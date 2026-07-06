@@ -25,4 +25,6 @@ public class User
     public Student? Student { get; set; }
     public Parent? Parent { get; set; }
     public Teacher? Teacher { get; set; }
+
+    public List<Chat> Chats { get; set; } = new List<Chat>();
 }
