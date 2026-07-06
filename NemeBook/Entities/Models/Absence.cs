@@ -12,7 +12,7 @@ public class Absence
     public Guid StudentId { get; set; }
     public Student Student { get; set; } = null!;
 
-    public DateOnly Date { get; set; }
+    public DateTime Date { get; set; }
     
     public int LessonNumber { get; set; } // Hour Number
 

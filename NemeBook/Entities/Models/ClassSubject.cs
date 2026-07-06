@@ -15,4 +15,5 @@ public class ClassSubject
 
     public List<Grade> Grades { get; set; } = new List<Grade>();
     public List<Absence> Absences { get; set; } = new List<Absence>();
+    public List<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 }
