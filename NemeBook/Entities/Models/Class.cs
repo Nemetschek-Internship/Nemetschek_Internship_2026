@@ -14,4 +14,6 @@ public class Class
     public List<Student> Students { get; set; } = new List<Student>();
     
     public List<ClassSubject> ClassSubjects { get; set; } = new List<ClassSubject>();
+
+    public List<Event> Events { get; set; } = new List<Event>();
 }
