@@ -1,0 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+using Entities.Enums;
+
+namespace Entities.Models;
+
+public class User
+{
+    public Guid Id { get; set; }
+    
+    public string FirstName { get; set; } = null!;
+    public string MiddleName { get; set; } = null!;
+    public string LastName { get; set; } = null!;
+
+    [EmailAddress]
+    public string Email { get; set; } = null!;
+    public string Password { get; set; } = null!;
+    
+    [Phone]
+    public string? PhoneNumber { get; set; }
+    
+    public bool IsDeleted { get; set; }
+
+    public UserRole Role { get; set; }
+
+    public Student? Student { get; set; }
+    public Parent? Parent { get; set; }
+    public Teacher? Teacher { get; set; }
+}
