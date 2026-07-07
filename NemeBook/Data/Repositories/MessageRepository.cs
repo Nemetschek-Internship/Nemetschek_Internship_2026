@@ -16,12 +16,14 @@ public class MessageRepository : IMessageRepository
     public Task<Message?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return dbContext.Messages
+            .Include(message => message.Sender)
             .FirstOrDefaultAsync(message => message.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Message>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Messages
+            .Include(message => message.Sender)
             .ToListAsync(cancellationToken);
     }
 
@@ -45,7 +47,7 @@ public class MessageRepository : IMessageRepository
             return;
         }
 
-        message.IsDeleted = true;
+        dbContext.Messages.Remove(message);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

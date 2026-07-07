@@ -28,6 +28,7 @@ builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services.AddControllersWithViews();
 

@@ -16,12 +16,16 @@ public class StudentRepository : IStudentRepository
     public Task<Student?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return dbContext.Students
+            .Include(student => student.User)
+            .Include(student => student.Parents)
             .FirstOrDefaultAsync(student => student.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Student>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Students
+            .Include(student => student.User)
+            .Include(student => student.Parents)
             .ToListAsync(cancellationToken);
     }
 
