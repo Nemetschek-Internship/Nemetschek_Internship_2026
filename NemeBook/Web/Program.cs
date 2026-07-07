@@ -1,7 +1,9 @@
-using Data;
+﻿using Data;
 using Data.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Services.Interfaces;
 using Services.Repositories;
+using Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,9 @@ builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services.AddControllersWithViews();
 
