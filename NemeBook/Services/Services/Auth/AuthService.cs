@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Services.Interfaces;
 using Services.Repositories;
 
-namespace Services.Services;
+namespace Services.Services.Auth;
 
 public class AuthService : IAuthService
 {

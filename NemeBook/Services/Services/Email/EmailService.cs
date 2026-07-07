@@ -1,26 +1,36 @@
 using System.Linq;
+using Entities.Enums;
 using Entities.Models;
 using EmailAttachment = Entities.Models.EmailAttachment;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Resend;
+using Services.Dtos.Registration;
 using Services.Interfaces;
+using Services.Interfaces.Registration;
+using Services.Options;
 
-namespace Services.Implementations;
+namespace Services.Services.Email;
 
-public class EmailService : IEmailService
+public class EmailService : IEmailService, IRegistrationEmailSender
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<EmailService> _logger;
+    private readonly RegistrationEmailOptions _registrationEmailOptions;
 
     private const string ResendApiKeyKey = "Email:ResendApiKey";
     private const string FromEmailKey = "Email:FromEmail";
     private const string FromNameKey = "Email:FromName";
 
-    public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+    public EmailService(
+        IConfiguration configuration,
+        ILogger<EmailService> logger,
+        IOptions<RegistrationEmailOptions> registrationEmailOptions)
     {
         _configuration = configuration;
         _logger = logger;
+        _registrationEmailOptions = registrationEmailOptions.Value;
     }
 
     public async Task SendEmailAsync(string to, string subject, string content, CancellationToken cancellationToken = default)
@@ -155,6 +165,22 @@ public class EmailService : IEmailService
         }
     }
 
+    public async Task SendInvitationAsync(
+        RegistrationEmailRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var subject = request.Type == RegistrationInvitationType.ParentSignUp
+            ? "NemeBook: Complete parent registration"
+            : "NemeBook: Set your password";
+
+        var content = GenerateRegistrationInvitationEmailContent(request);
+        await SendEmailAsync(request.Email, subject, content, cancellationToken);
+
+        _logger.LogInformation("Registration invitation email sent to {RecipientEmail}", request.Email);
+    }
+
     private string GeneratePasswordResetEmailContent(string recipientName, string resetLink)
     {
         return $"NemeBook Password Reset\n\nHello {recipientName},\n\n" +
@@ -168,5 +194,36 @@ public class EmailService : IEmailService
         return $"NemeBook Notification\n\nHello {recipientName},\n\n" +
                $"{title}\n{message}\n\n" +
                "Please log in to NemeBook to view more details.\n\nThanks,\nNemeBook Team";
+    }
+
+    private string GenerateRegistrationInvitationEmailContent(RegistrationEmailRequest request)
+    {
+        var link = BuildRegistrationInvitationLink(request);
+        var actionText = request.Type == RegistrationInvitationType.ParentSignUp
+            ? "complete your parent registration"
+            : "set your password";
+
+        return $"NemeBook Registration\n\nHello,\n\n" +
+               $"Use the link below to {actionText}:\n{link}\n\n" +
+               $"This link expires at {request.ExpiresAtUtc:yyyy-MM-dd HH:mm} UTC.\n\n" +
+               "Thanks,\nNemeBook Team";
+    }
+
+    private string BuildRegistrationInvitationLink(RegistrationEmailRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(_registrationEmailOptions.BaseUrl))
+        {
+            throw new InvalidOperationException("RegistrationEmail:BaseUrl is not configured.");
+        }
+
+        var path = request.Type == RegistrationInvitationType.ParentSignUp
+            ? _registrationEmailOptions.ParentSignUpPath
+            : _registrationEmailOptions.SetPasswordPath;
+
+        var baseUrl = _registrationEmailOptions.BaseUrl.TrimEnd('/');
+        var normalizedPath = path.StartsWith('/') ? path : $"/{path}";
+        var separator = normalizedPath.Contains('?') ? '&' : '?';
+
+        return $"{baseUrl}{normalizedPath}{separator}token={Uri.EscapeDataString(request.Token)}";
     }
 }
