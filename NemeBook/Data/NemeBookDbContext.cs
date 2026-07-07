@@ -20,6 +20,7 @@ public class NemeBookDbContext : DbContext
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Parent> Parents => Set<Parent>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<RegistrationInvitation> RegistrationInvitations => Set<RegistrationInvitation>();
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Subject> Subjects => Set<Subject>();
@@ -39,6 +40,7 @@ public class NemeBookDbContext : DbContext
         ConfigureEvents(modelBuilder);
         ConfigureChats(modelBuilder);
         ConfigureNotifications(modelBuilder);
+        ConfigurePasswordResetTokens(modelBuilder);
         ConfigureRegistrationInvitations(modelBuilder);
     }
 
@@ -272,6 +274,22 @@ public class NemeBookDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(notification => notification.FeedbackId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private static void ConfigurePasswordResetTokens(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasIndex(token => token.Token).IsUnique();
+            entity.HasIndex(token => token.UserId).IsUnique();
+            entity.Property(token => token.Token).HasMaxLength(256);
+
+            entity.HasOne(token => token.User)
+                .WithOne(user => user.PasswordResetToken)
+                .HasForeignKey<PasswordResetToken>(token => token.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

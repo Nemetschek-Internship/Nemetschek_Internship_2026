@@ -1,0 +1,48 @@
+﻿<!-- Web/Views/Account/Profile.cshtml -->
+@model Web.ViewModels.Auth.UserInfoDto
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-person-circle"></i> My Profile</h4>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] is not null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <dl class="row">
+                    <dt class="col-sm-4">Full Name</dt>
+                    <dd class="col-sm-8">@Model.FullName</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">@Model.Email</dd>
+
+                    <dt class="col-sm-4">Phone Number</dt>
+                    <dd class="col-sm-8">@(Model.PhoneNumber ?? "Not specified")</dd>
+
+                    <dt class="col-sm-4">Role</dt>
+                    <dd class="col-sm-8">@Model.Role</dd>
+                </dl>
+
+                <div class="d-grid gap-2">
+                    <a asp-action="ChangePassword" class="btn btn-warning">
+                        <i class="bi bi-key"></i> Change Password
+                    </a>
+                    <a asp-action="Index" asp-controller="Home" class="btn btn-secondary">
+                        <i class="bi bi-house"></i> Go to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

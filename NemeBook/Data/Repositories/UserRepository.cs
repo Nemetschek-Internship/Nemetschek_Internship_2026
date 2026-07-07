@@ -19,6 +19,12 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
     }
 
+    public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return dbContext.Users
+            .FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Users
