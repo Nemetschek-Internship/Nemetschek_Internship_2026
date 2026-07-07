@@ -16,12 +16,16 @@ public class TeacherRepository : ITeacherRepository
     public Task<Teacher?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return dbContext.Teachers
+            .Include(teacher => teacher.User)
+            .Include(teacher => teacher.ClassSubjects)
             .FirstOrDefaultAsync(teacher => teacher.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Teacher>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Teachers
+            .Include(teacher => teacher.User)
+            .Include(teacher => teacher.ClassSubjects)
             .ToListAsync(cancellationToken);
     }
 
@@ -39,13 +43,16 @@ public class TeacherRepository : ITeacherRepository
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var teacher = await GetByIdAsync(id, cancellationToken);
+        var teacher = await dbContext.Teachers
+            .Include(existingTeacher => existingTeacher.User)
+            .FirstOrDefaultAsync(existingTeacher => existingTeacher.Id == id, cancellationToken);
+
         if (teacher is null)
         {
             return;
         }
 
-        dbContext.Teachers.Remove(teacher);
+        teacher.User.IsDeleted = true;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

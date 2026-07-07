@@ -309,6 +309,9 @@ namespace Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
                     b.Property<Guid?>("EventId")
                         .HasColumnType("uniqueidentifier");
 

@@ -24,6 +24,7 @@ public class NemeBookDbContext : DbContext
     public DbSet<Subject> Subjects => Set<Subject>();
     public DbSet<Teacher> Teachers => Set<Teacher>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +39,23 @@ public class NemeBookDbContext : DbContext
         ConfigureEvents(modelBuilder);
         ConfigureChats(modelBuilder);
         ConfigureNotifications(modelBuilder);
+        ConfigurePasswordResetTokens(modelBuilder);
+    }
+
+    private static void ConfigurePasswordResetTokens(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasIndex(token => token.Token).IsUnique();
+            entity.HasIndex(token => token.UserId).IsUnique();
+            entity.Property(token => token.Token).HasMaxLength(256);
+
+            entity.HasOne(token => token.User)
+                .WithOne(user => user.PasswordResetToken)
+                .HasForeignKey<PasswordResetToken>(token => token.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 
     private static void ConfigureUsers(ModelBuilder modelBuilder)

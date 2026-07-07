@@ -26,6 +26,8 @@ public class User
     public Student? Student { get; set; }
     public Parent? Parent { get; set; }
     public Teacher? Teacher { get; set; }
+    
+    public PasswordResetToken? PasswordResetToken { get; set; }
 
     public List<Chat> Chats { get; set; } = new List<Chat>();
     public List<Notification> Notifications { get; set; } = new List<Notification>();

@@ -16,12 +16,18 @@ public class ParentRepository : IParentRepository
     public Task<Parent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return dbContext.Parents
+            .Include(parent => parent.User)
+            .Include(parent => parent.Students)
+            .ThenInclude(student => student.User)
             .FirstOrDefaultAsync(parent => parent.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Parent>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Parents
+            .Include(parent => parent.User)
+            .Include(parent => parent.Students)
+            .ThenInclude(student => student.User)
             .ToListAsync(cancellationToken);
     }
 
@@ -39,13 +45,16 @@ public class ParentRepository : IParentRepository
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var parent = await GetByIdAsync(id, cancellationToken);
+        var parent = await dbContext.Parents
+            .Include(existingParent => existingParent.User)
+            .FirstOrDefaultAsync(existingParent => existingParent.Id == id, cancellationToken);
+
         if (parent is null)
         {
             return;
         }
 
-        dbContext.Parents.Remove(parent);
+        parent.User.IsDeleted = true;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

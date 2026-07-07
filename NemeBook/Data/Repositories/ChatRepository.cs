@@ -16,12 +16,14 @@ public class ChatRepository : IChatRepository
     public Task<Chat?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return dbContext.Chats
+            .Include(chat => chat.Users)
             .FirstOrDefaultAsync(chat => chat.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Chat>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Chats
+            .Include(chat => chat.Users)
             .ToListAsync(cancellationToken);
     }
 
