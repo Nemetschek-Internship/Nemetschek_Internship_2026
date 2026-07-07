@@ -2,7 +2,7 @@ using Entities.Models;
 using Services.Interfaces;
 using Services.Repositories;
 
-namespace Services.Implementations;
+namespace Services.Services.Accounts;
 
 public class AccountService : IAccountService
 {

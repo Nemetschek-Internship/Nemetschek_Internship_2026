@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Services.Interfaces;
 using Services.Repositories;
 
-namespace Services.Implementations;
+namespace Services.Services.Notifications;
 
 public class NotificationService : INotificationService
 {
