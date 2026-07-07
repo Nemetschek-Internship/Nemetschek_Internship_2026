@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class ClassRepository : IClassRepository
 
     public Task<Class?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Classes
+            .FirstOrDefaultAsync(schoolClass => schoolClass.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Class>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Class>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Classes
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(Class schoolClass, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Class schoolClass, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Classes.AddAsync(schoolClass, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Class schoolClass, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Class schoolClass, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Classes.Update(schoolClass);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var schoolClass = await GetByIdAsync(id, cancellationToken);
+        if (schoolClass is null)
+        {
+            return;
+        }
+
+        dbContext.Classes.Remove(schoolClass);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

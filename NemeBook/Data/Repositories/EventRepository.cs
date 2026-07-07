@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class EventRepository : IEventRepository
 
     public Task<Event?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Events
+            .FirstOrDefaultAsync(schoolEvent => schoolEvent.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Event>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Event>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Events
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(Event schoolEvent, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Event schoolEvent, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Events.AddAsync(schoolEvent, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Event schoolEvent, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Event schoolEvent, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Events.Update(schoolEvent);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var schoolEvent = await GetByIdAsync(id, cancellationToken);
+        if (schoolEvent is null)
+        {
+            return;
+        }
+
+        dbContext.Events.Remove(schoolEvent);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

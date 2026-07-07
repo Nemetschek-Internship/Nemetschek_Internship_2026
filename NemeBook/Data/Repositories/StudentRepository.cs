@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class StudentRepository : IStudentRepository
 
     public Task<Student?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Students
+            .FirstOrDefaultAsync(student => student.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Student>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Student>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Students
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(Student student, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Student student, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Students.AddAsync(student, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Student student, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Student student, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Students.Update(student);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var student = await GetByIdAsync(id, cancellationToken);
+        if (student is null)
+        {
+            return;
+        }
+
+        dbContext.Students.Remove(student);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

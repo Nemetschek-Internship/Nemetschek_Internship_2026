@@ -1,5 +1,6 @@
 ﻿using Data;
 using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -15,31 +16,45 @@ public class AccountsRepository : IAccountsRepository
 
     public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Users
+            .FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
     }
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Users
+            .FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
     }
 
     public Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Users
+            .AnyAsync(user => user.Email == email, cancellationToken);
     }
 
-    public Task CreateAsync(User user, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(User user, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Users.AddAsync(user, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(User user, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Users.Update(user);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(existingUser => existingUser.Id == id, cancellationToken);
+
+        if (user is null)
+        {
+            return;
+        }
+
+        user.IsDeleted = true;
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class ChatRepository : IChatRepository
 
     public Task<Chat?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Chats
+            .FirstOrDefaultAsync(chat => chat.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Chat>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Chat>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Chats
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(Chat chat, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Chat chat, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Chats.AddAsync(chat, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Chat chat, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Chat chat, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Chats.Update(chat);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var chat = await GetByIdAsync(id, cancellationToken);
+        if (chat is null)
+        {
+            return;
+        }
+
+        dbContext.Chats.Remove(chat);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class FeedbackRepository : IFeedbackRepository
 
     public Task<Feedback?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Feedbacks
+            .FirstOrDefaultAsync(feedback => feedback.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Feedback>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Feedback>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Feedbacks
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(Feedback feedback, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Feedback feedback, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Feedbacks.AddAsync(feedback, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Feedback feedback, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Feedback feedback, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Feedbacks.Update(feedback);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var feedback = await GetByIdAsync(id, cancellationToken);
+        if (feedback is null)
+        {
+            return;
+        }
+
+        dbContext.Feedbacks.Remove(feedback);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

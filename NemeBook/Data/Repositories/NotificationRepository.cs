@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class NotificationRepository : INotificationRepository
 
     public Task<Notification?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Notifications
+            .FirstOrDefaultAsync(notification => notification.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Notification>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Notification>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Notifications
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(Notification notification, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Notification notification, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Notifications.AddAsync(notification, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Notification notification, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Notification notification, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Notifications.Update(notification);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var notification = await GetByIdAsync(id, cancellationToken);
+        if (notification is null)
+        {
+            return;
+        }
+
+        dbContext.Notifications.Remove(notification);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

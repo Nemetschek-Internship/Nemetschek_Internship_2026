@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class ClassSubjectRepository : IClassSubjectRepository
 
     public Task<ClassSubject?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.ClassSubjects
+            .FirstOrDefaultAsync(classSubject => classSubject.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<ClassSubject>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ClassSubject>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.ClassSubjects
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(ClassSubject classSubject, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(ClassSubject classSubject, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.ClassSubjects.AddAsync(classSubject, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(ClassSubject classSubject, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(ClassSubject classSubject, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.ClassSubjects.Update(classSubject);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var classSubject = await GetByIdAsync(id, cancellationToken);
+        if (classSubject is null)
+        {
+            return;
+        }
+
+        dbContext.ClassSubjects.Remove(classSubject);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

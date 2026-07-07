@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class GradeRepository : IGradeRepository
 
     public Task<Grade?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Grades
+            .FirstOrDefaultAsync(grade => grade.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Grade>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Grade>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Grades
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(Grade grade, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Grade grade, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Grades.AddAsync(grade, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Grade grade, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Grade grade, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Grades.Update(grade);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var grade = await GetByIdAsync(id, cancellationToken);
+        if (grade is null)
+        {
+            return;
+        }
+
+        dbContext.Grades.Remove(grade);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

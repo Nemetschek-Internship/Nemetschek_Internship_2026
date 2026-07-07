@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.Repositories;
 
 namespace Data.Repositories;
@@ -14,26 +15,37 @@ public class ParentRepository : IParentRepository
 
     public Task<Parent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return dbContext.Parents
+            .FirstOrDefaultAsync(parent => parent.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Parent>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Parent>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Parents
+            .ToListAsync(cancellationToken);
     }
 
-    public Task CreateAsync(Parent parent, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Parent parent, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Parents.AddAsync(parent, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Parent parent, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Parent parent, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Parents.Update(parent);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var parent = await GetByIdAsync(id, cancellationToken);
+        if (parent is null)
+        {
+            return;
+        }
+
+        dbContext.Parents.Remove(parent);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
