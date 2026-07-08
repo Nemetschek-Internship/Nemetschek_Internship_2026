@@ -17,6 +17,7 @@ public class ClassSubjectRepository : IClassSubjectRepository
     {
         return dbContext.ClassSubjects
             .Include(classSubject => classSubject.Class)
+            .Include(classSubject => classSubject.Subject)
             .Include(classSubject => classSubject.Teacher)
             .FirstOrDefaultAsync(classSubject => classSubject.Id == id, cancellationToken);
     }
@@ -25,6 +26,7 @@ public class ClassSubjectRepository : IClassSubjectRepository
     {
         return await dbContext.ClassSubjects
             .Include(classSubject => classSubject.Class)
+            .Include(classSubject => classSubject.Subject)
             .Include(classSubject => classSubject.Teacher)
             .ToListAsync(cancellationToken);
     }

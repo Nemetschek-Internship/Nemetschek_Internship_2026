@@ -8,6 +8,9 @@ public class Event
 
     public Guid CreatedByUserId { get; set; }
     public User CreatedByUser { get; set; } = null!;
+
+    public Guid? ClassSubjectId { get; set; }
+    public ClassSubject? ClassSubject { get; set; }
     
     public string Title { get; set; } = string.Empty;
     

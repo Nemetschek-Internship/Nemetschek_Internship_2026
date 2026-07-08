@@ -16,12 +16,14 @@ public class SubjectRepository : ISubjectRepository
     public Task<Subject?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return dbContext.Subjects
+            .Include(subject => subject.TeacherSubjects)
             .FirstOrDefaultAsync(subject => subject.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Subject>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Subjects
+            .Include(subject => subject.TeacherSubjects)
             .ToListAsync(cancellationToken);
     }
 
