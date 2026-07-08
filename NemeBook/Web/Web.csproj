@@ -17,7 +17,6 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Resend" Version="0.5.1" />
       <PackageReference Include="System.Threading.RateLimiting" Version="9.0.17" />
     </ItemGroup>
 
