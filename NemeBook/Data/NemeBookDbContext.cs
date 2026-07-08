@@ -12,6 +12,7 @@ public class NemeBookDbContext : DbContext
 
     public DbSet<Absence> Absences => Set<Absence>();
     public DbSet<Chat> Chats => Set<Chat>();
+    public DbSet<ClassScheduleEntry> ClassScheduleEntries => Set<ClassScheduleEntry>();
     public DbSet<Class> Classes => Set<Class>();
     public DbSet<ClassSubject> ClassSubjects => Set<ClassSubject>();
     public DbSet<Event> Events => Set<Event>();
@@ -25,6 +26,7 @@ public class NemeBookDbContext : DbContext
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Subject> Subjects => Set<Subject>();
     public DbSet<Teacher> Teachers => Set<Teacher>();
+    public DbSet<TeacherSubject> TeacherSubjects => Set<TeacherSubject>();
     public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -34,6 +36,7 @@ public class NemeBookDbContext : DbContext
         ConfigureUsers(modelBuilder);
         ConfigureClasses(modelBuilder);
         ConfigureClassSubjects(modelBuilder);
+        ConfigureClassScheduleEntries(modelBuilder);
         ConfigureGrades(modelBuilder);
         ConfigureAbsences(modelBuilder);
         ConfigureFeedbacks(modelBuilder);
@@ -98,7 +101,7 @@ public class NemeBookDbContext : DbContext
             entity.HasOne(schoolClass => schoolClass.MainTeacher)
                 .WithOne(teacher => teacher.MainClass)
                 .HasForeignKey<Class>(schoolClass => schoolClass.MainTeacherId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasMany(schoolClass => schoolClass.Students)
                 .WithOne(student => student.Class)
@@ -120,6 +123,24 @@ public class NemeBookDbContext : DbContext
             entity.Property(subject => subject.Name).HasMaxLength(100);
         });
 
+        modelBuilder.Entity<TeacherSubject>(entity =>
+        {
+            entity.HasQueryFilter(teacherSubject => !teacherSubject.Teacher.User.IsDeleted);
+
+            entity.HasIndex(teacherSubject => new { teacherSubject.TeacherId, teacherSubject.SubjectId })
+                .IsUnique();
+
+            entity.HasOne(teacherSubject => teacherSubject.Teacher)
+                .WithMany(teacher => teacher.TeacherSubjects)
+                .HasForeignKey(teacherSubject => teacherSubject.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(teacherSubject => teacherSubject.Subject)
+                .WithMany(subject => subject.TeacherSubjects)
+                .HasForeignKey(teacherSubject => teacherSubject.SubjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<ClassSubject>(entity =>
         {
             entity.HasIndex(classSubject => new { classSubject.ClassId, classSubject.SubjectId })
@@ -138,6 +159,30 @@ public class NemeBookDbContext : DbContext
             entity.HasOne(classSubject => classSubject.Teacher)
                 .WithMany(teacher => teacher.ClassSubjects)
                 .HasForeignKey(classSubject => classSubject.TeacherId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private static void ConfigureClassScheduleEntries(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClassScheduleEntry>(entity =>
+        {
+            entity.HasIndex(scheduleEntry => new
+                {
+                    scheduleEntry.ClassId,
+                    scheduleEntry.DayOfWeek,
+                    scheduleEntry.PeriodNumber
+                })
+                .IsUnique();
+
+            entity.HasOne(scheduleEntry => scheduleEntry.Class)
+                .WithMany(schoolClass => schoolClass.ScheduleEntries)
+                .HasForeignKey(scheduleEntry => scheduleEntry.ClassId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(scheduleEntry => scheduleEntry.ClassSubject)
+                .WithMany(classSubject => classSubject.ScheduleEntries)
+                .HasForeignKey(scheduleEntry => scheduleEntry.ClassSubjectId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
@@ -148,6 +193,7 @@ public class NemeBookDbContext : DbContext
         {
             entity.Property(grade => grade.Value).HasPrecision(3, 2);
             entity.Property(grade => grade.Note).HasMaxLength(1000);
+            entity.Property(grade => grade.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasOne(grade => grade.Student)
                 .WithMany(student => student.Grades)
@@ -165,7 +211,9 @@ public class NemeBookDbContext : DbContext
     {
         modelBuilder.Entity<Absence>(entity =>
         {
-            entity.Property(absence => absence.Description).HasMaxLength(1000);
+            entity.Property(absence => absence.ExcuseNote).HasMaxLength(1000);
+            entity.Property(absence => absence.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(absence => absence.Date).HasColumnType("date");
 
             entity.HasOne(absence => absence.Student)
                 .WithMany(student => student.Absences)
@@ -176,6 +224,11 @@ public class NemeBookDbContext : DbContext
                 .WithMany(classSubject => classSubject.Absences)
                 .HasForeignKey(absence => absence.ClassSubjectId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(absence => absence.ClassScheduleEntry)
+                .WithMany(scheduleEntry => scheduleEntry.Absences)
+                .HasForeignKey(absence => absence.ClassScheduleEntryId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
@@ -184,6 +237,10 @@ public class NemeBookDbContext : DbContext
         modelBuilder.Entity<Feedback>(entity =>
         {
             entity.Property(feedback => feedback.Description).HasMaxLength(1000);
+            entity.Property(feedback => feedback.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(feedback => feedback.Date)
+                .HasColumnType("date")
+                .HasDefaultValueSql("CONVERT(date, GETUTCDATE())");
 
             entity.HasOne(feedback => feedback.Student)
                 .WithMany(student => student.Feedbacks)
@@ -194,6 +251,11 @@ public class NemeBookDbContext : DbContext
                 .WithMany(classSubject => classSubject.Feedbacks)
                 .HasForeignKey(feedback => feedback.ClassSubjectId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(feedback => feedback.ClassScheduleEntry)
+                .WithMany(scheduleEntry => scheduleEntry.Feedbacks)
+                .HasForeignKey(feedback => feedback.ClassScheduleEntryId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
@@ -208,6 +270,11 @@ public class NemeBookDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(schoolEvent => schoolEvent.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(schoolEvent => schoolEvent.ClassSubject)
+                .WithMany(classSubject => classSubject.Events)
+                .HasForeignKey(schoolEvent => schoolEvent.ClassSubjectId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasMany(schoolEvent => schoolEvent.Classes)
                 .WithMany(schoolClass => schoolClass.Events)

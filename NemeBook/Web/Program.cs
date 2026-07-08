@@ -1,5 +1,6 @@
 using Data;
 using Data.Repositories;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
@@ -31,16 +32,19 @@ using Services.Services.Subjects;
 using Services.Services.Teachers;
 
 var builder = WebApplication.CreateBuilder(args);
-
+Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..",".env"));
+builder.Configuration.AddEnvironmentVariables();
 // Add services to the container.
 builder.Services.AddDbContext<NemeBookDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddTransient<RateLimitingOptions>();
 // Register repositories.
 builder.Services.AddScoped<IAbsenceRepository, AbsenceRepository>();
 builder.Services.AddScoped<IAccountsRepository, AccountsRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
+builder.Services.AddScoped<IClassScheduleEntryRepository, ClassScheduleEntryRepository>();
 builder.Services.AddScoped<IClassSubjectRepository, ClassSubjectRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
@@ -75,6 +79,7 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<IEmailService>(serviceProvider => serviceProvider.GetRequiredService<EmailService>());
 builder.Services.AddScoped<IRegistrationEmailSender>(serviceProvider => serviceProvider.GetRequiredService<EmailService>());
+builder.Services.AddScoped<IRegistrationImportParser, ExcelRegistrationImportParser>();
 builder.Services.AddScoped<IInvitationTokenService, InvitationTokenService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
@@ -83,6 +88,10 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));
+
+builder.Services.Configure<SmtpOptions>(
+    builder.Configuration.GetSection("Email"));
+builder.Services.AddTransient<RateLimitingOptions>();
 
 // Add Cookie Authentication.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

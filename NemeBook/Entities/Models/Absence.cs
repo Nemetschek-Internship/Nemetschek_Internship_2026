@@ -12,7 +12,12 @@ public class Absence
     public Guid StudentId { get; set; }
     public Student Student { get; set; } = null!;
 
-    public DateTime Date { get; set; }
+    public Guid? ClassScheduleEntryId { get; set; }
+    public ClassScheduleEntry? ClassScheduleEntry { get; set; }
+
+    public DateOnly Date { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public int LessonNumber { get; set; } // Hour Number
 
@@ -22,5 +27,5 @@ public class Absence
 
     public AbsenceExcuseReason? ExcuseReason { get; set; }
 
-    public string Description { get; set; } = string.Empty;
+    public string ExcuseNote { get; set; } = string.Empty;
 }

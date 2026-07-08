@@ -308,7 +308,8 @@ public class ChatService : IChatService
 
         var classTeacherIds = classSubjects
             .Where(classSubject => classSubject.ClassId == student.ClassId)
-            .Select(classSubject => classSubject.TeacherId)
+            .Where(classSubject => classSubject.TeacherId.HasValue)
+            .Select(classSubject => classSubject.TeacherId!.Value)
             .ToHashSet();
 
         var mainTeacherId = classes
@@ -343,14 +344,18 @@ public class ChatService : IChatService
 
         var teacherIds = classSubjects
             .Where(classSubject => childClassIds.Contains(classSubject.ClassId))
-            .Select(classSubject => classSubject.TeacherId)
+            .Where(classSubject => classSubject.TeacherId.HasValue)
+            .Select(classSubject => classSubject.TeacherId!.Value)
             .ToHashSet();
 
         foreach (var mainTeacherId in classes
                      .Where(currentClass => childClassIds.Contains(currentClass.Id))
                      .Select(currentClass => currentClass.MainTeacherId))
         {
-            teacherIds.Add(mainTeacherId);
+            if (mainTeacherId.HasValue)
+            {
+                teacherIds.Add(mainTeacherId.Value);
+            }
         }
 
         var allowed = teacherIds

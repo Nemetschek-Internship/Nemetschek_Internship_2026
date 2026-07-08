@@ -20,5 +20,5 @@ public class Grade
 
     public string Note { get; set; } = string.Empty;
     
-    public DateTime Date { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

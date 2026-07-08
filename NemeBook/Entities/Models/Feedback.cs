@@ -12,7 +12,12 @@ public class Feedback
     public Guid StudentId { get; set; }
     public Student Student { get; set; } = null!;
 
-    public DateTime Date { get; set; }
+    public Guid? ClassScheduleEntryId { get; set; }
+    public ClassScheduleEntry? ClassScheduleEntry { get; set; }
+
+    public DateOnly Date { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public FeedbackType Type { get; set; }
 
