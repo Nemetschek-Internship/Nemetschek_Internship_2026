@@ -1,5 +1,6 @@
 using Data;
 using Data.Repositories;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
@@ -19,11 +20,13 @@ using Services.Services.Security;
 using Services.Services.Students;
 
 var builder = WebApplication.CreateBuilder(args);
-
+Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..",".env"));
+builder.Configuration.AddEnvironmentVariables();
 // Add services to the container.
 builder.Services.AddDbContext<NemeBookDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddTransient<RateLimitingOptions>();
 // Register repositories.
 builder.Services.AddScoped<IAbsenceRepository, AbsenceRepository>();
 builder.Services.AddScoped<IAccountsRepository, AccountsRepository>();
@@ -60,6 +63,10 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));
+
+builder.Services.Configure<SmtpOptions>(
+    builder.Configuration.GetSection("Email"));
+builder.Services.AddTransient<RateLimitingOptions>();
 
 // Add Cookie Authentication.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

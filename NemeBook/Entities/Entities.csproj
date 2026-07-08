@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="Resend" Version="0.5.1" />
+    <PackageReference Include="System.Threading.RateLimiting" Version="9.0.17" />
   </ItemGroup>
 
 </Project>
