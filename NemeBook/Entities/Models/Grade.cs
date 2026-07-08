@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Entities.Enums;
 
 namespace Entities.Models;
@@ -13,7 +13,7 @@ public class Grade
     public Guid ClassSubjectId { get; set; }
     public ClassSubject ClassSubject { get; set; } = null!;
     
-    [Range(2, 6)]
+    [Range(2, 6, ErrorMessage = "Оценката трябва да бъде между 2 и 6.")]
     public decimal Value { get; set; }
 
     public GradeType Type { get; set; }

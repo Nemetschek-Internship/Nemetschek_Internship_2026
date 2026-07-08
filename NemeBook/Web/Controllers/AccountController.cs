@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
-using Web.ViewModels.Auth;
 
 namespace Web.Controllers;
 
@@ -156,7 +155,7 @@ public class AccountController : Controller
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
             new Claim(ClaimTypes.Role, user.Role.ToString()),
-            new Claim("FullName", $"{user.FirstName} {user.MiddleName} {user.LastName}")
+            new Claim("FullName", FormatFullName(user.FirstName, user.MiddleName, user.LastName))
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -173,6 +172,14 @@ public class AccountController : Controller
             CookieAuthenticationDefaults.AuthenticationScheme,
             principal,
             authProperties);
+    }
+
+    private static string FormatFullName(string firstName, string? middleName, string lastName)
+    {
+        return string.Join(
+            " ",
+            new[] { firstName, middleName, lastName }
+                .Where(name => !string.IsNullOrWhiteSpace(name)));
     }
 
     private Guid? GetCurrentUserId()

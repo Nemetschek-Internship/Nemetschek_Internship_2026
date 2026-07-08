@@ -72,7 +72,7 @@ public class ChatService : IChatService
             var search = searchTerm.Trim();
             query = query.Where(user =>
                 user.FirstName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                user.MiddleName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (user.MiddleName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 user.LastName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 user.Email.Contains(search, StringComparison.OrdinalIgnoreCase));
         }

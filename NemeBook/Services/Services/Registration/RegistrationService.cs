@@ -213,7 +213,7 @@ public class RegistrationService : IRegistrationService
     {
         ArgumentNullException.ThrowIfNull(request);
         EnsureValidName(request.FirstName, nameof(request.FirstName));
-        EnsureValidName(request.MiddleName, nameof(request.MiddleName));
+        EnsureValidOptionalName(request.MiddleName, nameof(request.MiddleName));
         EnsureValidName(request.LastName, nameof(request.LastName));
         EnsureValidPassword(request.Password);
 
@@ -234,7 +234,7 @@ public class RegistrationService : IRegistrationService
             {
                 Id = Guid.NewGuid(),
                 FirstName = NormalizeRequired(request.FirstName),
-                MiddleName = NormalizeRequired(request.MiddleName),
+                MiddleName = NormalizeOptional(request.MiddleName),
                 LastName = NormalizeRequired(request.LastName),
                 Email = invitation.Email,
                 PhoneNumber = NormalizeOptional(request.PhoneNumber),
@@ -251,7 +251,7 @@ public class RegistrationService : IRegistrationService
         else
         {
             user.FirstName = NormalizeRequired(request.FirstName);
-            user.MiddleName = NormalizeRequired(request.MiddleName);
+            user.MiddleName = NormalizeOptional(request.MiddleName);
             user.LastName = NormalizeRequired(request.LastName);
             user.PhoneNumber = NormalizeOptional(request.PhoneNumber);
             user.Password = passwordHasher.HashPassword(request.Password);
@@ -271,7 +271,7 @@ public class RegistrationService : IRegistrationService
     {
         ArgumentNullException.ThrowIfNull(request);
         EnsureValidName(request.FirstName, nameof(request.FirstName));
-        EnsureValidName(request.MiddleName, nameof(request.MiddleName));
+        EnsureValidOptionalName(request.MiddleName, nameof(request.MiddleName));
         EnsureValidName(request.LastName, nameof(request.LastName));
         EnsureValidEmail(request.Email, nameof(request.Email));
         EnsureValidPassword(request.Password);
@@ -296,7 +296,7 @@ public class RegistrationService : IRegistrationService
         {
             Id = Guid.NewGuid(),
             FirstName = NormalizeRequired(request.FirstName),
-            MiddleName = NormalizeRequired(request.MiddleName),
+            MiddleName = NormalizeOptional(request.MiddleName),
             LastName = NormalizeRequired(request.LastName),
             Email = email,
             PhoneNumber = NormalizeOptional(request.PhoneNumber),
@@ -492,7 +492,7 @@ public class RegistrationService : IRegistrationService
 
     private static User CreateImportedUser(
         string firstName,
-        string middleName,
+        string? middleName,
         string lastName,
         string email,
         string? phoneNumber,
@@ -502,7 +502,7 @@ public class RegistrationService : IRegistrationService
         {
             Id = Guid.NewGuid(),
             FirstName = NormalizeRequired(firstName),
-            MiddleName = NormalizeRequired(middleName),
+            MiddleName = NormalizeOptional(middleName),
             LastName = NormalizeRequired(lastName),
             Email = email,
             PhoneNumber = phoneNumber,
@@ -520,7 +520,7 @@ public class RegistrationService : IRegistrationService
         var isValid = true;
 
         isValid &= ValidateImportedName(studentImport.FirstName, studentImport.RowNumber, email, "First name", result);
-        isValid &= ValidateImportedName(studentImport.MiddleName, studentImport.RowNumber, email, "Middle name", result);
+        isValid &= ValidateOptionalImportedName(studentImport.MiddleName, studentImport.RowNumber, email, "Middle name", result);
         isValid &= ValidateImportedName(studentImport.LastName, studentImport.RowNumber, email, "Last name", result);
         isValid &= ValidateImportedEmail(email, importedEmails, studentImport.RowNumber, result);
 
@@ -548,7 +548,7 @@ public class RegistrationService : IRegistrationService
         var isValid = true;
 
         isValid &= ValidateImportedName(teacherImport.FirstName, teacherImport.RowNumber, email, "First name", result);
-        isValid &= ValidateImportedName(teacherImport.MiddleName, teacherImport.RowNumber, email, "Middle name", result);
+        isValid &= ValidateOptionalImportedName(teacherImport.MiddleName, teacherImport.RowNumber, email, "Middle name", result);
         isValid &= ValidateImportedName(teacherImport.LastName, teacherImport.RowNumber, email, "Last name", result);
         isValid &= ValidateImportedEmail(email, importedEmails, teacherImport.RowNumber, result);
 
@@ -568,6 +568,22 @@ public class RegistrationService : IRegistrationService
         }
 
         AddIssue(result, rowNumber, email, $"{fieldName} is required and cannot exceed 100 characters.");
+        return false;
+    }
+
+    private static bool ValidateOptionalImportedName(
+        string? value,
+        int? rowNumber,
+        string? email,
+        string fieldName,
+        RegistrationImportResult result)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Trim().Length <= 100)
+        {
+            return true;
+        }
+
+        AddIssue(result, rowNumber, email, $"{fieldName} cannot exceed 100 characters.");
         return false;
     }
 
@@ -617,6 +633,14 @@ public class RegistrationService : IRegistrationService
         if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > 100)
         {
             throw new ArgumentException("Name is required and cannot exceed 100 characters.", parameterName);
+        }
+    }
+
+    private static void EnsureValidOptionalName(string? value, string parameterName)
+    {
+        if (!string.IsNullOrWhiteSpace(value) && value.Trim().Length > 100)
+        {
+            throw new ArgumentException("Name cannot exceed 100 characters.", parameterName);
         }
     }
 

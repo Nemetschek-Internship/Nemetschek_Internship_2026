@@ -4,12 +4,12 @@ namespace Entities.ViewModels.Auth;
 
 public class LoginRequest
 {
-    [Required(ErrorMessage = "Email is required")]
-    [EmailAddress(ErrorMessage = "Invalid email format")]
+    [Required(ErrorMessage = "Имейлът е задължителен.")]
+    [EmailAddress(ErrorMessage = "Невалиден формат на имейл адрес.")]
     public string Email { get; set; } = null!;
 
-    [Required(ErrorMessage = "Password is required")]
-    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long")]
+    [Required(ErrorMessage = "Паролата е задължителна.")]
+    [MinLength(6, ErrorMessage = "Паролата трябва да бъде поне 6 символа.")]
     public string Password { get; set; } = null!;
 
     public bool RememberMe { get; set; }
