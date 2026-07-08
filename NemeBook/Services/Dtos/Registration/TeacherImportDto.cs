@@ -12,5 +12,9 @@ public class TeacherImportDto
 
     public string Email { get; set; } = null!;
 
+    public DateOnly BirthDate { get; set; }
+
     public string? PhoneNumber { get; set; }
+
+    public IReadOnlyCollection<string> Subjects { get; set; } = Array.Empty<string>();
 }

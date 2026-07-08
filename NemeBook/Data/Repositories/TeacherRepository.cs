@@ -18,6 +18,8 @@ public class TeacherRepository : ITeacherRepository
         return dbContext.Teachers
             .Include(teacher => teacher.User)
             .Include(teacher => teacher.ClassSubjects)
+            .Include(teacher => teacher.TeacherSubjects)
+            .ThenInclude(teacherSubject => teacherSubject.Subject)
             .FirstOrDefaultAsync(teacher => teacher.Id == id, cancellationToken);
     }
 
@@ -26,6 +28,8 @@ public class TeacherRepository : ITeacherRepository
         return await dbContext.Teachers
             .Include(teacher => teacher.User)
             .Include(teacher => teacher.ClassSubjects)
+            .Include(teacher => teacher.TeacherSubjects)
+            .ThenInclude(teacherSubject => teacherSubject.Subject)
             .ToListAsync(cancellationToken);
     }
 

@@ -4,6 +4,7 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(NemeBookDbContext))]
-    partial class NemeBookDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708081557_MakeMiddleNameOptional")]
+    partial class MakeMiddleNameOptional
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,21 +61,13 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ClassScheduleEntryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("ClassSubjectId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<string>("ExcuseNote")
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -93,8 +88,6 @@ namespace Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ClassScheduleEntryId");
 
                     b.HasIndex("ClassSubjectId");
 
@@ -131,53 +124,18 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(1)");
 
-                    b.Property<Guid?>("MainTeacherId")
+                    b.Property<Guid>("MainTeacherId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MainTeacherId")
-                        .IsUnique()
-                        .HasFilter("[MainTeacherId] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("GradeNumber", "Letter")
                         .IsUnique();
 
                     b.ToTable("Classes");
-                });
-
-            modelBuilder.Entity("Entities.Models.ClassScheduleEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassSubjectId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly>("EndsAt")
-                        .HasColumnType("time");
-
-                    b.Property<int>("PeriodNumber")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly>("StartsAt")
-                        .HasColumnType("time");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClassSubjectId");
-
-                    b.HasIndex("ClassId", "DayOfWeek", "PeriodNumber")
-                        .IsUnique();
-
-                    b.ToTable("ClassScheduleEntries");
                 });
 
             modelBuilder.Entity("Entities.Models.ClassSubject", b =>
@@ -192,7 +150,7 @@ namespace Data.Migrations
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("TeacherId")
+                    b.Property<Guid>("TeacherId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -211,9 +169,6 @@ namespace Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ClassSubjectId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CreatedByUserId")
@@ -237,8 +192,6 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClassSubjectId");
-
                     b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Events");
@@ -250,21 +203,11 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ClassScheduleEntryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("ClassSubjectId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<DateOnly>("Date")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
-                        .HasDefaultValueSql("CONVERT(date, GETUTCDATE())");
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -278,8 +221,6 @@ namespace Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ClassScheduleEntryId");
 
                     b.HasIndex("ClassSubjectId");
 
@@ -297,10 +238,8 @@ namespace Data.Migrations
                     b.Property<Guid>("ClassSubjectId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Note")
                         .IsRequired()
@@ -555,9 +494,6 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateOnly>("BirthDate")
-                        .HasColumnType("date");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -567,28 +503,6 @@ namespace Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Teachers");
-                });
-
-            modelBuilder.Entity("Entities.Models.TeacherSubject", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SubjectId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TeacherId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SubjectId");
-
-                    b.HasIndex("TeacherId", "SubjectId")
-                        .IsUnique();
-
-                    b.ToTable("TeacherSubjects");
                 });
 
             modelBuilder.Entity("Entities.Models.User", b =>
@@ -701,11 +615,6 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Models.Absence", b =>
                 {
-                    b.HasOne("Entities.Models.ClassScheduleEntry", "ClassScheduleEntry")
-                        .WithMany("Absences")
-                        .HasForeignKey("ClassScheduleEntryId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Entities.Models.ClassSubject", "ClassSubject")
                         .WithMany("Absences")
                         .HasForeignKey("ClassSubjectId")
@@ -718,8 +627,6 @@ namespace Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ClassScheduleEntry");
-
                     b.Navigation("ClassSubject");
 
                     b.Navigation("Student");
@@ -730,28 +637,10 @@ namespace Data.Migrations
                     b.HasOne("Entities.Models.Teacher", "MainTeacher")
                         .WithOne("MainClass")
                         .HasForeignKey("Entities.Models.Class", "MainTeacherId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("MainTeacher");
-                });
-
-            modelBuilder.Entity("Entities.Models.ClassScheduleEntry", b =>
-                {
-                    b.HasOne("Entities.Models.Class", "Class")
-                        .WithMany("ScheduleEntries")
-                        .HasForeignKey("ClassId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.ClassSubject", "ClassSubject")
-                        .WithMany("ScheduleEntries")
-                        .HasForeignKey("ClassSubjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Class");
-
-                    b.Navigation("ClassSubject");
                 });
 
             modelBuilder.Entity("Entities.Models.ClassSubject", b =>
@@ -771,7 +660,8 @@ namespace Data.Migrations
                     b.HasOne("Entities.Models.Teacher", "Teacher")
                         .WithMany("ClassSubjects")
                         .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Class");
 
@@ -782,29 +672,17 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Models.Event", b =>
                 {
-                    b.HasOne("Entities.Models.ClassSubject", "ClassSubject")
-                        .WithMany("Events")
-                        .HasForeignKey("ClassSubjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Entities.Models.User", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ClassSubject");
-
                     b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("Entities.Models.Feedback", b =>
                 {
-                    b.HasOne("Entities.Models.ClassScheduleEntry", "ClassScheduleEntry")
-                        .WithMany("Feedbacks")
-                        .HasForeignKey("ClassScheduleEntryId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Entities.Models.ClassSubject", "ClassSubject")
                         .WithMany("Feedbacks")
                         .HasForeignKey("ClassSubjectId")
@@ -816,8 +694,6 @@ namespace Data.Migrations
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("ClassScheduleEntry");
 
                     b.Navigation("ClassSubject");
 
@@ -963,25 +839,6 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Entities.Models.TeacherSubject", b =>
-                {
-                    b.HasOne("Entities.Models.Subject", "Subject")
-                        .WithMany("TeacherSubjects")
-                        .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.Teacher", "Teacher")
-                        .WithMany("TeacherSubjects")
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Subject");
-
-                    b.Navigation("Teacher");
-                });
-
             modelBuilder.Entity("ParentStudent", b =>
                 {
                     b.HasOne("Entities.Models.Parent", null)
@@ -1021,29 +878,16 @@ namespace Data.Migrations
                 {
                     b.Navigation("ClassSubjects");
 
-                    b.Navigation("ScheduleEntries");
-
                     b.Navigation("Students");
-                });
-
-            modelBuilder.Entity("Entities.Models.ClassScheduleEntry", b =>
-                {
-                    b.Navigation("Absences");
-
-                    b.Navigation("Feedbacks");
                 });
 
             modelBuilder.Entity("Entities.Models.ClassSubject", b =>
                 {
                     b.Navigation("Absences");
 
-                    b.Navigation("Events");
-
                     b.Navigation("Feedbacks");
 
                     b.Navigation("Grades");
-
-                    b.Navigation("ScheduleEntries");
                 });
 
             modelBuilder.Entity("Entities.Models.Student", b =>
@@ -1058,8 +902,6 @@ namespace Data.Migrations
             modelBuilder.Entity("Entities.Models.Subject", b =>
                 {
                     b.Navigation("ClassSubjects");
-
-                    b.Navigation("TeacherSubjects");
                 });
 
             modelBuilder.Entity("Entities.Models.Teacher", b =>
@@ -1067,8 +909,6 @@ namespace Data.Migrations
                     b.Navigation("ClassSubjects");
 
                     b.Navigation("MainClass");
-
-                    b.Navigation("TeacherSubjects");
                 });
 
             modelBuilder.Entity("Entities.Models.User", b =>

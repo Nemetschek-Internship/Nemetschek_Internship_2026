@@ -14,7 +14,9 @@ public class StudentImportDto
 
     public DateOnly BirthDate { get; set; }
 
-    public Guid ClassId { get; set; }
+    public string? PhoneNumber { get; set; }
+
+    public string ClassLabel { get; set; } = null!;
 
     public IReadOnlyCollection<string> ParentEmails { get; set; } = Array.Empty<string>();
 }

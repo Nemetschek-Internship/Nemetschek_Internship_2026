@@ -17,6 +17,7 @@ public class RegistrationService : IRegistrationService
     private readonly ITeacherRepository teacherRepository;
     private readonly IParentRepository parentRepository;
     private readonly IClassRepository classRepository;
+    private readonly ISubjectRepository subjectRepository;
     private readonly IRegistrationInvitationRepository invitationRepository;
     private readonly IInvitationTokenService invitationTokenService;
     private readonly IRegistrationEmailSender registrationEmailSender;
@@ -28,6 +29,7 @@ public class RegistrationService : IRegistrationService
         ITeacherRepository teacherRepository,
         IParentRepository parentRepository,
         IClassRepository classRepository,
+        ISubjectRepository subjectRepository,
         IRegistrationInvitationRepository invitationRepository,
         IInvitationTokenService invitationTokenService,
         IRegistrationEmailSender registrationEmailSender,
@@ -38,6 +40,7 @@ public class RegistrationService : IRegistrationService
         this.teacherRepository = teacherRepository;
         this.parentRepository = parentRepository;
         this.classRepository = classRepository;
+        this.subjectRepository = subjectRepository;
         this.invitationRepository = invitationRepository;
         this.invitationTokenService = invitationTokenService;
         this.registrationEmailSender = registrationEmailSender;
@@ -53,6 +56,7 @@ public class RegistrationService : IRegistrationService
         var result = new RegistrationImportResult { TotalRows = students.Count };
         var importedEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var parentStudentIdsByEmail = new Dictionary<string, HashSet<Guid>>(StringComparer.OrdinalIgnoreCase);
+        var schoolClasses = (await classRepository.GetAllAsync(cancellationToken)).ToList();
 
         foreach (var studentImport in students)
         {
@@ -62,20 +66,26 @@ public class RegistrationService : IRegistrationService
                 continue;
             }
 
-            var schoolClass = await classRepository.GetByIdAsync(studentImport.ClassId, cancellationToken);
-            if (schoolClass is null)
-            {
-                AddIssue(result, studentImport.RowNumber, email, "Class was not found.");
-                continue;
-            }
-
             if (await accountsRepository.EmailExistsAsync(email, cancellationToken))
             {
                 AddIssue(result, studentImport.RowNumber, email, "A user with this email already exists.");
                 continue;
             }
 
-            var user = CreateImportedUser(studentImport.FirstName, studentImport.MiddleName, studentImport.LastName, email, null, UserRole.Student);
+            var schoolClass = await GetOrCreateClassAsync(studentImport.ClassLabel, schoolClasses, cancellationToken);
+            if (schoolClass is null)
+            {
+                AddIssue(result, studentImport.RowNumber, email, "Class could not be created.");
+                continue;
+            }
+
+            var user = CreateImportedUser(
+                studentImport.FirstName,
+                studentImport.MiddleName,
+                studentImport.LastName,
+                email,
+                NormalizeOptional(studentImport.PhoneNumber),
+                UserRole.Student);
             await accountsRepository.CreateAsync(user, cancellationToken);
             result.CreatedUsers++;
 
@@ -84,7 +94,7 @@ public class RegistrationService : IRegistrationService
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
                 BirthDate = studentImport.BirthDate,
-                ClassId = studentImport.ClassId
+                ClassId = schoolClass.Id
             };
 
             await studentRepository.CreateAsync(student, cancellationToken);
@@ -127,6 +137,7 @@ public class RegistrationService : IRegistrationService
 
         var result = new RegistrationImportResult { TotalRows = teachers.Count };
         var importedEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var subjects = (await subjectRepository.GetAllAsync(cancellationToken)).ToList();
 
         foreach (var teacherImport in teachers)
         {
@@ -153,10 +164,21 @@ public class RegistrationService : IRegistrationService
             await accountsRepository.CreateAsync(user, cancellationToken);
             result.CreatedUsers++;
 
+            var taughtSubjects = await GetOrCreateSubjectsAsync(teacherImport.Subjects, subjects, cancellationToken);
+            var teacherId = Guid.NewGuid();
             var teacher = new Teacher
             {
-                Id = Guid.NewGuid(),
-                UserId = user.Id
+                Id = teacherId,
+                UserId = user.Id,
+                BirthDate = teacherImport.BirthDate,
+                TeacherSubjects = taughtSubjects
+                    .Select(subject => new TeacherSubject
+                    {
+                        Id = Guid.NewGuid(),
+                        TeacherId = teacherId,
+                        SubjectId = subject.Id
+                    })
+                    .ToList()
             };
 
             await teacherRepository.CreateAsync(teacher, cancellationToken);
@@ -170,6 +192,29 @@ public class RegistrationService : IRegistrationService
                 Array.Empty<Guid>(),
                 cancellationToken);
             result.CreatedInvitations++;
+        }
+
+        return result;
+    }
+
+    public async Task<RegistrationImportResult> ImportParentsAsync(
+        IReadOnlyCollection<ParentImportDto> parents,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(parents);
+
+        var result = new RegistrationImportResult { TotalRows = parents.Count };
+        var importedEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var parentImport in parents)
+        {
+            var email = NormalizeEmail(parentImport.Email);
+            if (!ValidateParentImport(parentImport, email, importedEmails, result))
+            {
+                continue;
+            }
+
+            await InviteOrLinkParentAsync(email, Array.Empty<Guid>(), result, cancellationToken);
         }
 
         return result;
@@ -524,9 +569,9 @@ public class RegistrationService : IRegistrationService
         isValid &= ValidateImportedName(studentImport.LastName, studentImport.RowNumber, email, "Last name", result);
         isValid &= ValidateImportedEmail(email, importedEmails, studentImport.RowNumber, result);
 
-        if (studentImport.ClassId == Guid.Empty)
+        if (!TryParseClassLabel(studentImport.ClassLabel, out _, out _))
         {
-            AddIssue(result, studentImport.RowNumber, email, "Class id cannot be empty.");
+            AddIssue(result, studentImport.RowNumber, email, "Class is required and must be in format like '1 Б'.");
             isValid = false;
         }
 
@@ -537,6 +582,70 @@ public class RegistrationService : IRegistrationService
         }
 
         return isValid;
+    }
+
+    private async Task<Class?> GetOrCreateClassAsync(
+        string? classLabel,
+        List<Class> schoolClasses,
+        CancellationToken cancellationToken)
+    {
+        if (!TryParseClassLabel(classLabel, out var gradeNumber, out var letter))
+        {
+            return null;
+        }
+
+        var matchingClass = schoolClasses.FirstOrDefault(currentClass =>
+            currentClass.GradeNumber == gradeNumber &&
+            char.ToUpperInvariant(currentClass.Letter) == letter);
+
+        if (matchingClass is not null)
+        {
+            return matchingClass;
+        }
+
+        var schoolClass = new Class
+        {
+            Id = Guid.NewGuid(),
+            GradeNumber = gradeNumber,
+            Letter = letter
+        };
+
+        await classRepository.CreateAsync(schoolClass, cancellationToken);
+        schoolClasses.Add(schoolClass);
+
+        return schoolClass;
+    }
+
+    private static bool TryParseClassLabel(string? classLabel, out int gradeNumber, out char letter)
+    {
+        gradeNumber = default;
+        letter = default;
+
+        if (string.IsNullOrWhiteSpace(classLabel))
+        {
+            return false;
+        }
+
+        var trimmedLabel = classLabel.Trim();
+        var digitCount = 0;
+        while (digitCount < trimmedLabel.Length && char.IsDigit(trimmedLabel[digitCount]))
+        {
+            digitCount++;
+        }
+
+        if (digitCount == 0 || !int.TryParse(trimmedLabel[..digitCount], out gradeNumber) || gradeNumber <= 0)
+        {
+            return false;
+        }
+
+        var letterPart = trimmedLabel[digitCount..].Trim(' ', '-', '/', '.');
+        if (letterPart.Length == 0)
+        {
+            return false;
+        }
+
+        letter = char.ToUpperInvariant(letterPart[0]);
+        return char.IsLetter(letter);
     }
 
     private static bool ValidateTeacherImport(
@@ -552,7 +661,68 @@ public class RegistrationService : IRegistrationService
         isValid &= ValidateImportedName(teacherImport.LastName, teacherImport.RowNumber, email, "Last name", result);
         isValid &= ValidateImportedEmail(email, importedEmails, teacherImport.RowNumber, result);
 
+        if (teacherImport.BirthDate == default)
+        {
+            AddIssue(result, teacherImport.RowNumber, email, "Birth date is required.");
+            isValid = false;
+        }
+
+        if (!GetNormalizedSubjectNames(teacherImport.Subjects).Any())
+        {
+            AddIssue(result, teacherImport.RowNumber, email, "At least one subject is required.");
+            isValid = false;
+        }
+
         return isValid;
+    }
+
+    private async Task<IReadOnlyList<Subject>> GetOrCreateSubjectsAsync(
+        IReadOnlyCollection<string> subjectNames,
+        List<Subject> subjects,
+        CancellationToken cancellationToken)
+    {
+        var result = new List<Subject>();
+
+        foreach (var subjectName in GetNormalizedSubjectNames(subjectNames))
+        {
+            var subject = subjects.FirstOrDefault(existingSubject =>
+                string.Equals(existingSubject.Name, subjectName, StringComparison.OrdinalIgnoreCase));
+
+            if (subject is null)
+            {
+                subject = new Subject
+                {
+                    Id = Guid.NewGuid(),
+                    Name = subjectName
+                };
+
+                await subjectRepository.CreateAsync(subject, cancellationToken);
+                subjects.Add(subject);
+            }
+
+            result.Add(subject);
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyList<string> GetNormalizedSubjectNames(IReadOnlyCollection<string>? subjectNames)
+    {
+        return (subjectNames ?? Array.Empty<string>())
+            .Select(NormalizeOptional)
+            .Where(subjectName => subjectName is not null)
+            .Select(subjectName => subjectName!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static bool ValidateParentImport(
+        ParentImportDto parentImport,
+        string email,
+        HashSet<string> importedEmails,
+        RegistrationImportResult result)
+    {
+        return ValidateImportedEmail(email, importedEmails, parentImport.RowNumber, result);
     }
 
     private static bool ValidateImportedName(
