@@ -1,63 +1,519 @@
-﻿<!-- Web/Views/Account/Login.cshtml -->
-@model Entities.ViewModels.Auth.LoginRequest
+﻿@model Entities.ViewModels.Auth.LoginRequest
 
 @{
     ViewData["Title"] = "Login";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="bi bi-box-arrow-in-right"></i> Login</h4>
-            </div>
-            <div class="card-body">
-                @if (!string.IsNullOrEmpty(ViewData["ReturnUrl"]?.ToString()))
-                {
-                    <div class="alert alert-info">
-                        Please login to continue.
-                    </div>
-                }
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-                <form asp-action="Login" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    .nb-login-page {
+        font-family: 'Inter', sans-serif;
+        min-height: calc(100vh - 130px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 24px 0;
+    }
 
-                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+    .nb-login-card {
+        width: 100%;
+        max-width: 430px;
+        border-radius: 20px;
+        border: 1px solid #ebecef;
+        background: #ffffff;
+        box-shadow: 0 12px 42px rgba(20, 25, 35, 0.1);
+        padding: 24px;
+    }
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-bold"></label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input asp-for="Email" class="form-control" placeholder="Enter your email" />
-                        </div>
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
+    .nb-brand {
+        text-align: center;
+        margin-bottom: 14px;
+    }
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label fw-bold"></label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input asp-for="Password" class="form-control" type="password" placeholder="Enter your password" />
-                        </div>
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
+    .nb-logo-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, #ff8a00, #ffc14a);
+        margin: 0 auto 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1;
+        text-transform: lowercase;
+    }
 
-                    <div class="mb-3 form-check">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label">Remember me</label>
-                    </div>
+    .nb-brand-name {
+        font-size: 33px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
 
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-box-arrow-in-right"></i> Login
-                    </button>
-                </form>
+    .nb-brand-name .accent {
+        color: #f37021;
+    }
 
-                <hr />
-                <div class="text-center">
-                    <p class="text-muted small">Contact administrator for account creation.</p>
-                </div>
-            </div>
+    .nb-login-card h1 {
+        text-align: center;
+        margin: 8px 0 6px;
+        color: #25262b;
+        font-size: 35px;
+        letter-spacing: -0.02em;
+        font-weight: 800;
+    }
+
+    .nb-subtitle {
+        text-align: center;
+        margin: 0 0 16px;
+        color: #737a85;
+        font-size: 15px;
+    }
+
+    .nb-form-label {
+        display: block;
+        color: #292d35;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 7px;
+    }
+
+    .nb-input-wrap {
+        position: relative;
+        margin-bottom: 14px;
+    }
+
+    .nb-input-icon,
+    .nb-input-end {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #8a9099;
+        font-size: 16px;
+        line-height: 1;
+        pointer-events: none;
+    }
+
+    .nb-input-icon {
+        left: 14px;
+    }
+
+    .nb-input-end {
+        right: 14px;
+    }
+
+    .nb-login-input {
+        width: 100%;
+        height: 47px;
+        border: 1px solid #d8dce3;
+        border-radius: 11px;
+        background: #fff;
+        color: #31343b;
+        font-size: 15px;
+        padding: 0 42px 0 41px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .nb-login-input:focus {
+        border-color: #f37021;
+        box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.14);
+    }
+
+    .nb-login-input::placeholder {
+        color: #a5aab2;
+    }
+
+    .nb-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 2px 0 14px;
+        gap: 12px;
+    }
+
+    .nb-remember {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #2f333a;
+        font-size: 14px;
+    }
+
+    .nb-remember input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #f37021;
+        margin: 0;
+    }
+
+    .nb-forgot {
+        color: #f37021;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .nb-forgot:hover {
+        color: #d95f16;
+        text-decoration: underline;
+    }
+
+    .nb-login-btn {
+        width: 100%;
+        height: 44px;
+        border: 0;
+        border-radius: 11px;
+        background: #f37021;
+        color: #fff;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        transition: filter 0.2s ease, transform 0.05s ease;
+    }
+
+    .nb-login-btn:hover {
+        filter: brightness(0.95);
+    }
+
+    .nb-login-btn:active {
+        transform: translateY(1px);
+    }
+
+    .nb-help {
+        text-align: center;
+        margin-top: 14px;
+        color: #9398a1;
+        font-size: 13px;
+    }
+
+    .nb-help b {
+        color: #f37021;
+        font-weight: 700;
+    }
+
+    .nb-login-desktop-note {
+        margin-top: 10px;
+        font-size: 13px;
+        color: #6f7681;
+        text-align: center;
+    }
+
+    .nb-validation {
+        color: #b42318;
+        font-size: 13px;
+        margin-top: -7px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .nb-summary {
+        margin-bottom: 12px;
+        font-size: 13px;
+    }
+
+    .nb-stage {
+        display: none;
+        width: 100%;
+    }
+
+    .nb-mobile-only {
+        display: none;
+    }
+
+    @@media (max-width: 767.98px) {
+        header,
+        footer {
+            display: none !important;
+        }
+
+        .container {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+
+        main.pb-3 {
+            padding-bottom: 0 !important;
+        }
+
+        body {
+            margin-bottom: 0;
+            background: linear-gradient(180deg, #efeae4 0%, #f6e9db 100%);
+        }
+
+        .nb-login-page {
+            min-height: 100vh;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 36px 20px 26px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nb-login-page::before {
+            content: "";
+            position: absolute;
+            left: -48px;
+            bottom: 34px;
+            width: 122px;
+            height: 122px;
+            border-radius: 26px;
+            background: #f37021;
+            transform: rotate(45deg);
+        }
+
+        .nb-login-page::after {
+            content: "";
+            position: absolute;
+            top: 108px;
+            left: 24px;
+            width: 45px;
+            height: 26px;
+            background-image: radial-gradient(#efbe98 1.4px, transparent 1.4px);
+            background-size: 11px 11px;
+            opacity: 0.9;
+        }
+
+        .nb-mobile-only {
+            display: block;
+            position: absolute;
+            right: 24px;
+            bottom: 82px;
+            width: 45px;
+            height: 26px;
+            background-image: radial-gradient(#efbe98 1.4px, transparent 1.4px);
+            background-size: 11px 11px;
+            opacity: 0.9;
+        }
+
+        .nb-stage {
+            display: block;
+            text-align: center;
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: 430px;
+            z-index: 1;
+        }
+
+        .nb-stage-label {
+            color: #f37021;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .nb-stage-progress {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nb-stage-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #d7d7d7;
+        }
+
+        .nb-stage-dot.active {
+            background: #f37021;
+        }
+
+        .nb-stage-line {
+            width: 28px;
+            height: 2px;
+            border-radius: 2px;
+            background: #dbdbdb;
+        }
+
+        .nb-login-card {
+            max-width: 100%;
+            border: 0;
+            border-radius: 16px;
+            padding: 20px 18px 16px;
+            box-shadow: 0 12px 26px rgba(37, 36, 36, 0.09);
+            z-index: 1;
+        }
+
+        .nb-logo-mark {
+            width: 38px;
+            height: 38px;
+            font-size: 28px;
+            border-radius: 11px;
+            margin-bottom: 7px;
+        }
+
+        .nb-brand-name {
+            font-size: 36px;
+        }
+
+        .nb-login-card h1 {
+            margin-top: 5px;
+            font-size: 41px;
+        }
+
+        .nb-subtitle {
+            font-size: 14px;
+            margin-bottom: 14px;
+        }
+
+        .nb-form-label {
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .nb-login-input {
+            height: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+            padding-left: 38px;
+        }
+
+        .nb-row {
+            margin: 0 0 10px;
+        }
+
+        .nb-remember,
+        .nb-forgot {
+            font-size: 13px;
+        }
+
+        .nb-login-btn {
+            height: 40px;
+            border-radius: 10px;
+            font-size: 26px;
+            letter-spacing: 0.005em;
+        }
+
+        .nb-help {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .nb-login-desktop-note {
+            display: none;
+        }
+    }
+
+    @@media (max-width: 390px) {
+        .nb-login-page {
+            padding: 26px 14px 20px;
+        }
+
+        .nb-stage-label {
+            font-size: 12px;
+            letter-spacing: 0.1em;
+        }
+
+        .nb-stage-line {
+            width: 24px;
+        }
+
+        .nb-login-card {
+            padding: 16px 14px 14px;
+            border-radius: 14px;
+        }
+
+        .nb-brand-name {
+            font-size: 32px;
+        }
+
+        .nb-login-card h1 {
+            font-size: 34px;
+        }
+
+        .nb-row {
+            flex-wrap: wrap;
+            row-gap: 6px;
+        }
+
+        .nb-login-btn {
+            font-size: 22px;
+        }
+    }
+
+    @@media (min-width: 768px) and (max-width: 1024px) {
+        .nb-login-page {
+            min-height: calc(100vh - 130px);
+            padding: 24px;
+        }
+
+        .nb-login-card {
+            max-width: 480px;
+        }
+    }
+</style>
+
+<div class="nb-login-page">
+    <div class="nb-mobile-only" aria-hidden="true"></div>
+
+    <div class="nb-stage" aria-hidden="true">
+        <div class="nb-stage-label">STEP 1 OF 3</div>
+        <div class="nb-stage-progress">
+            <span class="nb-stage-dot active"></span>
+            <span class="nb-stage-line"></span>
+            <span class="nb-stage-dot"></span>
+            <span class="nb-stage-line"></span>
+            <span class="nb-stage-dot"></span>
         </div>
+    </div>
+
+    <div class="nb-login-card">
+        <div class="nb-brand">
+            <div class="nb-logo-mark">n</div>
+            <div class="nb-brand-name"><span class="accent">Neme</span>Book</div>
+        </div>
+
+        <h1>Welcome back!</h1>
+        <p class="nb-subtitle">Sign in to continue to your account</p>
+
+        @if (!string.IsNullOrEmpty(ViewData["ReturnUrl"]?.ToString()))
+        {
+            <p class="nb-subtitle">Please login to continue.</p>
+        }
+
+        <form asp-action="Login" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="text-danger nb-summary"></div>
+
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+            <label asp-for="Email" class="nb-form-label">Email or username</label>
+            <div class="nb-input-wrap">
+                <i class="bi bi-envelope nb-input-icon" aria-hidden="true"></i>
+                <input asp-for="Email" class="nb-login-input" placeholder="you@school.bg" />
+            </div>
+            <span asp-validation-for="Email" class="nb-validation"></span>
+
+            <label asp-for="Password" class="nb-form-label">Password</label>
+            <div class="nb-input-wrap">
+                <i class="bi bi-lock nb-input-icon" aria-hidden="true"></i>
+                <input asp-for="Password" class="nb-login-input" type="password" placeholder="**********" />
+                <i class="bi bi-eye nb-input-end" aria-hidden="true"></i>
+            </div>
+            <span asp-validation-for="Password" class="nb-validation"></span>
+
+            <div class="nb-row">
+                <label asp-for="RememberMe" class="nb-remember">
+                    <input asp-for="RememberMe" />
+                    <span>Remember me</span>
+                </label>
+                <a class="nb-forgot" href="#">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="nb-login-btn">Log in</button>
+        </form>
+
+        <p class="nb-help">New here? Ask your school for an invitation.</p>
+        <p class="nb-help">Need help? <b>Contact your school administrator.</b></p>
+        <p class="nb-login-desktop-note">Contact administrator for account creation.</p>
     </div>
 </div>
 
