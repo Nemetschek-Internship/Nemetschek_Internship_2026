@@ -1,10 +1,10 @@
-﻿// Services/Services/AuthService.cs
-using Entities.Enums;
+﻿using Entities.Enums;
 using Entities.Models;
 using Entities.ViewModels.Auth;
 using Microsoft.Extensions.Logging;
 using Services.Interfaces;
 using Services.Repositories;
+using Services.Interfaces.Security;
 
 namespace Services.Services.Auth;
 
@@ -12,13 +12,16 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly ILogger<AuthService> _logger;
+    private readonly IPasswordHasher _passwordHasher;
 
     public AuthService(
         IUserRepository userRepository,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
         _logger = logger;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<User?> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -38,7 +41,7 @@ public class AuthService : IAuthService
             return null;
         }
 
-        if (!VerifyPassword(request.Password, user.Password))
+        if (!_passwordHasher.VerifyPassword(request.Password, user.Password))
         {
             _logger.LogWarning("Login failed - invalid password for: {Email}", request.Email);
             return null;
@@ -67,26 +70,15 @@ public class AuthService : IAuthService
             return false;
         }
 
-        if (!VerifyPassword(currentPassword, user.Password))
+        if (!_passwordHasher.VerifyPassword(currentPassword, user.Password))
         {
             return false;
         }
 
-        user.Password = HashPassword(newPassword);
+        user.Password = _passwordHasher.HashPassword(newPassword);
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         _logger.LogInformation("Password changed for user: {UserId}", userId);
         return true;
-    }
-
-    private static string HashPassword(string password)
-    {
-        return password;
-    }
-
-    private static bool VerifyPassword(string password, string hashedPassword)
-    {
-        
-        return password == hashedPassword;
     }
 }

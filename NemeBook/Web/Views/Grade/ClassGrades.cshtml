@@ -1,0 +1,146 @@
+﻿@model Entities.ViewModels.Grades.ClassGradesViewModel
+
+@{
+    ViewData["Title"] = $"Оценки - {Model.ClassName} - {Model.SubjectName}";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-people-fill"></i>
+                        @Model.ClassName - @Model.SubjectName
+                    </h4>
+                    <small>Учител: @Model.TeacherName</small>
+                </div>
+                <div class="card-body">
+                    <!-- Статистика -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h6>Среден успех</h6>
+                                    <h3>@Model.Summary.ClassAverage.ToString("F2")</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h6>Най-висока</h6>
+                                    <h3>@Model.Summary.MaxGrade?.ToString("F2")</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body text-center">
+                                    <h6>Най-ниска</h6>
+                                    <h3>@Model.Summary.MinGrade?.ToString("F2")</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-secondary text-white">
+                                <div class="card-body text-center">
+                                    <h6>Ученици</h6>
+                                    <h3>@Model.Summary.TotalStudents</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Разпределение на оценките -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Разпределение на оценките</h6>
+                                    <div class="d-flex gap-3">
+                                        @foreach (var dist in Model.Summary.GradeDistribution.OrderBy(d => d.Key))
+                                        {
+                                            <div class="text-center">
+                                                <span class="badge @(dist.Key >= 5 ? "bg-success" : dist.Key >= 4 ? "bg-warning" : "bg-danger")">
+                                                    @dist.Key
+                                                </span>
+                                                <div><strong>@dist.Value</strong></div>
+                                                <small>оценки</small>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Таблица с оценки -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="gradesTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Ученик</th>
+                                    <th>Оценки</th>
+                                    <th>Брой</th>
+                                    <th>Среден успех</th>
+                                    <th>Последна</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int index = 1;
+                                    var sortedStudents = Model.StudentGrades
+                                        .OrderByDescending(s => s.Average)
+                                        .ThenBy(s => s.StudentName)
+                                        .ToList();
+                                }
+                                @foreach (var student in sortedStudents)
+                                {
+                                    <tr>
+                                        <td>@index</td>
+                                        <td>@student.StudentName</td>
+                                        <td>
+                                            @foreach (var grade in student.Grades.OrderByDescending(g => g.Date).Take(10))
+                                            {
+                                                <span class="badge @(grade.Value >= 5 ? "bg-success" : grade.Value >= 4 ? "bg-warning" : "bg-danger") me-1">
+                                                    @grade.Value.ToString("F2")
+                                                </span>
+                                            }
+                                            @if (student.Grades.Count > 10)
+                                            {
+                                                <span class="badge bg-secondary">+@(student.Grades.Count - 10)</span>
+                                            }
+                                        </td>
+                                        <td>@student.TotalGrades</td>
+                                        <td>
+                                            <strong class="@(student.Average >= 5 ? "text-success" : student.Average >= 4 ? "text-warning" : "text-danger")">
+                                                @student.Average.ToString("F2")
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            @if (student.LatestGrade is not null)
+                                            {
+                                                <span class="badge @(student.LatestGrade.Value >= 5 ? "bg-success" : student.LatestGrade.Value >= 4 ? "bg-warning" : "bg-danger")">
+                                                    @student.LatestGrade.Value.ToString("F2")
+                                                </span>
+                                                <br />
+                                                <small>@student.LatestGrade.Date.ToString("dd.MM.yyyy")</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Няма</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

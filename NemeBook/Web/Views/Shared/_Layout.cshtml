@@ -23,13 +23,74 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
+
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <!-- GRADE МЕНЮ -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="gradesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-journal-bookmark-fill"></i> Оценки
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="gradesDropdown">
+                                    <!-- Моите оценки - достъпно за всички -->
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Grade" asp-action="MyGrades">
+                                            <i class="bi bi-person"></i> Моите оценки
+                                        </a>
+                                    </li>
+
+                                    <!-- Разделител -->
+                                    <li><hr class="dropdown-divider" /></li>
+
+                                    <!-- Учителски функционалности -->
+                                    @if (User.IsInRole("Teacher") || User.IsInRole("Principal"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Grade" asp-action="ClassGrades"
+                                               asp-route-classId="@ViewBag.ClassId" asp-route-subjectId="@ViewBag.SubjectId">
+                                                <i class="bi bi-people"></i> Оценки на клас
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Grade" asp-action="Ranking"
+                                               asp-route-classId="@ViewBag.ClassId" asp-route-subjectId="@ViewBag.SubjectId">
+                                                <i class="bi bi-trophy"></i> Класация
+                                            </a>
+                                        </li>
+                                    }
+
+                                    <!-- Родителски функционалности -->
+                                    @if (User.IsInRole("Parent"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Grade" asp-action="MyChildrenGrades">
+                                                <i class="bi bi-people"></i> Оценки на децата
+                                            </a>
+                                        </li>
+                                    }
+
+                                    <!-- Директорски функционалности -->
+                                    @if (User.IsInRole("Principal"))
+                                    {
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Grade" asp-action="AllClasses">
+                                                <i class="bi bi-building"></i> Всички класове
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </li>
+
+                            <!-- CHAT МЕНЮ -->
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Chat" asp-action="Index">Chats</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Chat" asp-action="Index">
+                                    <i class="bi bi-chat-dots-fill"></i> Чатове
+                                </a>
                             </li>
                         }
                     </ul>
+
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
@@ -38,13 +99,23 @@
                                     <i class="bi bi-person-circle"></i> @User.FindFirst("FullName")?.Value
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                    <li><a class="dropdown-item" asp-action="Profile" asp-controller="Account"><i class="bi bi-person"></i> Profile</a></li>
-                                    <li><a class="dropdown-item" asp-action="ChangePassword" asp-controller="Account"><i class="bi bi-key"></i> Change Password</a></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-action="Profile" asp-controller="Account">
+                                            <i class="bi bi-person"></i> Профил
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-action="ChangePassword" asp-controller="Account">
+                                            <i class="bi bi-key"></i> Смяна на парола
+                                        </a>
+                                    </li>
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>
                                         <form asp-action="Logout" asp-controller="Account" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-box-arrow-right"></i> Изход
+                                            </button>
                                         </form>
                                     </li>
                                 </ul>
@@ -52,10 +123,9 @@
                         }
                         else
                         {
-                            <!-- ❌ ПРЕМАХНАТ: Register линк -->
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-action="Login" asp-controller="Account">
-                                    <i class="bi bi-box-arrow-in-right"></i> Login
+                                    <i class="bi bi-box-arrow-in-right"></i> Вход
                                 </a>
                             </li>
                         }
@@ -64,6 +134,7 @@
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()

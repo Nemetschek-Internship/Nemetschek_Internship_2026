@@ -5,19 +5,31 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
 using Services.Interfaces.Chats;
+using Services.Interfaces.Classes;
+using Services.Interfaces.ClassSubjects;
+using Services.Interfaces.Grades;
+using Services.Interfaces.Parents;
 using Services.Interfaces.Registration;
 using Services.Interfaces.Security;
 using Services.Interfaces.Students;
+using Services.Interfaces.Subjects;
+using Services.Interfaces.Teachers;
 using Services.Options;
 using Services.Repositories;
 using Services.Services.Accounts;
 using Services.Services.Auth;
 using Services.Services.Chats;
+using Services.Services.Classes;
+using Services.Services.ClassSubjects;
 using Services.Services.Email;
+using Services.Services.Grades;
 using Services.Services.Notifications;
+using Services.Services.Parents;
 using Services.Services.Registration;
 using Services.Services.Security;
 using Services.Services.Students;
+using Services.Services.Subjects;
+using Services.Services.Teachers;
 
 var builder = WebApplication.CreateBuilder(args);
 Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..",".env"));
@@ -46,6 +58,19 @@ builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Grade Repository
+builder.Services.AddScoped<IGradeRepository, GradeRepository>();
+
+// Grade Service
+builder.Services.AddScoped<IGradeService, GradeService>();
+
+//User Service
+builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddScoped<IParentService, ParentService>();
+builder.Services.AddScoped<IClassSubjectService, ClassSubjectService>();
 
 // Register services.
 builder.Services.AddScoped<IAccountService, AccountService>();
