@@ -1,0 +1,52 @@
+name: CI Docker Security
+
+on:
+  pull_request:
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-docker-security.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-docker-security.yml"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-vuln-scan:
+    name: Docker Image Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: NemeBook
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Web Image
+        run: docker build -f Web/Dockerfile -t nemebook-web:ci .
+
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: nemebook-web:ci
+          format: table
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
+
+      - name: Docker Scout Scan
+        continue-on-error: true
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: nemebook-web:ci
+          only-severities: critical,high
+          exit-code: true

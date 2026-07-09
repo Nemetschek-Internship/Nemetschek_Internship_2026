@@ -1,0 +1,65 @@
+name: CI Sonar Scan
+
+on:
+  pull_request:
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-sonar.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-sonar.yml"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonar:
+    name: SonarQube Or SonarCloud
+    runs-on: ubuntu-latest
+    if: ${{ vars.SONAR_PROJECT_KEY != '' && secrets.SONAR_TOKEN != '' }}
+
+    defaults:
+      run:
+        working-directory: NemeBook
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore NemeBook.sln
+
+      - name: Build
+        run: dotnet build NemeBook.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Tests/Tests.csproj --configuration Release --no-build
+
+      - name: Sonar Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          projectBaseDir: NemeBook
+          args: >
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+
+      - name: Sonar Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 10
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}

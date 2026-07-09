@@ -1,16 +1,16 @@
-name: CI Checks
+name: CI Build And Smoke
 
 on:
   pull_request:
     paths:
       - "NemeBook/**"
-      - ".github/workflows/ci-checks.yml"
+      - ".github/workflows/ci-build-and-smoke.yml"
   push:
     branches:
       - "**"
     paths:
       - "NemeBook/**"
-      - ".github/workflows/ci-checks.yml"
+      - ".github/workflows/ci-build-and-smoke.yml"
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}

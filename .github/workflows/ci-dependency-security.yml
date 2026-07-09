@@ -1,0 +1,92 @@
+name: CI Dependency Security
+
+on:
+  pull_request:
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-dependency-security.yml"
+      - ".github/dependabot.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-dependency-security.yml"
+      - ".github/dependabot.yml"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nuget-vulnerability-scan:
+    name: Dotnet Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: NemeBook
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore NemeBook.sln
+
+      - name: Scan NuGet Dependencies
+        run: dotnet list NemeBook.sln package --vulnerable --include-transitive
+
+      - name: Export Vulnerability Report
+        run: dotnet list NemeBook.sln package --vulnerable --include-transitive --format json > vulnerable-packages.json
+
+      - name: Fail If Vulnerabilities Found
+        run: |
+          if jq -e '[.. | objects | .severity? // empty] | length > 0' vulnerable-packages.json > /dev/null; then
+            echo "Vulnerable dependencies detected"
+            jq '[.. | objects | select(.severity? != null)]' vulnerable-packages.json
+            exit 1
+          fi
+          echo "No vulnerable dependencies found"
+
+      - name: Upload Vulnerability Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerable-packages-report
+          path: NemeBook/vulnerable-packages.json
+          if-no-files-found: warn
+
+  snyk-scan:
+    name: Snyk Open Source Scan
+    runs-on: ubuntu-latest
+    if: ${{ secrets.SNYK_TOKEN != '' }}
+
+    defaults:
+      run:
+        working-directory: NemeBook
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore NemeBook.sln
+
+      - name: Run Snyk
+        uses: snyk/actions/dotnet@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --all-projects --severity-threshold=high

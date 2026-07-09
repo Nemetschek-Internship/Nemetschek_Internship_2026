@@ -1,0 +1,43 @@
+name: CI Static Analysis
+
+on:
+  pull_request:
+    paths:
+      - "NemeBook/**"
+      - "Directory.Build.props"
+      - ".github/workflows/ci-static-analysis.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "NemeBook/**"
+      - "Directory.Build.props"
+      - ".github/workflows/ci-static-analysis.yml"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyzers:
+    name: Roslyn And StyleCop
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: NemeBook
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore NemeBook.sln
+
+      - name: Build With Analyzer Warnings As Errors
+        run: dotnet build NemeBook.sln --configuration Release --no-restore -p:TreatWarningsAsErrors=true

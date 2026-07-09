@@ -1,0 +1,62 @@
+name: CI Test Coverage
+
+on:
+  pull_request:
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-test-coverage.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-test-coverage.yml"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: Dotnet Coverage
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: NemeBook
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore NemeBook.sln
+
+      - name: Run Tests With Coverage
+        run: dotnet test Tests/Tests.csproj --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate Coverage Report
+        run: |
+          reportgenerator \
+            -reports:"TestResults/**/coverage.cobertura.xml" \
+            -targetdir:"TestResults/CoverageReport" \
+            -reporttypes:"HtmlInline;Cobertura;TextSummary"
+
+      - name: Show Coverage Summary
+        run: cat TestResults/CoverageReport/Summary.txt
+
+      - name: Upload Coverage Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: NemeBook/TestResults/CoverageReport
+          if-no-files-found: warn

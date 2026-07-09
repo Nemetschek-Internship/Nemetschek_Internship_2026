@@ -1,0 +1,41 @@
+name: CI Format Check
+
+on:
+  pull_request:
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-format.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "NemeBook/**"
+      - ".github/workflows/ci-format.yml"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Dotnet Format Verify
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: NemeBook
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore NemeBook.sln
+
+      - name: Verify Formatting
+        run: dotnet format NemeBook.sln --verify-no-changes --no-restore --verbosity minimal
