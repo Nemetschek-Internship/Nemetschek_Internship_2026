@@ -1,0 +1,122 @@
+@model Entities.ViewModels.Auth.ParentSignUpViewModel
+
+@{
+    ViewData["Title"] = "Parent Sign Up";
+}
+
+<style>
+    .nb-auth-page {
+        min-height: calc(100vh - 130px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 0;
+    }
+
+    .nb-auth-card {
+        width: 100%;
+        max-width: 520px;
+        border-radius: 20px;
+        border: 1px solid #ebecef;
+        background: #ffffff;
+        box-shadow: 0 12px 42px rgba(20, 25, 35, 0.1);
+        padding: 24px;
+    }
+
+    .nb-brand { text-align: center; margin-bottom: 14px; }
+
+    .nb-logo-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, #f37021, #ffc14a);
+        margin: 0 auto 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .nb-brand-name { font-size: 33px; font-weight: 800; line-height: 1; }
+    .nb-brand-name .accent { color: #f37021; }
+    .nb-auth-card h1 { text-align: center; margin: 8px 0 6px; color: #25262b; font-size: 34px; font-weight: 800; }
+    .nb-subtitle { text-align: center; margin: 0 0 16px; color: #737a85; font-size: 15px; }
+    .nb-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .nb-form-field.full { grid-column: 1 / -1; }
+    .nb-form-label { display: block; color: #292d35; font-size: 14px; font-weight: 600; margin-bottom: 7px; }
+    .nb-auth-input { width: 100%; height: 47px; border: 1px solid #d8dce3; border-radius: 11px; padding: 0 14px; font-size: 15px; }
+    .nb-auth-input:focus { border-color: #f37021; box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.14); outline: none; }
+    .nb-auth-btn { width: 100%; height: 44px; border: 0; border-radius: 11px; background: #f37021; color: #fff; font-size: 20px; font-weight: 700; margin-top: 14px; }
+    .nb-auth-btn:hover { background: #d95f16; }
+    .nb-validation { color: #b42318; font-size: 13px; margin-top: 4px; display: block; }
+    .nb-summary { margin-bottom: 12px; font-size: 13px; }
+
+    @@media (max-width: 575.98px) {
+        .nb-form-grid { grid-template-columns: 1fr; }
+        .nb-form-field.full { grid-column: auto; }
+    }
+</style>
+
+<div class="nb-auth-page">
+    <div class="nb-auth-card">
+        <div class="nb-brand">
+            <div class="nb-logo-mark">n</div>
+            <div class="nb-brand-name"><span class="accent">Neme</span>Book</div>
+        </div>
+
+        <h1>Parent sign up</h1>
+        <p class="nb-subtitle">Complete your profile and create a password.</p>
+
+        <form asp-action="ParentSignUp" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="text-danger nb-summary"></div>
+            <input asp-for="Token" type="hidden" />
+
+            <div class="nb-form-grid">
+                <div class="nb-form-field">
+                    <label asp-for="FirstName" class="nb-form-label">First name</label>
+                    <input asp-for="FirstName" class="nb-auth-input" />
+                    <span asp-validation-for="FirstName" class="nb-validation"></span>
+                </div>
+
+                <div class="nb-form-field">
+                    <label asp-for="MiddleName" class="nb-form-label">Middle name</label>
+                    <input asp-for="MiddleName" class="nb-auth-input" />
+                    <span asp-validation-for="MiddleName" class="nb-validation"></span>
+                </div>
+
+                <div class="nb-form-field">
+                    <label asp-for="LastName" class="nb-form-label">Last name</label>
+                    <input asp-for="LastName" class="nb-auth-input" />
+                    <span asp-validation-for="LastName" class="nb-validation"></span>
+                </div>
+
+                <div class="nb-form-field">
+                    <label asp-for="PhoneNumber" class="nb-form-label">Phone number</label>
+                    <input asp-for="PhoneNumber" class="nb-auth-input" />
+                    <span asp-validation-for="PhoneNumber" class="nb-validation"></span>
+                </div>
+
+                <div class="nb-form-field">
+                    <label asp-for="Password" class="nb-form-label">Password</label>
+                    <input asp-for="Password" class="nb-auth-input" />
+                    <span asp-validation-for="Password" class="nb-validation"></span>
+                </div>
+
+                <div class="nb-form-field">
+                    <label asp-for="ConfirmPassword" class="nb-form-label">Confirm password</label>
+                    <input asp-for="ConfirmPassword" class="nb-auth-input" />
+                    <span asp-validation-for="ConfirmPassword" class="nb-validation"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="nb-auth-btn">Complete registration</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

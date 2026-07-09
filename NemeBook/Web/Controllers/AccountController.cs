@@ -5,18 +5,25 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Services.Dtos.Registration;
 using Services.Interfaces;
+using Services.Interfaces.Registration;
 
 namespace Web.Controllers;
 
 public class AccountController : Controller
 {
     private readonly IAuthService _authService;
+    private readonly IRegistrationService _registrationService;
     private readonly ILogger<AccountController> _logger;
 
-    public AccountController(IAuthService authService, ILogger<AccountController> logger)
+    public AccountController(
+        IAuthService authService,
+        IRegistrationService registrationService,
+        ILogger<AccountController> logger)
     {
         _authService = authService;
+        _registrationService = registrationService;
         _logger = logger;
     }
 
@@ -77,6 +84,92 @@ public class AccountController : Controller
     public IActionResult AccessDenied()
     {
         return View();
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult SetPassword(string? token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        return View(new SetPasswordViewModel { Token = token });
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetPassword(SetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        try
+        {
+            await _registrationService.CompleteSetPasswordAsync(new CompleteSetPasswordRequest
+            {
+                Token = model.Token,
+                Password = model.Password
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Set password invitation failed.");
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Password set successfully. You can now log in.";
+        return RedirectToAction(nameof(Login));
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult ParentSignUp(string? token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        return View(new ParentSignUpViewModel { Token = token });
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ParentSignUp(ParentSignUpViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        try
+        {
+            await _registrationService.CompleteParentSignUpAsync(new CompleteParentSignUpRequest
+            {
+                Token = model.Token,
+                FirstName = model.FirstName,
+                MiddleName = model.MiddleName,
+                LastName = model.LastName,
+                PhoneNumber = model.PhoneNumber,
+                Password = model.Password
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Parent sign-up invitation failed.");
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Registration completed successfully. You can now log in.";
+        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]
