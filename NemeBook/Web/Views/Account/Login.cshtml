@@ -7,6 +7,11 @@
 <style>
     @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+    :root {
+        --nb-orange: #f37021;
+        --nb-orange-dark: #d95f16;
+    }
+
     .nb-login-page {
         font-family: 'Inter', sans-serif;
         min-height: calc(100vh - 130px);
@@ -28,16 +33,13 @@
         padding: 24px;
     }
 
-    .nb-brand {
-        text-align: center;
-        margin-bottom: 14px;
-    }
+    .nb-brand { text-align: center; margin-bottom: 14px; }
 
     .nb-logo-mark {
         width: 42px;
         height: 42px;
         border-radius: 12px;
-        background: linear-gradient(145deg, #ff8a00, #ffc14a);
+        background: linear-gradient(145deg, var(--nb-orange), #ffc14a);
         margin: 0 auto 8px;
         display: flex;
         align-items: center;
@@ -49,16 +51,8 @@
         text-transform: lowercase;
     }
 
-    .nb-brand-name {
-        font-size: 33px;
-        font-weight: 800;
-        line-height: 1;
-        letter-spacing: -0.02em;
-    }
-
-    .nb-brand-name .accent {
-        color: #f37021;
-    }
+    .nb-brand-name { font-size: 33px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+    .nb-brand-name .accent { color: var(--nb-orange); }
 
     .nb-login-card h1 {
         text-align: center;
@@ -69,12 +63,7 @@
         font-weight: 800;
     }
 
-    .nb-subtitle {
-        text-align: center;
-        margin: 0 0 16px;
-        color: #737a85;
-        font-size: 15px;
-    }
+    .nb-subtitle { text-align: center; margin: 0 0 16px; color: #737a85; font-size: 15px; }
 
     .nb-form-label {
         display: block;
@@ -84,10 +73,7 @@
         margin-bottom: 7px;
     }
 
-    .nb-input-wrap {
-        position: relative;
-        margin-bottom: 14px;
-    }
+    .nb-input-wrap { position: relative; margin-bottom: 14px; }
 
     .nb-input-icon,
     .nb-input-end {
@@ -100,12 +86,12 @@
         pointer-events: none;
     }
 
-    .nb-input-icon {
-        left: 14px;
-    }
+    .nb-input-icon { left: 14px; }
+    .nb-input-end { right: 14px; }
 
-    .nb-input-end {
-        right: 14px;
+    .nb-input-end.nb-toggle {
+        pointer-events: auto;
+        cursor: pointer;
     }
 
     .nb-login-input {
@@ -122,13 +108,11 @@
     }
 
     .nb-login-input:focus {
-        border-color: #f37021;
+        border-color: var(--nb-orange);
         box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.14);
     }
 
-    .nb-login-input::placeholder {
-        color: #a5aab2;
-    }
+    .nb-login-input::placeholder { color: #a5aab2; }
 
     .nb-row {
         display: flex;
@@ -138,39 +122,18 @@
         gap: 12px;
     }
 
-    .nb-remember {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #2f333a;
-        font-size: 14px;
-    }
+    .nb-remember { display: inline-flex; align-items: center; gap: 8px; color: #2f333a; font-size: 14px; }
+    .nb-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--nb-orange); margin: 0; }
 
-    .nb-remember input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        accent-color: #f37021;
-        margin: 0;
-    }
-
-    .nb-forgot {
-        color: #f37021;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 700;
-    }
-
-    .nb-forgot:hover {
-        color: #d95f16;
-        text-decoration: underline;
-    }
+    .nb-forgot { color: var(--nb-orange); text-decoration: none; font-size: 14px; font-weight: 700; }
+    .nb-forgot:hover { color: var(--nb-orange-dark); text-decoration: underline; }
 
     .nb-login-btn {
         width: 100%;
         height: 44px;
         border: 0;
         border-radius: 11px;
-        background: #f37021;
+        background: var(--nb-orange);
         color: #fff;
         font-size: 22px;
         font-weight: 700;
@@ -178,74 +141,27 @@
         transition: filter 0.2s ease, transform 0.05s ease;
     }
 
-    .nb-login-btn:hover {
-        filter: brightness(0.95);
-    }
+    .nb-login-btn:hover { filter: brightness(0.95); }
+    .nb-login-btn:active { transform: translateY(1px); }
 
-    .nb-login-btn:active {
-        transform: translateY(1px);
-    }
+    .nb-help { text-align: center; margin-top: 14px; color: #9398a1; font-size: 13px; }
+    .nb-help b { color: var(--nb-orange); font-weight: 700; }
 
-    .nb-help {
-        text-align: center;
-        margin-top: 14px;
-        color: #9398a1;
-        font-size: 13px;
-    }
+    .nb-login-desktop-note { margin-top: 10px; font-size: 13px; color: #6f7681; text-align: center; }
 
-    .nb-help b {
-        color: #f37021;
-        font-weight: 700;
-    }
+    .nb-validation { color: #b42318; font-size: 13px; margin-top: -7px; margin-bottom: 10px; display: block; }
 
-    .nb-login-desktop-note {
-        margin-top: 10px;
-        font-size: 13px;
-        color: #6f7681;
-        text-align: center;
-    }
+    .nb-summary { margin-bottom: 12px; font-size: 13px; }
 
-    .nb-validation {
-        color: #b42318;
-        font-size: 13px;
-        margin-top: -7px;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    .nb-summary {
-        margin-bottom: 12px;
-        font-size: 13px;
-    }
-
-    .nb-stage {
-        display: none;
-        width: 100%;
-    }
-
-    .nb-mobile-only {
-        display: none;
-    }
+    .nb-stage { display: none; width: 100%; }
+    .nb-mobile-only { display: none; }
 
     @@media (max-width: 767.98px) {
-        header,
-        footer {
-            display: none !important;
-        }
+        header, footer { display: none !important; }
+        .container { max-width: 100% !important; padding: 0 !important; }
+        main.pb-3 { padding-bottom: 0 !important; }
 
-        .container {
-            max-width: 100% !important;
-            padding: 0 !important;
-        }
-
-        main.pb-3 {
-            padding-bottom: 0 !important;
-        }
-
-        body {
-            margin-bottom: 0;
-            background: linear-gradient(180deg, #efeae4 0%, #f6e9db 100%);
-        }
+        body { margin-bottom: 0; background: linear-gradient(180deg, #efeae4 0%, #f6e9db 100%); }
 
         .nb-login-page {
             min-height: 100vh;
@@ -264,20 +180,24 @@
             width: 122px;
             height: 122px;
             border-radius: 26px;
-            background: #f37021;
+            background: var(--nb-orange);
             transform: rotate(45deg);
         }
 
-        .nb-login-page::after {
+        .nb-login-page::after,
+        .nb-mobile-only {
             content: "";
+            background-image: radial-gradient(#efbe98 1.4px, transparent 1.4px);
+            background-size: 11px 11px;
+            opacity: 0.9;
+        }
+
+        .nb-login-page::after {
             position: absolute;
             top: 108px;
             left: 24px;
             width: 45px;
             height: 26px;
-            background-image: radial-gradient(#efbe98 1.4px, transparent 1.4px);
-            background-size: 11px 11px;
-            opacity: 0.9;
         }
 
         .nb-mobile-only {
@@ -287,9 +207,6 @@
             bottom: 82px;
             width: 45px;
             height: 26px;
-            background-image: radial-gradient(#efbe98 1.4px, transparent 1.4px);
-            background-size: 11px 11px;
-            opacity: 0.9;
         }
 
         .nb-stage {
@@ -302,7 +219,7 @@
         }
 
         .nb-stage-label {
-            color: #f37021;
+            color: var(--nb-orange);
             font-size: 14px;
             font-weight: 700;
             letter-spacing: 0.12em;
@@ -310,29 +227,10 @@
             margin-bottom: 8px;
         }
 
-        .nb-stage-progress {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nb-stage-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: #d7d7d7;
-        }
-
-        .nb-stage-dot.active {
-            background: #f37021;
-        }
-
-        .nb-stage-line {
-            width: 28px;
-            height: 2px;
-            border-radius: 2px;
-            background: #dbdbdb;
-        }
+        .nb-stage-progress { display: inline-flex; align-items: center; gap: 8px; }
+        .nb-stage-dot { width: 9px; height: 9px; border-radius: 50%; background: #d7d7d7; }
+        .nb-stage-dot.active { background: var(--nb-orange); }
+        .nb-stage-line { width: 28px; height: 2px; border-radius: 2px; background: #dbdbdb; }
 
         .nb-login-card {
             max-width: 100%;
@@ -343,112 +241,33 @@
             z-index: 1;
         }
 
-        .nb-logo-mark {
-            width: 38px;
-            height: 38px;
-            font-size: 28px;
-            border-radius: 11px;
-            margin-bottom: 7px;
-        }
-
-        .nb-brand-name {
-            font-size: 36px;
-        }
-
-        .nb-login-card h1 {
-            margin-top: 5px;
-            font-size: 41px;
-        }
-
-        .nb-subtitle {
-            font-size: 14px;
-            margin-bottom: 14px;
-        }
-
-        .nb-form-label {
-            font-size: 13px;
-            margin-bottom: 6px;
-        }
-
-        .nb-login-input {
-            height: 40px;
-            border-radius: 10px;
-            font-size: 14px;
-            padding-left: 38px;
-        }
-
-        .nb-row {
-            margin: 0 0 10px;
-        }
-
-        .nb-remember,
-        .nb-forgot {
-            font-size: 13px;
-        }
-
-        .nb-login-btn {
-            height: 40px;
-            border-radius: 10px;
-            font-size: 26px;
-            letter-spacing: 0.005em;
-        }
-
-        .nb-help {
-            margin-top: 10px;
-            font-size: 12px;
-        }
-
-        .nb-login-desktop-note {
-            display: none;
-        }
+        .nb-logo-mark { width: 38px; height: 38px; font-size: 28px; border-radius: 11px; margin-bottom: 7px; }
+        .nb-brand-name { font-size: 36px; }
+        .nb-login-card h1 { margin-top: 5px; font-size: 41px; }
+        .nb-subtitle { font-size: 14px; margin-bottom: 14px; }
+        .nb-form-label { font-size: 13px; margin-bottom: 6px; }
+        .nb-login-input { height: 40px; border-radius: 10px; font-size: 14px; padding-left: 38px; }
+        .nb-row { margin: 0 0 10px; }
+        .nb-remember, .nb-forgot { font-size: 13px; }
+        .nb-login-btn { height: 40px; border-radius: 10px; font-size: 26px; letter-spacing: 0.005em; }
+        .nb-help { margin-top: 10px; font-size: 12px; }
+        .nb-login-desktop-note { display: none; }
     }
 
     @@media (max-width: 390px) {
-        .nb-login-page {
-            padding: 26px 14px 20px;
-        }
-
-        .nb-stage-label {
-            font-size: 12px;
-            letter-spacing: 0.1em;
-        }
-
-        .nb-stage-line {
-            width: 24px;
-        }
-
-        .nb-login-card {
-            padding: 16px 14px 14px;
-            border-radius: 14px;
-        }
-
-        .nb-brand-name {
-            font-size: 32px;
-        }
-
-        .nb-login-card h1 {
-            font-size: 34px;
-        }
-
-        .nb-row {
-            flex-wrap: wrap;
-            row-gap: 6px;
-        }
-
-        .nb-login-btn {
-            font-size: 22px;
-        }
+        .nb-login-page { padding: 26px 14px 20px; }
+        .nb-stage-label { font-size: 12px; letter-spacing: 0.1em; }
+        .nb-stage-line { width: 24px; }
+        .nb-login-card { padding: 16px 14px 14px; border-radius: 14px; }
+        .nb-brand-name { font-size: 32px; }
+        .nb-login-card h1 { font-size: 34px; }
+        .nb-row { flex-wrap: wrap; row-gap: 6px; }
+        .nb-login-btn { font-size: 22px; }
     }
 
     @@media (min-width: 768px) and (max-width: 1024px) {
-        .nb-login-page {
-            min-height: calc(100vh - 130px);
-            padding: 24px;
-        }
-
-        .nb-login-card {
-            max-width: 480px;
-        }
+        .nb-login-page { min-height: calc(100vh - 130px); padding: 24px; }
+        .nb-login-card { max-width: 480px; }
     }
 </style>
 
@@ -485,7 +304,7 @@
 
             <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
-            <label asp-for="Email" class="nb-form-label">Email or username</label>
+            <label asp-for="Email" class="nb-form-label">Email</label>
             <div class="nb-input-wrap">
                 <i class="bi bi-envelope nb-input-icon" aria-hidden="true"></i>
                 <input asp-for="Email" class="nb-login-input" placeholder="you@school.bg" />
@@ -495,8 +314,8 @@
             <label asp-for="Password" class="nb-form-label">Password</label>
             <div class="nb-input-wrap">
                 <i class="bi bi-lock nb-input-icon" aria-hidden="true"></i>
-                <input asp-for="Password" class="nb-login-input" type="password" placeholder="**********" />
-                <i class="bi bi-eye nb-input-end" aria-hidden="true"></i>
+                <input asp-for="Password" id="passwordInput" class="nb-login-input" type="password" placeholder="**********" />
+                <i class="bi bi-eye nb-input-end nb-toggle" id="togglePassword" role="button" tabindex="0" aria-label="Show password"></i>
             </div>
             <span asp-validation-for="Password" class="nb-validation"></span>
 
@@ -519,4 +338,26 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const input = document.getElementById('passwordInput');
+            const toggle = document.getElementById('togglePassword');
+
+            function toggleVisibility() {
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                toggle.classList.toggle('bi-eye');
+                toggle.classList.toggle('bi-eye-slash');
+                toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            }
+
+            toggle.addEventListener('click', toggleVisibility);
+            toggle.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleVisibility();
+                }
+            });
+        })();
+    </script>
 }
