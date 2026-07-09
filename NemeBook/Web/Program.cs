@@ -2,6 +2,7 @@
 using Data.Repositories;
 using DotNetEnv;
 using Entities.Enums;
+using Entities.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Services.Dtos.Registration;
@@ -32,6 +33,7 @@ using Services.Services.Security;
 using Services.Services.Students;
 using Services.Services.Subjects;
 using Services.Services.Teachers;
+using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +56,16 @@ if (IsRunningInContainer() && LooksLikeLocalOnlyConnection(connectionString))
 }
 
 builder.Services.AddDbContext<NemeBookDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(
+        connectionString,
+        sqlOptions =>
+        {
+            sqlOptions.CommandTimeout(180);
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        }));
 
 builder.Services.AddTransient<RateLimitingOptions>();
 
@@ -137,6 +148,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddSingleton<BackgroundEmailQueue>();
+builder.Services.AddSingleton<IBackgroundEmailQueue>(serviceProvider => serviceProvider.GetRequiredService<BackgroundEmailQueue>());
+builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<BackgroundEmailQueue>());
+
 var app = builder.Build();
 
 await EnsureDatabaseReadyAndMigratedAsync(app);
@@ -189,27 +204,41 @@ static bool LooksLikeLocalOnlyConnection(string connectionString)
 
 static async Task EnsureDatabaseReadyAndMigratedAsync(WebApplication app)
 {
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<NemeBookDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseStartup");
+    var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseStartup");
 
     const int maxAttempts = 15;
     for (var attempt = 1; attempt <= maxAttempts; attempt++)
     {
         try
         {
+            using var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<NemeBookDbContext>();
+
+            if (!await dbContext.Database.CanConnectAsync())
+            {
+                throw new InvalidOperationException("Database server accepted the connection but the database is not ready yet.");
+            }
+
             await dbContext.Database.MigrateAsync();
             logger.LogInformation("Database is ready and migrations are applied.");
             return;
         }
         catch (Exception ex) when (attempt < maxAttempts)
         {
-            logger.LogWarning(ex, "Database not ready yet. Retry {Attempt}/{MaxAttempts}...", attempt, maxAttempts);
-            await Task.Delay(TimeSpan.FromSeconds(3));
+            var delay = TimeSpan.FromSeconds(Math.Min(attempt * 2, 15));
+            logger.LogWarning(
+                ex,
+                "Database not ready yet. Retry {Attempt}/{MaxAttempts} in {DelaySeconds} seconds...",
+                attempt,
+                maxAttempts,
+                delay.TotalSeconds);
+            await Task.Delay(delay);
         }
     }
 
-    await dbContext.Database.MigrateAsync();
+    using var finalScope = app.Services.CreateScope();
+    var finalDbContext = finalScope.ServiceProvider.GetRequiredService<NemeBookDbContext>();
+    await finalDbContext.Database.MigrateAsync();
 }
 
 static async Task SeedDefaultUsersAsync(WebApplication app)
@@ -218,6 +247,7 @@ static async Task SeedDefaultUsersAsync(WebApplication app)
     await SeedUserBySectionAsync(app, "SeedTeacher", UserRole.Teacher, "TeacherSeeder");
     await SeedUserBySectionAsync(app, "SeedParent", UserRole.Parent, "ParentSeeder");
     await SeedUserBySectionAsync(app, "SeedStudent", UserRole.Student, "StudentSeeder");
+    await SeedBorisVelkovTeacherAsync(app);
 }
 
 static async Task SeedUserBySectionAsync(
@@ -254,11 +284,52 @@ static async Task SeedUserBySectionAsync(
             Password = password
         },
         role);
-
     logger.LogInformation(
         "{Role} seed completed. Created: {Created}, UserId: {UserId}, Email: {Email}",
         role,
         result.Created,
         result.UserId,
         email);
+}
+
+static async Task SeedBorisVelkovTeacherAsync(WebApplication app)
+{
+    const string email = "boris.velkov.highschool@buditel.bg";
+    const string password = "BobE0000";
+
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<NemeBookDbContext>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("BorisVelkovSeeder");
+
+    var user = await dbContext.Users.FirstOrDefaultAsync(existingUser => existingUser.Email == email);
+    if (user is null)
+    {
+        user = new User
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Boris",
+            LastName = "Velkov",
+            Email = email,
+            Password = passwordHasher.HashPassword(password),
+            Role = UserRole.Teacher
+        };
+
+        await dbContext.Users.AddAsync(user);
+        await dbContext.SaveChangesAsync();
+
+        logger.LogInformation("Boris Velkov seed completed. Created: true, UserId: {UserId}, Email: {Email}", user.Id, email);
+        return;
+    }
+
+    user.FirstName = "Boris";
+    user.LastName = "Velkov";
+    user.Email = email;
+    user.Password = passwordHasher.HashPassword(password);
+    user.Role = UserRole.Teacher;
+    user.IsDeleted = false;
+
+    await dbContext.SaveChangesAsync();
+
+    logger.LogInformation("Boris Velkov seed completed. Created: false, UserId: {UserId}, Email: {Email}", user.Id, email);
 }

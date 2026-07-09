@@ -108,8 +108,168 @@ public class EmailService : IEmailService, IRegistrationEmailSender
 
     public async Task SendPasswordResetEmailAsync(string recipientEmail, string recipientName, string resetLink, CancellationToken cancellationToken = default)
     {
-        var content = $"<h2>Password Reset</h2><p>Hello {recipientName},</p><p>Click the link below to reset your password:</p><p><a href='{resetLink}'>{resetLink}</a></p><p>This link expires in 1 hour.</p>";
-        await SendEmailAsync(recipientEmail, "NemeBook: Password Reset Request", content, cancellationToken);
+        var content = $@"
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Reset Your Password</title>
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background-color: #f9fafb;
+        }}
+        .email-container {{
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }}
+        .header {{
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            padding: 40px 20px;
+            text-align: center;
+        }}
+        .logo {{
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }}
+        .logo-icon {{
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #F97316;
+            font-size: 24px;
+        }}
+        .header h1 {{
+            color: #ffffff;
+            margin: 16px 0 0 0;
+            font-size: 28px;
+            font-weight: 600;
+        }}
+        .content {{
+            padding: 40px 32px;
+            color: #1f2937;
+            font-size: 16px;
+            line-height: 1.6;
+        }}
+        .greeting {{
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #111827;
+        }}
+        .description {{
+            color: #6b7280;
+            margin-bottom: 32px;
+            font-size: 15px;
+        }}
+        .button-container {{
+            text-align: center;
+            margin: 32px 0;
+        }}
+        .reset-button {{
+            display: inline-block;
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            color: white;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }}
+        .reset-button:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4);
+        }}
+        .fallback-link {{
+            color: #6b7280;
+            font-size: 13px;
+            word-break: break-all;
+            margin-top: 16px;
+        }}
+        .fallback-link a {{
+            color: #f97316;
+            text-decoration: none;
+        }}
+        .expiration-notice {{
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px;
+            border-radius: 4px;
+            margin: 24px 0;
+            font-size: 14px;
+            color: #92400e;
+        }}
+        .footer {{
+            background-color: #f3f4f6;
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+            border-top: 1px solid #e5e7eb;
+        }}
+        .footer-text {{
+            margin: 8px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class=""email-container"">
+        <div class=""header"">
+            <div class=""logo"">
+                <div class=""logo-icon"">📚</div>
+            </div>
+            <h1>NemeBook</h1>
+        </div>
+        
+        <div class=""content"">
+            <p class=""greeting"">Hello {recipientName},</p>
+            
+            <p class=""description"">
+                We received a request to reset your password. Click the button below to create a new password for your NemeBook account.
+            </p>
+            
+            <div class=""button-container"">
+                <a href=""{resetLink}"" class=""reset-button"">Reset Password</a>
+            </div>
+            
+            <div class=""expiration-notice"">
+                <strong>⏱️ Important:</strong> This link will expire in <strong>30 minutes</strong>. If you didn't request a password reset, please ignore this email.
+            </div>
+            
+            <p style=""color: #6b7280; font-size: 14px; margin-top: 24px;"">
+                If the button above doesn't work, copy and paste this link into your browser:
+            </p>
+            <p class=""fallback-link"">
+                <a href=""{resetLink}"">{resetLink}</a>
+            </p>
+        </div>
+        
+        <div class=""footer"">
+            <p class=""footer-text""><strong>NemeBook</strong> — Your Learning Management System</p>
+            <p class=""footer-text"">© {DateTime.Now.Year} NemeBook. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+        
+        await SendEmailAsync(recipientEmail, "NemeBook: Reset Your Password", content, cancellationToken);
     }
 
     public async Task SendInvitationAsync(RegistrationEmailRequest request, CancellationToken cancellationToken = default)
