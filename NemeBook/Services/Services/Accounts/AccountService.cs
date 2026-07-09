@@ -29,14 +29,13 @@ public class AccountService : IAccountService
         {
             UserId = user.Id,
             Token = Guid.NewGuid().ToString("N"),
-            ExpiresAt = DateTime.UtcNow.AddHours(1),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(30),
         };
 
         await _passwordResetRepository.CreateOrReplaceAsync(token, cancellationToken);
 
-        var resetLink = resetUrlBase.EndsWith("/")
-            ? $"{resetUrlBase}?token={token.Token}"
-            : $"{resetUrlBase}?token={token.Token}";
+        var separator = resetUrlBase.Contains('?') ? "&" : "?";
+        var resetLink = $"{resetUrlBase}{separator}token={Uri.EscapeDataString(token.Token)}";
 
         await _emailService.SendPasswordResetEmailAsync(user.Email, user.FirstName, resetLink, cancellationToken);
     }

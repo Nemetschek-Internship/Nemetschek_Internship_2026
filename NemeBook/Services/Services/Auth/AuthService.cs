@@ -81,4 +81,19 @@ public class AuthService : IAuthService
         _logger.LogInformation("Password changed for user: {UserId}", userId);
         return true;
     }
+
+    public async Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+        {
+            return false;
+        }
+
+        user.Password = _passwordHasher.HashPassword(newPassword);
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        _logger.LogInformation("Password reset for user: {UserId}", userId);
+        return true;
+    }
 }

@@ -304,6 +304,11 @@
             <div class="alert alert-success py-2">@successMessage</div>
         }
 
+        @if (TempData["ErrorMessage"] is string errorMessage)
+        {
+            <div class="alert alert-danger py-2">@errorMessage</div>
+        }
+
         <form asp-action="Login" method="post" novalidate>
             <div asp-validation-summary="ModelOnly" class="text-danger nb-summary"></div>
 
@@ -329,7 +334,7 @@
                     <input asp-for="RememberMe" />
                     <span>Remember me</span>
                 </label>
-                <a class="nb-forgot" href="#">Forgot password?</a>
+                <a class="nb-forgot" asp-action="ForgotPassword" asp-controller="Account">Forgot password?</a>
             </div>
 
             <button type="submit" class="nb-login-btn">Log in</button>

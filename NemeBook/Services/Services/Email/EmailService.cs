@@ -108,7 +108,7 @@ public class EmailService : IEmailService, IRegistrationEmailSender
 
     public async Task SendPasswordResetEmailAsync(string recipientEmail, string recipientName, string resetLink, CancellationToken cancellationToken = default)
     {
-        var content = $"<h2>Password Reset</h2><p>Hello {recipientName},</p><p>Click the link below to reset your password:</p><p><a href='{resetLink}'>{resetLink}</a></p><p>This link expires in 1 hour.</p>";
+        var content = $"<h2>Password Reset</h2><p>Hello {recipientName},</p><p>Click the link below to reset your password:</p><p><a href='{resetLink}'>{resetLink}</a></p><p>This link expires in 30 minutes.</p>";
         await SendEmailAsync(recipientEmail, "NemeBook: Password Reset Request", content, cancellationToken);
     }
 
