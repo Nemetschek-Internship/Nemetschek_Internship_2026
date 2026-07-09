@@ -299,6 +299,11 @@
             <p class="nb-subtitle">Please login to continue.</p>
         }
 
+        @if (TempData["SuccessMessage"] is string successMessage)
+        {
+            <div class="alert alert-success py-2">@successMessage</div>
+        }
+
         <form asp-action="Login" method="post" novalidate>
             <div asp-validation-summary="ModelOnly" class="text-danger nb-summary"></div>
 
