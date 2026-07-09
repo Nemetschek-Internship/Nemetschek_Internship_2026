@@ -20,7 +20,7 @@
 
             <div class="nb-parent-grid">
                 <div class="nb-form-field">
-                    <label asp-for="FirstName" class="nb-form-label">Име</label>
+                    <label asp-for="FirstName" class="nb-form-label">Име <span class="nb-required-label">задължително</span></label>
                     <div class="nb-input-shell">
                         <i class="bi bi-person-fill" aria-hidden="true"></i>
                         <input asp-for="FirstName" class="nb-form-input" autocomplete="given-name" />
@@ -29,7 +29,7 @@
                 </div>
 
                 <div class="nb-form-field">
-                    <label asp-for="MiddleName" class="nb-form-label">Презиме</label>
+                    <label asp-for="MiddleName" class="nb-form-label">Презиме <span class="nb-optional-label">незадължително</span></label>
                     <div class="nb-input-shell">
                         <i class="bi bi-person-fill" aria-hidden="true"></i>
                         <input asp-for="MiddleName" class="nb-form-input" autocomplete="additional-name" />
@@ -38,7 +38,7 @@
                 </div>
 
                 <div class="nb-form-field">
-                    <label asp-for="LastName" class="nb-form-label">Фамилия</label>
+                    <label asp-for="LastName" class="nb-form-label">Фамилия <span class="nb-required-label">задължително</span></label>
                     <div class="nb-input-shell">
                         <i class="bi bi-person-fill" aria-hidden="true"></i>
                         <input asp-for="LastName" class="nb-form-input" autocomplete="family-name" />
@@ -47,7 +47,7 @@
                 </div>
 
                 <div class="nb-form-field">
-                    <label asp-for="PhoneNumber" class="nb-form-label">Телефонен номер</label>
+                    <label asp-for="PhoneNumber" class="nb-form-label">Телефонен номер <span class="nb-optional-label">незадължително</span></label>
                     <div class="nb-input-shell">
                         <i class="bi bi-telephone-fill" aria-hidden="true"></i>
                         <input asp-for="PhoneNumber" class="nb-form-input" autocomplete="tel" />
@@ -56,7 +56,7 @@
                 </div>
 
                 <div class="nb-form-field">
-                    <label asp-for="Password" class="nb-form-label">Парола</label>
+                    <label asp-for="Password" class="nb-form-label">Парола <span class="nb-required-label">задължително</span></label>
                     <div class="nb-input-shell">
                         <i class="bi bi-lock-fill" aria-hidden="true"></i>
                         <input asp-for="Password" class="nb-form-input" autocomplete="new-password" />
@@ -65,7 +65,7 @@
                 </div>
 
                 <div class="nb-form-field">
-                    <label asp-for="ConfirmPassword" class="nb-form-label">Повторете паролата</label>
+                    <label asp-for="ConfirmPassword" class="nb-form-label">Повторете паролата <span class="nb-required-label">задължително</span></label>
                     <div class="nb-input-shell">
                         <i class="bi bi-lock-fill" aria-hidden="true"></i>
                         <input asp-for="ConfirmPassword" class="nb-form-input" autocomplete="new-password" />

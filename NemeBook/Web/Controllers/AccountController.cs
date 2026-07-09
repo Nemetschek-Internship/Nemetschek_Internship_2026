@@ -15,15 +15,18 @@ namespace Web.Controllers;
 public class AccountController : Controller
 {
     private readonly IAuthService _authService;
+    private readonly IAccountService _accountService;
     private readonly IRegistrationService _registrationService;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         IAuthService authService,
+        IAccountService accountService,
         IRegistrationService registrationService,
         ILogger<AccountController> logger)
     {
         _authService = authService;
+        _accountService = accountService;
         _registrationService = registrationService;
         _logger = logger;
     }
@@ -79,6 +82,94 @@ public class AccountController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         _logger.LogInformation("User logged out");
         return RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult ForgotPassword()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        return View(new ForgotPasswordRequest());
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(request);
+        }
+
+        var resetUrlBase = Url.Action(
+            nameof(ResetPassword),
+            "Account",
+            values: null,
+            protocol: Request.Scheme);
+
+        if (string.IsNullOrWhiteSpace(resetUrlBase))
+        {
+            ModelState.AddModelError(string.Empty, "Неуспешно създаване на линк за възстановяване.");
+            return View(request);
+        }
+
+        var emailSent = await _accountService.SendPasswordResetAsync(request.Email, resetUrlBase, cancellationToken);
+        if (!emailSent)
+        {
+            ModelState.AddModelError(nameof(request.Email), "Няма профил с този имейл адрес.");
+            return View(request);
+        }
+
+        TempData["SuccessMessage"] = "Изпратихме линк за възстановяване на паролата.";
+        return RedirectToAction(nameof(Login));
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword(string? token, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(token)
+            || !await _accountService.IsPasswordResetTokenValidAsync(token, cancellationToken))
+        {
+            TempData["ErrorMessage"] = "Линкът за възстановяване е невалиден или е изтекъл.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        return View(new ResetPasswordViewModel { Token = token });
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(
+        ResetPasswordViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        try
+        {
+            await _accountService.ResetPasswordAsync(model.Token, model.Password, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Password reset failed.");
+            ModelState.AddModelError(string.Empty, GetPasswordResetErrorMessage(ex.Message));
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Паролата е сменена успешно. Вече можете да влезете в профила си.";
+        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]
@@ -323,6 +414,17 @@ public class AccountController : Controller
             "Invitation was not found." => "Поканата не беше намерена.",
             "Invitation type is invalid." => "Поканата е невалидна.",
             _ => "Поканата е невалидна или вече е използвана."
+        };
+    }
+
+    private static string GetPasswordResetErrorMessage(string error)
+    {
+        return error switch
+        {
+            "Password reset link is invalid." => "Линкът за възстановяване е невалиден.",
+            "Password reset link has expired." => "Линкът за възстановяване е изтекъл.",
+            "Password must be at least 8 characters." => "Паролата трябва да бъде поне 8 символа.",
+            _ => "Неуспешно възстановяване на паролата."
         };
     }
 }

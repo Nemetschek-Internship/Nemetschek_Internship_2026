@@ -151,6 +151,21 @@ body {
   font-weight: 700;
 }
 
+.nb-required-label,
+.nb-optional-label {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.nb-required-label {
+  color: var(--nb-orange-dark);
+}
+
+.nb-optional-label {
+  color: var(--nb-muted);
+}
+
 .nb-input-shell {
   position: relative;
 }
@@ -327,6 +342,55 @@ body {
 .nb-password-toggle:focus {
   background: #f4f5f7;
   color: var(--nb-text);
+}
+
+.nb-password-strength {
+  margin-top: 9px;
+}
+
+.nb-password-strength-track {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eef1f5;
+}
+
+.nb-password-strength-bar {
+  width: 0;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: transparent;
+  transition: width 0.18s ease, background-color 0.18s ease;
+}
+
+.nb-password-strength-bar.is-weak {
+  width: 25%;
+  background: #dc2626;
+}
+
+.nb-password-strength-bar.is-fair {
+  width: 50%;
+  background: #f59e0b;
+}
+
+.nb-password-strength-bar.is-good {
+  width: 75%;
+  background: #0ea5e9;
+}
+
+.nb-password-strength-bar.is-strong {
+  width: 100%;
+  background: var(--nb-success);
+}
+
+.nb-password-strength-text {
+  display: block;
+  margin-top: 6px;
+  color: var(--nb-muted);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .nb-login-help {
