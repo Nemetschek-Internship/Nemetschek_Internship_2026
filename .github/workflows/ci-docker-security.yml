@@ -33,7 +33,7 @@ jobs:
         run: docker build -f Web/Dockerfile -t nemebook-web:ci .
 
       - name: Trivy Scan
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: nemebook-web:ci
           format: table
