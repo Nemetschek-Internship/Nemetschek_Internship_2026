@@ -66,16 +66,16 @@ public class RegistrationService : IRegistrationService
                 continue;
             }
 
-            if (await accountsRepository.EmailExistsAsync(email, cancellationToken))
+            var existingUser = await accountsRepository.GetByEmailAsync(email, cancellationToken);
+            if (existingUser is not null)
             {
-                AddIssue(result, studentImport.RowNumber, email, "A user with this email already exists.");
                 continue;
             }
 
             var schoolClass = await GetOrCreateClassAsync(studentImport.ClassLabel, schoolClasses, cancellationToken);
             if (schoolClass is null)
             {
-                AddIssue(result, studentImport.RowNumber, email, "Class could not be created.");
+                AddIssue(result, studentImport.RowNumber, email, "Класът не може да бъде създаден.");
                 continue;
             }
 
@@ -147,9 +147,9 @@ public class RegistrationService : IRegistrationService
                 continue;
             }
 
-            if (await accountsRepository.EmailExistsAsync(email, cancellationToken))
+            var existingUser = await accountsRepository.GetByEmailAsync(email, cancellationToken);
+            if (existingUser is not null)
             {
-                AddIssue(result, teacherImport.RowNumber, email, "A user with this email already exists.");
                 continue;
             }
 
@@ -310,6 +310,14 @@ public class RegistrationService : IRegistrationService
         await invitationRepository.UpdateAsync(invitation, cancellationToken);
     }
 
+    public async Task ValidateInvitationAsync(
+        string token,
+        RegistrationInvitationType type,
+        CancellationToken cancellationToken = default)
+    {
+        await GetValidInvitationAsync(token, type, cancellationToken);
+    }
+
     public async Task<PrincipalSeedResult> SeedPrincipalAsync(
         SeedPrincipalRequest request,
         CancellationToken cancellationToken = default)
@@ -377,7 +385,6 @@ public class RegistrationService : IRegistrationService
         {
             if (existingUser.Role != UserRole.Parent)
             {
-                AddIssue(result, null, parentEmail, "Parent email is already used by a non-parent account.");
                 return;
             }
 
@@ -572,20 +579,20 @@ public class RegistrationService : IRegistrationService
     {
         var isValid = true;
 
-        isValid &= ValidateImportedName(studentImport.FirstName, studentImport.RowNumber, email, "First name", result);
-        isValid &= ValidateOptionalImportedName(studentImport.MiddleName, studentImport.RowNumber, email, "Middle name", result);
-        isValid &= ValidateImportedName(studentImport.LastName, studentImport.RowNumber, email, "Last name", result);
+        isValid &= ValidateImportedName(studentImport.FirstName, studentImport.RowNumber, email, "Името", result);
+        isValid &= ValidateOptionalImportedName(studentImport.MiddleName, studentImport.RowNumber, email, "Презимето", result);
+        isValid &= ValidateImportedName(studentImport.LastName, studentImport.RowNumber, email, "Фамилията", result);
         isValid &= ValidateImportedEmail(email, importedEmails, studentImport.RowNumber, result);
 
         if (!TryParseClassLabel(studentImport.ClassLabel, out _, out _))
         {
-            AddIssue(result, studentImport.RowNumber, email, "Class is required and must be in format like '1 Б'.");
+            AddIssue(result, studentImport.RowNumber, email, "Класът е задължителен и трябва да бъде във формат като '1 Б'.");
             isValid = false;
         }
 
         if (studentImport.BirthDate == default)
         {
-            AddIssue(result, studentImport.RowNumber, email, "Birth date is required.");
+            AddIssue(result, studentImport.RowNumber, email, "Датата на раждане е задължителна.");
             isValid = false;
         }
 
@@ -664,20 +671,20 @@ public class RegistrationService : IRegistrationService
     {
         var isValid = true;
 
-        isValid &= ValidateImportedName(teacherImport.FirstName, teacherImport.RowNumber, email, "First name", result);
-        isValid &= ValidateOptionalImportedName(teacherImport.MiddleName, teacherImport.RowNumber, email, "Middle name", result);
-        isValid &= ValidateImportedName(teacherImport.LastName, teacherImport.RowNumber, email, "Last name", result);
+        isValid &= ValidateImportedName(teacherImport.FirstName, teacherImport.RowNumber, email, "Името", result);
+        isValid &= ValidateOptionalImportedName(teacherImport.MiddleName, teacherImport.RowNumber, email, "Презимето", result);
+        isValid &= ValidateImportedName(teacherImport.LastName, teacherImport.RowNumber, email, "Фамилията", result);
         isValid &= ValidateImportedEmail(email, importedEmails, teacherImport.RowNumber, result);
 
         if (teacherImport.BirthDate == default)
         {
-            AddIssue(result, teacherImport.RowNumber, email, "Birth date is required.");
+            AddIssue(result, teacherImport.RowNumber, email, "Датата на раждане е задължителна.");
             isValid = false;
         }
 
         if (!GetNormalizedSubjectNames(teacherImport.Subjects).Any())
         {
-            AddIssue(result, teacherImport.RowNumber, email, "At least one subject is required.");
+            AddIssue(result, teacherImport.RowNumber, email, "Необходим е поне един предмет.");
             isValid = false;
         }
 
@@ -745,7 +752,7 @@ public class RegistrationService : IRegistrationService
             return true;
         }
 
-        AddIssue(result, rowNumber, email, $"{fieldName} is required and cannot exceed 100 characters.");
+        AddIssue(result, rowNumber, email, $"{fieldName} е задължително и не може да бъде по-дълго от 100 символа.");
         return false;
     }
 
@@ -761,7 +768,7 @@ public class RegistrationService : IRegistrationService
             return true;
         }
 
-        AddIssue(result, rowNumber, email, $"{fieldName} cannot exceed 100 characters.");
+        AddIssue(result, rowNumber, email, $"{fieldName} не може да бъде по-дълго от 100 символа.");
         return false;
     }
 
@@ -773,13 +780,13 @@ public class RegistrationService : IRegistrationService
     {
         if (!IsValidEmail(email))
         {
-            AddIssue(result, rowNumber, email, "Email is invalid.");
+            AddIssue(result, rowNumber, email, "Имейлът е невалиден.");
             return false;
         }
 
         if (!importedEmails.Add(email))
         {
-            AddIssue(result, rowNumber, email, "Email is duplicated in the import.");
+            AddIssue(result, rowNumber, email, "Имейлът се повтаря в таблицата.");
             return false;
         }
 
@@ -796,7 +803,7 @@ public class RegistrationService : IRegistrationService
             var normalizedEmail = NormalizeEmail(parentEmail);
             if (!IsValidEmail(normalizedEmail))
             {
-                AddIssue(result, studentImport.RowNumber, normalizedEmail, "Parent email is invalid.");
+                AddIssue(result, studentImport.RowNumber, normalizedEmail, "Имейлът на родителя е невалиден.");
                 continue;
             }
 

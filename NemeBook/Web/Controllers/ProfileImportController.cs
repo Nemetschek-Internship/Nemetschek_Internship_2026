@@ -25,7 +25,11 @@ public class ProfileImportController : Controller
     [HttpGet]
     public IActionResult Index()
     {
-        return View(new ProfileImportUploadViewModel());
+        return View(new ProfileImportUploadViewModel
+        {
+            SuccessMessage = TempData["ProfileImportSuccess"] as string,
+            ErrorMessage = TempData["ProfileImportError"] as string
+        });
     }
 
     [HttpPost]
@@ -36,7 +40,7 @@ public class ProfileImportController : Controller
     {
         if (model.StudentsFile is null && model.ParentsFile is null && model.TeachersFile is null)
         {
-            ModelState.AddModelError(string.Empty, "Choose at least one Excel file to import.");
+            ModelState.AddModelError(string.Empty, "Изберете поне един Excel файл за импорт.");
             return View("Index", model);
         }
 
@@ -44,7 +48,20 @@ public class ProfileImportController : Controller
         await ImportTeachersAsync(model, cancellationToken);
         await ImportParentsAsync(model, cancellationToken);
 
-        return View("Index", model);
+        if (HasImportIssues(model))
+        {
+            TempData["ProfileImportError"] = "Импортът завърши, но има редове с проблеми.";
+        }
+        else if (model.Results.Sum(result => result.Result?.CreatedInvitations ?? 0) > 0)
+        {
+            TempData["ProfileImportSuccess"] = "Всички имейли бяха изпратени.";
+        }
+        else
+        {
+            TempData["ProfileImportSuccess"] = "Няма нови профили за импорт.";
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
     private async Task ImportStudentsAsync(ProfileImportUploadViewModel model, CancellationToken cancellationToken)
@@ -56,7 +73,7 @@ public class ProfileImportController : Controller
 
         var result = new ProfileImportSectionResult
         {
-            Title = "Students",
+            Title = "Ученици",
             FileName = model.StudentsFile!.FileName
         };
 
@@ -84,7 +101,7 @@ public class ProfileImportController : Controller
 
         var result = new ProfileImportSectionResult
         {
-            Title = "Teachers",
+            Title = "Учители",
             FileName = model.TeachersFile!.FileName
         };
 
@@ -112,7 +129,7 @@ public class ProfileImportController : Controller
 
         var result = new ProfileImportSectionResult
         {
-            Title = "Parents",
+            Title = "Родители",
             FileName = model.ParentsFile!.FileName
         };
 
@@ -134,5 +151,12 @@ public class ProfileImportController : Controller
     private static bool IsProvided(IFormFile? file)
     {
         return file is not null && file.Length > 0;
+    }
+
+    private static bool HasImportIssues(ProfileImportUploadViewModel model)
+    {
+        return model.Results.Any(result =>
+            !result.IsSuccess ||
+            result.Result?.Issues.Any() == true);
     }
 }

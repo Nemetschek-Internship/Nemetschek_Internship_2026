@@ -1,349 +1,84 @@
-﻿@model Entities.ViewModels.Auth.LoginRequest
+@model Entities.ViewModels.Auth.LoginRequest
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Вход";
 }
 
-<style>
-    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-    :root {
-        --nb-orange: #f37021;
-        --nb-orange-dark: #d95f16;
-    }
-
-    .nb-login-page {
-        font-family: 'Inter', sans-serif;
-        min-height: calc(100vh - 130px);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        padding: 24px 0;
-    }
-
-    .nb-login-card {
-        width: 100%;
-        max-width: 430px;
-        border-radius: 20px;
-        border: 1px solid #ebecef;
-        background: #ffffff;
-        box-shadow: 0 12px 42px rgba(20, 25, 35, 0.1);
-        padding: 24px;
-    }
-
-    .nb-brand { text-align: center; margin-bottom: 14px; }
-
-    .nb-logo-mark {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: linear-gradient(145deg, var(--nb-orange), #ffc14a);
-        margin: 0 auto 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 32px;
-        font-weight: 800;
-        line-height: 1;
-        text-transform: lowercase;
-    }
-
-    .nb-brand-name { font-size: 33px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-    .nb-brand-name .accent { color: var(--nb-orange); }
-
-    .nb-login-card h1 {
-        text-align: center;
-        margin: 8px 0 6px;
-        color: #25262b;
-        font-size: 35px;
-        letter-spacing: -0.02em;
-        font-weight: 800;
-    }
-
-    .nb-subtitle { text-align: center; margin: 0 0 16px; color: #737a85; font-size: 15px; }
-
-    .nb-form-label {
-        display: block;
-        color: #292d35;
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 7px;
-    }
-
-    .nb-input-wrap { position: relative; margin-bottom: 14px; }
-
-    .nb-input-icon,
-    .nb-input-end {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #8a9099;
-        font-size: 16px;
-        line-height: 1;
-        pointer-events: none;
-    }
-
-    .nb-input-icon { left: 14px; }
-    .nb-input-end { right: 14px; }
-
-    .nb-input-end.nb-toggle {
-        pointer-events: auto;
-        cursor: pointer;
-    }
-
-    .nb-login-input {
-        width: 100%;
-        height: 47px;
-        border: 1px solid #d8dce3;
-        border-radius: 11px;
-        background: #fff;
-        color: #31343b;
-        font-size: 15px;
-        padding: 0 42px 0 41px;
-        outline: none;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .nb-login-input:focus {
-        border-color: var(--nb-orange);
-        box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.14);
-    }
-
-    .nb-login-input::placeholder { color: #a5aab2; }
-
-    .nb-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin: 2px 0 14px;
-        gap: 12px;
-    }
-
-    .nb-remember { display: inline-flex; align-items: center; gap: 8px; color: #2f333a; font-size: 14px; }
-    .nb-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--nb-orange); margin: 0; }
-
-    .nb-forgot { color: var(--nb-orange); text-decoration: none; font-size: 14px; font-weight: 700; }
-    .nb-forgot:hover { color: var(--nb-orange-dark); text-decoration: underline; }
-
-    .nb-login-btn {
-        width: 100%;
-        height: 44px;
-        border: 0;
-        border-radius: 11px;
-        background: var(--nb-orange);
-        color: #fff;
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-        transition: filter 0.2s ease, transform 0.05s ease;
-    }
-
-    .nb-login-btn:hover { filter: brightness(0.95); }
-    .nb-login-btn:active { transform: translateY(1px); }
-
-    .nb-help { text-align: center; margin-top: 14px; color: #9398a1; font-size: 13px; }
-    .nb-help b { color: var(--nb-orange); font-weight: 700; }
-
-    .nb-login-desktop-note { margin-top: 10px; font-size: 13px; color: #6f7681; text-align: center; }
-
-    .nb-validation { color: #b42318; font-size: 13px; margin-top: -7px; margin-bottom: 10px; display: block; }
-
-    .nb-summary { margin-bottom: 12px; font-size: 13px; }
-
-    .nb-stage { display: none; width: 100%; }
-    .nb-mobile-only { display: none; }
-
-    @@media (max-width: 767.98px) {
-        header, footer { display: none !important; }
-        .container { max-width: 100% !important; padding: 0 !important; }
-        main.pb-3 { padding-bottom: 0 !important; }
-
-        body { margin-bottom: 0; background: linear-gradient(180deg, #efeae4 0%, #f6e9db 100%); }
-
-        .nb-login-page {
-            min-height: 100vh;
-            align-items: flex-start;
-            justify-content: flex-start;
-            padding: 36px 20px 26px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nb-login-page::before {
-            content: "";
-            position: absolute;
-            left: -48px;
-            bottom: 34px;
-            width: 122px;
-            height: 122px;
-            border-radius: 26px;
-            background: var(--nb-orange);
-            transform: rotate(45deg);
-        }
-
-        .nb-login-page::after,
-        .nb-mobile-only {
-            content: "";
-            background-image: radial-gradient(#efbe98 1.4px, transparent 1.4px);
-            background-size: 11px 11px;
-            opacity: 0.9;
-        }
-
-        .nb-login-page::after {
-            position: absolute;
-            top: 108px;
-            left: 24px;
-            width: 45px;
-            height: 26px;
-        }
-
-        .nb-mobile-only {
-            display: block;
-            position: absolute;
-            right: 24px;
-            bottom: 82px;
-            width: 45px;
-            height: 26px;
-        }
-
-        .nb-stage {
-            display: block;
-            text-align: center;
-            margin-bottom: 16px;
-            width: 100%;
-            max-width: 430px;
-            z-index: 1;
-        }
-
-        .nb-stage-label {
-            color: var(--nb-orange);
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .nb-stage-progress { display: inline-flex; align-items: center; gap: 8px; }
-        .nb-stage-dot { width: 9px; height: 9px; border-radius: 50%; background: #d7d7d7; }
-        .nb-stage-dot.active { background: var(--nb-orange); }
-        .nb-stage-line { width: 28px; height: 2px; border-radius: 2px; background: #dbdbdb; }
-
-        .nb-login-card {
-            max-width: 100%;
-            border: 0;
-            border-radius: 16px;
-            padding: 20px 18px 16px;
-            box-shadow: 0 12px 26px rgba(37, 36, 36, 0.09);
-            z-index: 1;
-        }
-
-        .nb-logo-mark { width: 38px; height: 38px; font-size: 28px; border-radius: 11px; margin-bottom: 7px; }
-        .nb-brand-name { font-size: 36px; }
-        .nb-login-card h1 { margin-top: 5px; font-size: 41px; }
-        .nb-subtitle { font-size: 14px; margin-bottom: 14px; }
-        .nb-form-label { font-size: 13px; margin-bottom: 6px; }
-        .nb-login-input { height: 40px; border-radius: 10px; font-size: 14px; padding-left: 38px; }
-        .nb-row { margin: 0 0 10px; }
-        .nb-remember, .nb-forgot { font-size: 13px; }
-        .nb-login-btn { height: 40px; border-radius: 10px; font-size: 26px; letter-spacing: 0.005em; }
-        .nb-help { margin-top: 10px; font-size: 12px; }
-        .nb-login-desktop-note { display: none; }
-    }
-
-    @@media (max-width: 390px) {
-        .nb-login-page { padding: 26px 14px 20px; }
-        .nb-stage-label { font-size: 12px; letter-spacing: 0.1em; }
-        .nb-stage-line { width: 24px; }
-        .nb-login-card { padding: 16px 14px 14px; border-radius: 14px; }
-        .nb-brand-name { font-size: 32px; }
-        .nb-login-card h1 { font-size: 34px; }
-        .nb-row { flex-wrap: wrap; row-gap: 6px; }
-        .nb-login-btn { font-size: 22px; }
-    }
-
-    @@media (min-width: 768px) and (max-width: 1024px) {
-        .nb-login-page { min-height: calc(100vh - 130px); padding: 24px; }
-        .nb-login-card { max-width: 480px; }
-    }
-</style>
-
-<div class="nb-login-page">
-    <div class="nb-mobile-only" aria-hidden="true"></div>
-
-    <div class="nb-stage" aria-hidden="true">
-        <div class="nb-stage-label">STEP 1 OF 3</div>
-        <div class="nb-stage-progress">
-            <span class="nb-stage-dot active"></span>
-            <span class="nb-stage-line"></span>
-            <span class="nb-stage-dot"></span>
-            <span class="nb-stage-line"></span>
-            <span class="nb-stage-dot"></span>
-        </div>
-    </div>
-
-    <div class="nb-login-card">
-        <div class="nb-brand">
-            <div class="nb-logo-mark">n</div>
-            <div class="nb-brand-name"><span class="accent">Neme</span>Book</div>
+<div class="nb-form-shell">
+    <section class="nb-form-card nb-login-card" aria-labelledby="login-title">
+        <div class="nb-auth-brand">
+            <div class="nb-auth-logo">N</div>
+            <div class="nb-auth-name"><span>Neme</span>Book</div>
         </div>
 
-        <h1>Welcome back!</h1>
-        <p class="nb-subtitle">Sign in to continue to your account</p>
+        <h1 id="login-title">Добре дошли</h1>
+        <p class="nb-form-subtitle">Влезте в профила си, за да продължите.</p>
 
         @if (!string.IsNullOrEmpty(ViewData["ReturnUrl"]?.ToString()))
         {
-            <p class="nb-subtitle">Please login to continue.</p>
+            <div class="nb-flash-message is-info">
+                <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                <span>Моля, влезте в профила си, за да отворите тази страница.</span>
+            </div>
         }
 
         @if (TempData["SuccessMessage"] is string successMessage)
         {
-            <div class="alert alert-success py-2">@successMessage</div>
+            <div class="nb-flash-message is-success">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                <span>@successMessage</span>
+            </div>
         }
 
         @if (TempData["ErrorMessage"] is string errorMessage)
         {
-            <div class="alert alert-danger py-2">@errorMessage</div>
+            <div class="nb-flash-message is-error">
+                <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+                <span>@errorMessage</span>
+            </div>
         }
 
         <form asp-action="Login" method="post" novalidate>
-            <div asp-validation-summary="ModelOnly" class="text-danger nb-summary"></div>
-
+            <div asp-validation-summary="ModelOnly" class="nb-form-summary"></div>
             <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
-            <label asp-for="Email" class="nb-form-label">Email</label>
-            <div class="nb-input-wrap">
-                <i class="bi bi-envelope nb-input-icon" aria-hidden="true"></i>
-                <input asp-for="Email" class="nb-login-input" placeholder="you@school.bg" />
+            <div class="nb-form-field">
+                <label asp-for="Email" class="nb-form-label">Имейл</label>
+                <div class="nb-input-shell">
+                    <i class="bi bi-envelope-fill" aria-hidden="true"></i>
+                    <input asp-for="Email" class="nb-form-input" placeholder="you@school.bg" autocomplete="username" />
+                </div>
+                <span asp-validation-for="Email" class="nb-validation"></span>
             </div>
-            <span asp-validation-for="Email" class="nb-validation"></span>
 
-            <label asp-for="Password" class="nb-form-label">Password</label>
-            <div class="nb-input-wrap">
-                <i class="bi bi-lock nb-input-icon" aria-hidden="true"></i>
-                <input asp-for="Password" id="passwordInput" class="nb-login-input" type="password" placeholder="**********" />
-                <i class="bi bi-eye nb-input-end nb-toggle" id="togglePassword" role="button" tabindex="0" aria-label="Show password"></i>
+            <div class="nb-form-field">
+                <label asp-for="Password" class="nb-form-label">Парола</label>
+                <div class="nb-input-shell">
+                    <i class="bi bi-lock-fill" aria-hidden="true"></i>
+                    <input asp-for="Password" id="passwordInput" class="nb-form-input nb-password-input" type="password" placeholder="********" autocomplete="current-password" />
+                    <button type="button" class="nb-password-toggle" id="togglePassword" aria-label="Покажи паролата">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="Password" class="nb-validation"></span>
             </div>
-            <span asp-validation-for="Password" class="nb-validation"></span>
 
-            <div class="nb-row">
-                <label asp-for="RememberMe" class="nb-remember">
+            <div class="nb-login-options">
+                <label asp-for="RememberMe" class="nb-remember-option">
                     <input asp-for="RememberMe" />
-                    <span>Remember me</span>
+                    <span>Запомни ме</span>
                 </label>
-                <a class="nb-forgot" asp-action="ForgotPassword" asp-controller="Account">Forgot password?</a>
+                <a class="nb-text-link" asp-action="ForgotPassword" asp-controller="Account">Забравена парола?</a>
             </div>
 
-            <button type="submit" class="nb-login-btn">Log in</button>
+            <button type="submit" class="nb-primary-action">Вход</button>
         </form>
 
-        <p class="nb-help">New here? Ask your school for an invitation.</p>
-        <p class="nb-help">Need help? <b>Contact your school administrator.</b></p>
-        <p class="nb-login-desktop-note">Contact administrator for account creation.</p>
-    </div>
+        <div class="nb-login-help">
+            <p>Нямате профил? Училищният администратор ще ви изпрати покана.</p>
+            <p>Нужда от помощ? Свържете се с администратора на училището.</p>
+        </div>
+    </section>
 </div>
 
 @section Scripts {
@@ -352,22 +87,17 @@
         (function () {
             const input = document.getElementById('passwordInput');
             const toggle = document.getElementById('togglePassword');
+            const icon = toggle.querySelector('i');
 
             function toggleVisibility() {
-                const show = input.type === 'password';
-                input.type = show ? 'text' : 'password';
-                toggle.classList.toggle('bi-eye');
-                toggle.classList.toggle('bi-eye-slash');
-                toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                const showPassword = input.type === 'password';
+                input.type = showPassword ? 'text' : 'password';
+                icon.classList.toggle('bi-eye', !showPassword);
+                icon.classList.toggle('bi-eye-slash', showPassword);
+                toggle.setAttribute('aria-label', showPassword ? 'Скрий паролата' : 'Покажи паролата');
             }
 
             toggle.addEventListener('click', toggleVisibility);
-            toggle.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    toggleVisibility();
-                }
-            });
         })();
     </script>
 }

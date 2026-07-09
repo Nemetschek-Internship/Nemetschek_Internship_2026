@@ -13,6 +13,10 @@ public class ProfileImportUploadViewModel
 
     public List<ProfileImportSectionResult> Results { get; set; } = new List<ProfileImportSectionResult>();
 
+    public string? SuccessMessage { get; set; }
+
+    public string? ErrorMessage { get; set; }
+
     public bool HasResults => Results.Count > 0;
 }
 

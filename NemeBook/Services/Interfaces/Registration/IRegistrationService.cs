@@ -25,6 +25,11 @@ public interface IRegistrationService
         CompleteParentSignUpRequest request,
         CancellationToken cancellationToken = default);
 
+    Task ValidateInvitationAsync(
+        string token,
+        RegistrationInvitationType type,
+        CancellationToken cancellationToken = default);
+
     Task<PrincipalSeedResult> SeedPrincipalAsync(
         SeedPrincipalRequest request,
         CancellationToken cancellationToken = default);

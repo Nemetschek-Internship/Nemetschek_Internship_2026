@@ -1,290 +1,97 @@
 @model Web.ViewModels.ProfileImportUploadViewModel
 
 @{
-    ViewData["Title"] = "Import Profiles";
+    ViewData["Title"] = "Импорт на профили";
 }
 
-<style>
-    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-    :root {
-        --nb-orange: #f37021;
-        --nb-orange-dark: #d95f16;
-    }
-
-    .nb-import-page {
-        font-family: 'Inter', sans-serif;
-        min-height: calc(100vh - 130px);
-        display: flex;
-        justify-content: center;
-        padding: 28px 0 44px;
-    }
-
-    .nb-import-card {
-        width: 100%;
-        max-width: 760px;
-        border-radius: 20px;
-        border: 1px solid #ebecef;
-        background: #ffffff;
-        box-shadow: 0 12px 42px rgba(20, 25, 35, 0.1);
-        padding: 24px;
-    }
-
-    .nb-brand { text-align: center; margin-bottom: 14px; }
-
-    .nb-logo-mark {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: linear-gradient(145deg, var(--nb-orange), #ffc14a);
-        margin: 0 auto 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 32px;
-        font-weight: 800;
-        line-height: 1;
-        text-transform: lowercase;
-    }
-
-    .nb-brand-name { font-size: 33px; font-weight: 800; line-height: 1; }
-    .nb-brand-name .accent { color: var(--nb-orange); }
-
-    .nb-import-card h1 {
-        text-align: center;
-        margin: 8px 0 6px;
-        color: #25262b;
-        font-size: 34px;
-        font-weight: 800;
-    }
-
-    .nb-subtitle { text-align: center; margin: 0 0 18px; color: #737a85; font-size: 15px; }
-
-    .nb-upload-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        margin-bottom: 16px;
-    }
-
-    .nb-upload-box {
-        border: 1px solid #d8dce3;
-        border-radius: 12px;
-        padding: 14px;
-        background: #fff;
-        min-width: 0;
-    }
-
-    .nb-upload-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #292d35;
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .nb-upload-title i { color: var(--nb-orange); }
-
-    .nb-file {
-        width: 100%;
-        min-height: 42px;
-        border: 1px solid #d8dce3;
-        border-radius: 10px;
-        padding: 8px;
-        color: #31343b;
-        font-size: 13px;
-    }
-
-    .nb-file:focus {
-        border-color: var(--nb-orange);
-        box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.14);
-        outline: none;
-    }
-
-    .nb-import-btn {
-        width: 100%;
-        height: 44px;
-        border: 0;
-        border-radius: 11px;
-        background: var(--nb-orange);
-        color: #fff;
-        font-size: 20px;
-        font-weight: 700;
-    }
-
-    .nb-import-btn:hover { background: var(--nb-orange-dark); }
-
-    .nb-validation { color: #b42318; font-size: 13px; margin-bottom: 12px; }
-
-    .nb-results { margin-top: 20px; display: grid; gap: 12px; }
-
-    .nb-result {
-        border: 1px solid #ebecef;
-        border-radius: 12px;
-        padding: 14px;
-        background: #fafafa;
-    }
-
-    .nb-result-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 10px;
-    }
-
-    .nb-result-title { margin: 0; font-size: 18px; font-weight: 800; color: #25262b; }
-    .nb-file-name { color: #737a85; font-size: 13px; word-break: break-word; }
-
-    .nb-stats {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    .nb-stat {
-        border-radius: 10px;
-        background: #ffffff;
-        border: 1px solid #ebecef;
-        padding: 10px;
-    }
-
-    .nb-stat-label { color: #737a85; font-size: 12px; }
-    .nb-stat-value { color: #25262b; font-size: 20px; font-weight: 800; }
-
-    .nb-issues {
-        margin: 10px 0 0;
-        padding-left: 18px;
-        color: #8a4b00;
-        font-size: 13px;
-    }
-
-    @@media (max-width: 767.98px) {
-        .nb-import-page { padding: 18px 0 28px; }
-        .nb-import-card { border-radius: 16px; padding: 18px; }
-        .nb-upload-grid, .nb-stats { grid-template-columns: 1fr; }
-        .nb-import-card h1 { font-size: 30px; }
-    }
-</style>
-
-<div class="nb-import-page">
-    <div class="nb-import-card">
-        <div class="nb-brand">
-            <div class="nb-logo-mark">n</div>
-            <div class="nb-brand-name"><span class="accent">Neme</span>Book</div>
+<div class="nb-form-shell nb-import-shell">
+    <section class="nb-form-card nb-import-card" aria-labelledby="profile-import-title">
+        <div class="nb-auth-brand">
+            <div class="nb-auth-logo">N</div>
+            <div class="nb-auth-name"><span>Neme</span>Book</div>
         </div>
 
-        <h1>Import profiles</h1>
-        <p class="nb-subtitle">Upload Excel tables for students, teachers and parents.</p>
+        <h1 id="profile-import-title">Импорт на профили</h1>
+        <p class="nb-form-subtitle">Качете Excel таблиците за ученици, учители и родители.</p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+        {
+            <div class="nb-flash-message is-success">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                <span>@Model.SuccessMessage</span>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="nb-flash-message is-error">
+                <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+                <span>@Model.ErrorMessage</span>
+            </div>
+        }
 
         <form asp-action="Import" method="post" enctype="multipart/form-data" novalidate>
-            <div asp-validation-summary="ModelOnly" class="nb-validation"></div>
+            <div asp-validation-summary="ModelOnly" class="nb-form-summary"></div>
 
             <div class="nb-upload-grid">
                 <div class="nb-upload-box">
                     <label asp-for="StudentsFile" class="nb-upload-title">
-                        <i class="bi bi-mortarboard-fill"></i>
-                        <span>Students</span>
+                        <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+                        <span>Ученици</span>
                     </label>
-                    <input asp-for="StudentsFile" class="nb-file" type="file" accept=".xlsx,.xls" />
+                    <label class="nb-file-picker">
+                        <input asp-for="StudentsFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
+                        <span class="nb-file-button">Избери файл</span>
+                        <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
+                    </label>
                 </div>
 
                 <div class="nb-upload-box">
                     <label asp-for="TeachersFile" class="nb-upload-title">
-                        <i class="bi bi-person-workspace"></i>
-                        <span>Teachers</span>
+                        <i class="bi bi-person-workspace" aria-hidden="true"></i>
+                        <span>Учители</span>
                     </label>
-                    <input asp-for="TeachersFile" class="nb-file" type="file" accept=".xlsx,.xls" />
+                    <label class="nb-file-picker">
+                        <input asp-for="TeachersFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
+                        <span class="nb-file-button">Избери файл</span>
+                        <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
+                    </label>
                 </div>
 
                 <div class="nb-upload-box">
                     <label asp-for="ParentsFile" class="nb-upload-title">
-                        <i class="bi bi-people-fill"></i>
-                        <span>Parents</span>
+                        <i class="bi bi-people-fill" aria-hidden="true"></i>
+                        <span>Родители</span>
                     </label>
-                    <input asp-for="ParentsFile" class="nb-file" type="file" accept=".xlsx,.xls" />
+                    <label class="nb-file-picker">
+                        <input asp-for="ParentsFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
+                        <span class="nb-file-button">Избери файл</span>
+                        <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
+                    </label>
                 </div>
             </div>
 
-            <button type="submit" class="nb-import-btn">
-                <i class="bi bi-upload"></i>
-                Import profiles
+            <button type="submit" class="nb-primary-action">
+                <i class="bi bi-upload" aria-hidden="true"></i>
+                Импортирай профили
             </button>
         </form>
 
-        @if (Model.HasResults)
-        {
-            <div class="nb-results">
-                @foreach (var importResult in Model.Results)
-                {
-                    <section class="nb-result">
-                        <div class="nb-result-head">
-                            <div>
-                                <h2 class="nb-result-title">@importResult.Title</h2>
-                                <div class="nb-file-name">@importResult.FileName</div>
-                            </div>
-                            @if (importResult.IsSuccess)
-                            {
-                                <span class="badge text-bg-success">Finished</span>
-                            }
-                            else
-                            {
-                                <span class="badge text-bg-danger">Failed</span>
-                            }
-                        </div>
-
-                        @if (!importResult.IsSuccess)
-                        {
-                            <div class="alert alert-danger mb-0">@importResult.ErrorMessage</div>
-                        }
-                        else if (importResult.Result is not null)
-                        {
-                            <div class="nb-stats">
-                                <div class="nb-stat">
-                                    <div class="nb-stat-label">Rows</div>
-                                    <div class="nb-stat-value">@importResult.Result.TotalRows</div>
-                                </div>
-                                <div class="nb-stat">
-                                    <div class="nb-stat-label">Users</div>
-                                    <div class="nb-stat-value">@importResult.Result.CreatedUsers</div>
-                                </div>
-                                <div class="nb-stat">
-                                    <div class="nb-stat-label">Profiles</div>
-                                    <div class="nb-stat-value">@importResult.Result.CreatedProfiles</div>
-                                </div>
-                                <div class="nb-stat">
-                                    <div class="nb-stat-label">Invitations</div>
-                                    <div class="nb-stat-value">@importResult.Result.CreatedInvitations</div>
-                                </div>
-                            </div>
-
-                            @if (importResult.Result.Issues.Any())
-                            {
-                                <ul class="nb-issues">
-                                    @foreach (var issue in importResult.Result.Issues)
-                                    {
-                                        <li>
-                                            Row @(issue.RowNumber?.ToString() ?? "-")
-                                            @if (!string.IsNullOrWhiteSpace(issue.Email))
-                                            {
-                                                <span>(@issue.Email)</span>
-                                            }
-                                            : @issue.Message
-                                        </li>
-                                    }
-                                </ul>
-                            }
-                        }
-                    </section>
-                }
-            </div>
-        }
-    </div>
+    </section>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelectorAll('.nb-file-picker').forEach(function (picker) {
+            const input = picker.querySelector('.nb-file-input');
+            const display = picker.querySelector('.nb-file-name-display');
+
+            input.addEventListener('change', function () {
+                display.textContent = input.files.length > 0
+                    ? input.files[0].name
+                    : display.dataset.emptyText;
+            });
+        });
+    </script>
 }

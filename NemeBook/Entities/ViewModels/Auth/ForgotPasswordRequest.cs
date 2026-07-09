@@ -4,7 +4,7 @@ namespace Entities.ViewModels.Auth;
 
 public class ForgotPasswordRequest
 {
-    [Required(ErrorMessage = "Email is required.")]
-    [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+    [Required(ErrorMessage = "Имейлът е задължителен.")]
+    [EmailAddress(ErrorMessage = "Невалиден формат на имейл адрес.")]
     public string Email { get; set; } = string.Empty;
 }
