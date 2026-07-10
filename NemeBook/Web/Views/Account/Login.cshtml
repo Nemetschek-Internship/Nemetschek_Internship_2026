@@ -4,81 +4,81 @@
     ViewData["Title"] = "Вход";
 }
 
-<div class="nb-form-shell">
-    <section class="nb-form-card nb-login-card" aria-labelledby="login-title">
-        <div class="nb-auth-brand">
-            <div class="nb-auth-logo">N</div>
-            <div class="nb-auth-name"><span>Neme</span>Book</div>
+<div class="nb-login-page">
+    <aside class="nb-login-brand-panel" aria-label="NemeBook">
+        <div class="nb-login-brand-content">
+            <div class="nb-login-brand-orb" aria-hidden="true"></div>
+            <div class="nb-login-wordmark"><span>Neme</span>Book</div>
+            <p>Оценки, домашни и съобщения —<br />за ученици, учители и родители.</p>
         </div>
+    </aside>
 
-        <h1 id="login-title">Добре дошли</h1>
-        <p class="nb-form-subtitle">Влезте в профила си, за да продължите.</p>
+    <main class="nb-login-card-area">
+        <section class="nb-login-panel" aria-labelledby="login-title">
+            <h1 id="login-title">Добре дошли!</h1>
+            <p class="nb-login-subtitle">Влезте в профила си, за да продължите.</p>
 
-        @if (!string.IsNullOrEmpty(ViewData["ReturnUrl"]?.ToString()))
-        {
-            <div class="nb-flash-message is-info">
-                <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
-                <span>Моля, влезте в профила си, за да отворите тази страница.</span>
-            </div>
-        }
-
-        @if (TempData["SuccessMessage"] is string successMessage)
-        {
-            <div class="nb-flash-message is-success">
-                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
-                <span>@successMessage</span>
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] is string errorMessage)
-        {
-            <div class="nb-flash-message is-error">
-                <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
-                <span>@errorMessage</span>
-            </div>
-        }
-
-        <form asp-action="Login" method="post" novalidate>
-            <div asp-validation-summary="ModelOnly" class="nb-form-summary"></div>
-            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-
-            <div class="nb-form-field">
-                <label asp-for="Email" class="nb-form-label">Имейл</label>
-                <div class="nb-input-shell">
-                    <i class="bi bi-envelope-fill" aria-hidden="true"></i>
-                    <input asp-for="Email" class="nb-form-input" placeholder="you@school.bg" autocomplete="username" />
+            @if (!string.IsNullOrEmpty(ViewData["ReturnUrl"]?.ToString()))
+            {
+                <div class="nb-flash-message is-info">
+                    <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                    <span>Моля, влезте в профила си, за да отворите тази страница.</span>
                 </div>
-                <span asp-validation-for="Email" class="nb-validation"></span>
-            </div>
+            }
 
-            <div class="nb-form-field">
-                <label asp-for="Password" class="nb-form-label">Парола</label>
-                <div class="nb-input-shell">
-                    <i class="bi bi-lock-fill" aria-hidden="true"></i>
-                    <input asp-for="Password" id="passwordInput" class="nb-form-input nb-password-input" type="password" placeholder="********" autocomplete="current-password" />
-                    <button type="button" class="nb-password-toggle" id="togglePassword" aria-label="Покажи паролата">
-                        <i class="bi bi-eye" aria-hidden="true"></i>
-                    </button>
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="nb-flash-message is-success">
+                    <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                    <span>@successMessage</span>
                 </div>
-                <span asp-validation-for="Password" class="nb-validation"></span>
+            }
+
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="nb-flash-message is-error">
+                    <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+                    <span>@errorMessage</span>
+                </div>
+            }
+
+            <form asp-action="Login" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="nb-form-summary"></div>
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                <div class="nb-form-field">
+                    <label asp-for="Email" class="nb-form-label">Имейл</label>
+                    <input asp-for="Email" class="nb-login-input" placeholder="you@school.bg" autocomplete="username" />
+                    <span asp-validation-for="Email" class="nb-validation"></span>
+                </div>
+
+                <div class="nb-form-field">
+                    <label asp-for="Password" class="nb-form-label">Парола</label>
+                    <div class="nb-login-password-shell">
+                        <input asp-for="Password" id="passwordInput" class="nb-login-input nb-password-input" type="password" placeholder="********" autocomplete="current-password" />
+                        <button type="button" class="nb-password-toggle" id="togglePassword" aria-label="Покажи паролата">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="nb-validation"></span>
+                </div>
+
+                <div class="nb-login-options">
+                    <label asp-for="RememberMe" class="nb-remember-option">
+                        <input asp-for="RememberMe" />
+                        <span>Запомни ме</span>
+                    </label>
+                    <a class="nb-text-link" asp-action="ForgotPassword" asp-controller="Account">Забравена парола?</a>
+                </div>
+
+                <button type="submit" class="nb-primary-action">Вход</button>
+            </form>
+
+            <div class="nb-login-help">
+                <p>Нямате профил? <span>Училищният администратор ще ви изпрати покана.</span></p>
             </div>
-
-            <div class="nb-login-options">
-                <label asp-for="RememberMe" class="nb-remember-option">
-                    <input asp-for="RememberMe" />
-                    <span>Запомни ме</span>
-                </label>
-                <a class="nb-text-link" asp-action="ForgotPassword" asp-controller="Account">Забравена парола?</a>
-            </div>
-
-            <button type="submit" class="nb-primary-action">Вход</button>
-        </form>
-
-        <div class="nb-login-help">
-            <p>Нямате профил? Училищният администратор ще ви изпрати покана.</p>
-            <p>Нужда от помощ? Свържете се с администратора на училището.</p>
-        </div>
-    </section>
+        </section>
+    </main>
 </div>
 
 @section Scripts {

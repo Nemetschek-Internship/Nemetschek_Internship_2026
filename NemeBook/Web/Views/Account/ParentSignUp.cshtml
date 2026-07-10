@@ -4,15 +4,19 @@
     ViewData["Title"] = "Регистрация на родител";
 }
 
-<div class="nb-form-shell">
-    <section class="nb-form-card nb-form-card-parent" aria-labelledby="parent-signup-title">
-        <div class="nb-auth-brand">
-            <div class="nb-auth-logo">N</div>
-            <div class="nb-auth-name"><span>Neme</span>Book</div>
+<div class="nb-login-page">
+    <aside class="nb-login-brand-panel" aria-hidden="true">
+        <div class="nb-login-brand-content">
+            <div class="nb-login-brand-orb"></div>
+            <div class="nb-login-wordmark"><span>Neme</span>Book</div>
+            <p>Попълнете родителския си профил, за да получавате информация за детето си.</p>
         </div>
+    </aside>
 
+    <main class="nb-login-card-area">
+    <section class="nb-login-panel nb-auth-panel-wide" aria-labelledby="parent-signup-title">
         <h1 id="parent-signup-title">Завършете регистрацията</h1>
-        <p class="nb-form-subtitle">Попълнете данните си и създайте парола за родителския профил.</p>
+        <p class="nb-login-subtitle">Попълнете данните си и създайте парола за родителския профил.</p>
 
         <form asp-action="ParentSignUp" method="post" novalidate>
             <div asp-validation-summary="ModelOnly" class="nb-form-summary"></div>
@@ -77,6 +81,7 @@
             <button type="submit" class="nb-primary-action">Завърши регистрацията</button>
         </form>
     </section>
+    </main>
 </div>
 
 @section Scripts {
