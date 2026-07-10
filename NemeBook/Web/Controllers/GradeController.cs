@@ -151,8 +151,8 @@ public class GradeController : Controller
 
         ViewBag.ClassName = classEntity is not null
             ? $"{classEntity.GradeNumber}{classEntity.Letter}"
-            : "Unknown";
-        ViewBag.SubjectName = subject?.Name ?? "Unknown";
+            : "Неизвестно";
+        ViewBag.SubjectName = subject?.Name ?? "Неизвестно";
 
         return View(ranking);
     }

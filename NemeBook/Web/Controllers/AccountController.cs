@@ -1,4 +1,6 @@
 // Web/Controllers/AccountController.cs
+
+using System.Diagnostics;
 using System.Security.Claims;
 using Entities.Enums;
 using Entities.ViewModels.Auth;
@@ -33,10 +35,20 @@ public class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null, CancellationToken cancellationToken = default)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
+            var userId = GetCurrentUserId();
+            if (userId.HasValue)
+            {
+                var currentUser = await _authService.GetUserByIdAsync(userId.Value, cancellationToken);
+                if (currentUser?.Role == UserRole.Student)
+                {
+                    return RedirectToAction("Index", "Student");
+                }
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
@@ -66,6 +78,11 @@ public class AccountController : Controller
         await SignInUserAsync(user, request.RememberMe);
 
         _logger.LogInformation("User logged in: {Email}", user.Email);
+
+        if (user.Role == UserRole.Student)
+        {
+            return RedirectToAction("Index", "Student");
+        }
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
@@ -113,7 +130,7 @@ public class AccountController : Controller
             "Account",
             values: null,
             protocol: Request.Scheme);
-
+       
         if (string.IsNullOrWhiteSpace(resetUrlBase))
         {
             ModelState.AddModelError(string.Empty, "Неуспешно създаване на линк за възстановяване.");
@@ -290,7 +307,7 @@ public class AccountController : Controller
             return RedirectToAction("Login", "Account");
         }
 
-        var userInfo = new UserInfoDto
+        var userInfo = new AccountViewModel
         {
             Id = user.Id,
             FirstName = user.FirstName,
@@ -298,7 +315,7 @@ public class AccountController : Controller
             LastName = user.LastName,
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
-            Role = user.Role.ToString(),
+            Role = GetRoleDisplayName(user.Role),
         };
 
         return View(userInfo);
@@ -379,7 +396,11 @@ public class AccountController : Controller
             new Claim("FullName", FormatFullName(user.FirstName, user.MiddleName, user.LastName)),
         };
 
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var identity = new ClaimsIdentity(
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            ClaimTypes.Name,
+            ClaimTypes.Role);
         var principal = new ClaimsPrincipal(identity);
 
         var authProperties = new AuthenticationProperties
@@ -401,6 +422,18 @@ public class AccountController : Controller
             " ",
             new[] { firstName, middleName, lastName }
                 .Where(name => !string.IsNullOrWhiteSpace(name)));
+    }
+
+    private static string GetRoleDisplayName(UserRole role)
+    {
+        return role switch
+        {
+            UserRole.Student => "Ученик",
+            UserRole.Parent => "Родител",
+            UserRole.Teacher => "Учител",
+            UserRole.Principal => "Директор",
+            _ => role.ToString()
+        };
     }
 
     private Guid? GetCurrentUserId()

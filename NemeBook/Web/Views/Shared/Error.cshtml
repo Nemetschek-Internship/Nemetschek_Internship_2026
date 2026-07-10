@@ -1,25 +1,25 @@
 ﻿@model Entities.ViewModels.ErrorViewModel
 @{
-    ViewData["Title"] = "Error";
+    ViewData["Title"] = "Грешка";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<h1 class="text-danger">Грешка.</h1>
+<h2 class="text-danger">Възникна грешка при обработката на заявката.</h2>
 
 @if (Model.ShowRequestId)
 {
     <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+        <strong>Идентификатор на заявката:</strong> <code>@Model.RequestId</code>
     </p>
 }
 
-<h3>Development Mode</h3>
+<h3>Режим за разработка</h3>
 <p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
+    Превключването към среда за разработка ще покаже по-подробна информация за възникналата грешка.
 </p>
 <p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
+    <strong>Средата за разработка не трябва да бъде включена за публикувани приложения.</strong>
+    Това може да покаже чувствителна информация от изключенията на крайните потребители.
+    За локално дебъгване задайте променливата <strong>ASPNETCORE_ENVIRONMENT</strong> със стойност <strong>Development</strong>
+    и рестартирайте приложението.
 </p>

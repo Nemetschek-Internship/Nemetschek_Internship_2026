@@ -1,7 +1,18 @@
-﻿@model Entities.ViewModels.Grades.StudentGradesViewModel
+﻿@using System.ComponentModel.DataAnnotations
+@model Entities.ViewModels.Grades.StudentGradesViewModel
 
 @{
     ViewData["Title"] = "Моите оценки";
+
+    string GetDisplayName(Enum value)
+    {
+        var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+        return member?
+            .GetCustomAttributes(typeof(DisplayAttribute), false)
+            .OfType<DisplayAttribute>()
+            .FirstOrDefault()?
+            .Name ?? value.ToString();
+    }
 }
 
 <div class="container">
@@ -31,7 +42,7 @@
                                         <option value="">Всички</option>
                                         @foreach (var type in Enum.GetValues(typeof(Entities.Enums.GradeType)))
                                         {
-                                            <option value="@type">@type</option>
+                                            <option value="@type">@GetDisplayName((Enum)type)</option>
                                         }
                                     </select>
                                 </div>
@@ -62,7 +73,7 @@
                                         @foreach (var summary in Model.TypeSummary)
                                         {
                                             <div class="col-3 text-center">
-                                                <span class="badge bg-info">@summary.Type</span>
+                                                <span class="badge bg-info">@GetDisplayName(summary.Type)</span>
                                                 <div><strong>@summary.Average.ToString("F2")</strong></div>
                                                 <small>@summary.Count оценки</small>
                                             </div>
@@ -113,7 +124,7 @@
                                                                     @grade.Value.ToString("F2")
                                                                 </span>
                                                             </td>
-                                                            <td>@grade.Type</td>
+                                                            <td>@GetDisplayName(grade.Type)</td>
                                                             <td>@grade.TeacherName</td>
                                                             <td>@grade.Date.ToString("dd.MM.yyyy")</td>
                                                             <td>@grade.Note</td>

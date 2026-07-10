@@ -1,0 +1,172 @@
+@model Entities.ViewModels.Students.StudentHomeViewModel
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Начало";
+}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - NemeBook</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="nb-student-body">
+    <div class="nb-student-shell">
+        <aside class="nb-student-sidebar" aria-label="Навигация за ученик">
+            <a class="nb-student-brand" asp-controller="Student" asp-action="Index">
+                <span class="nb-student-brand-mark">N</span>
+                <span>
+                    <strong>NemeBook</strong>
+                    <small>Ученик</small>
+                </span>
+            </a>
+
+            <nav class="nb-student-nav">
+                <a class="is-active" asp-controller="Student" asp-action="Index"><i class="bi bi-house-fill"></i><span>Начало</span></a>
+                <a asp-controller="Grade" asp-action="MyGrades"><i class="bi bi-journal-bookmark"></i><span>Оценки</span></a>
+                <a href="#" aria-disabled="true"><i class="bi bi-chat-dots"></i><span>Чатове</span></a>
+                <a href="#" aria-disabled="true"><i class="bi bi-calendar3"></i><span>Календар</span></a>
+                <a asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i><span>Профил</span></a>
+            </nav>
+
+            <div class="nb-student-user">
+                <span class="nb-student-avatar">@Model.StudentInitials</span>
+                <span>
+                    <strong>@Model.StudentName</strong>
+                    <small>@Model.ClassName</small>
+                </span>
+            </div>
+        </aside>
+
+        <main class="nb-student-main">
+            <header class="nb-student-topbar">
+                <h1>Начало</h1>
+                <div class="nb-student-top-actions">
+                    <span class="nb-student-dot"></span>
+                    <span class="nb-student-avatar" aria-hidden="true">@Model.StudentInitials</span>
+                </div>
+            </header>
+
+            <section class="nb-student-content">
+                <div class="nb-student-greeting">
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <section class="nb-student-hero" aria-label="Обобщение за ученик">
+                    <div class="nb-student-id-card">
+                        <div class="nb-id-content">
+                            <span class="nb-id-line"></span>
+                            <span class="nb-id-caption">Общ успех</span>
+                            <span class="nb-id-meta">@Model.GradeCount оценки общо</span>
+                        </div>
+                        <div class="nb-id-average">
+                            <span>@Model.OverallAverage.ToString("0.00")</span>
+                            <small>СР.</small>
+                        </div>
+                    </div>
+
+                    <div class="nb-student-progress-card">
+                        <span class="nb-progress-title-line"></span>
+                        @if (Model.SubjectProgress.Any())
+                        {
+                            @foreach (var subject in Model.SubjectProgress)
+                            {
+                                <div class="nb-progress-row">
+                                    <span class="nb-progress-icon @subject.AccentClass"></span>
+                                    <strong title="@subject.SubjectName">@subject.SubjectName</strong>
+                                    <span class="nb-progress-track">
+                                        <span class="@subject.AccentClass" style="width: @subject.ProgressPercent%"></span>
+                                    </span>
+                                    <em>@subject.Average.ToString("0.00")</em>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="nb-empty-line">Все още няма данни по предмети</div>
+                        }
+                    </div>
+
+                    <div class="nb-student-side-stack">
+                        <article class="nb-mini-card">
+                            <div>
+                                <h3>Отзиви</h3>
+                                <strong>@Model.FeedbackSummary.Count</strong>
+                                <p>@Model.FeedbackSummary.Detail</p>
+                            </div>
+                            <i class="bi bi-chat-square-text-fill"></i>
+                        </article>
+
+                        <article class="nb-mini-card">
+                            <div>
+                                <h3>Отсъствия</h3>
+                                <strong>@Model.AbsenceSummary.Count</strong>
+                                <p>@Model.AbsenceSummary.Detail</p>
+                            </div>
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="nb-student-lower">
+                    <article class="nb-timeline-card">
+                        <div class="nb-card-heading">
+                            <h2>Данни</h2>
+                        </div>
+                        <div class="nb-timeline-tabs" aria-hidden="true">
+                            <span class="is-active"></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+
+                        @if (Model.RecentGrades.Any())
+                        {
+                            <div class="nb-timeline-list">
+                                @foreach (var grade in Model.RecentGrades)
+                                {
+                                    <div class="nb-timeline-item">
+                                        <span class="nb-timeline-dot"></span>
+                                        <span class="nb-timeline-marker"></span>
+                                        <div>
+                                            <strong>@grade.Title</strong>
+                                            <small>@grade.Detail</small>
+                                        </div>
+                                        <em>@grade.Value</em>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="nb-empty-panel">Все още няма оценки. Средният успех е 0.00.</div>
+                        }
+                    </article>
+
+                    <article class="nb-schedule-card">
+                        <div class="nb-card-heading">
+                            <h2>Днес</h2>
+                            <span>Програма <i class="bi bi-arrow-right-short"></i></span>
+                        </div>
+
+                        <div class="nb-schedule-list">
+                            @foreach (var item in Model.TodaysSchedule)
+                            {
+                                <div class="nb-schedule-item">
+                                    <span>@item.PeriodNumber</span>
+                                    <strong>@item.SubjectName</strong>
+                                    <em>@item.TimeRange</em>
+                                </div>
+                            }
+                        </div>
+                    </article>
+                </section>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
