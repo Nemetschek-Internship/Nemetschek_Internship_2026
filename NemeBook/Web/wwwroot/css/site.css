@@ -653,6 +653,8 @@ body {
   border: 2px solid transparent;
   border-radius: 10px;
   background: #f8f1ea;
+  color: inherit;
+  text-decoration: none;
 }
 
 .nb-class-card:hover,
@@ -695,6 +697,203 @@ body {
 .nb-class-average.is-low {
   background: #ffe0dc;
   color: #ef4444;
+}
+
+.nb-class-management-content {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 18px;
+  overflow: hidden;
+}
+
+.nb-class-management-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+}
+
+.nb-class-management-tabs a {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid #ede5dd;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #697180;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.nb-class-management-tabs a:hover,
+.nb-class-management-tabs a:focus,
+.nb-class-management-tabs a.is-active {
+  border-color: var(--nb-orange);
+  background: var(--nb-orange);
+  color: #ffffff;
+}
+
+.nb-class-students-panel {
+  min-height: 0;
+  padding: 18px;
+  overflow: auto;
+  border: 1px solid #ede5dd;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.nb-class-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.nb-class-section-header h2 {
+  margin: 0;
+  color: #25262b;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.nb-class-section-header span {
+  color: var(--nb-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.nb-student-list {
+  display: grid;
+  gap: 10px;
+}
+
+.nb-student-card {
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: minmax(190px, 1.2fr) minmax(360px, 2fr) 42px;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid #f1e6dc;
+  border-radius: 12px;
+  background: #fffaf5;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.nb-student-card:hover,
+.nb-student-card:focus-within {
+  border-color: #f7b27f;
+  box-shadow: 0 10px 24px rgba(115, 76, 44, 0.1);
+  transform: translateY(-1px);
+}
+
+.nb-student-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nb-student-main strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #25262b;
+  font-size: 15px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-student-number {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #ffe4c8;
+  color: var(--nb-orange-dark);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-student-stats {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.nb-student-stats span {
+  min-height: 48px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #f8f1ea;
+}
+
+.nb-student-stats small {
+  overflow: hidden;
+  color: #7a8290;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-student-stats strong {
+  color: #25262b;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.nb-student-chat-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 11px;
+  background: #fff0e3;
+  color: var(--nb-orange);
+  cursor: pointer;
+  font-size: 17px;
+}
+
+.nb-student-chat-btn:hover,
+.nb-student-chat-btn:focus {
+  background: var(--nb-orange);
+  color: #ffffff;
+}
+
+.nb-class-placeholder-panel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.nb-class-placeholder {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: var(--nb-muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.nb-class-placeholder i {
+  color: var(--nb-orange);
+  font-size: 28px;
 }
 
 .nb-login-page {
@@ -1515,6 +1714,58 @@ body {
 
   .nb-class-card {
     min-height: 78px;
+  }
+
+  .nb-class-management-content {
+    overflow: visible;
+  }
+
+  .nb-class-management-tabs {
+    flex-wrap: wrap;
+  }
+
+  .nb-class-management-tabs a {
+    flex: 1 1 130px;
+  }
+
+  .nb-class-students-panel {
+    overflow: visible;
+    padding: 12px;
+  }
+
+  .nb-class-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .nb-student-card {
+    grid-template-columns: minmax(0, 1fr) 38px;
+    gap: 12px;
+  }
+
+  .nb-student-main,
+  .nb-student-stats {
+    grid-column: 1 / -1;
+  }
+
+  .nb-student-chat-btn {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .nb-student-main {
+    padding-right: 48px;
+  }
+
+  .nb-student-number {
+    width: 28px;
+    height: 28px;
+  }
+
+  .nb-student-stats {
+    grid-template-columns: 1fr;
   }
 
   .nb-login-page {

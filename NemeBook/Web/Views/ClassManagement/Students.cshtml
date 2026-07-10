@@ -1,0 +1,160 @@
+@using System.ComponentModel.DataAnnotations
+@using Entities.Enums
+@model Web.ViewModels.PrincipalClassManagementViewModel
+
+@{
+    Layout = null;
+    ViewData["Title"] = $"Клас {Model.ClassName}";
+
+    var principalDisplayName = typeof(UserRole)
+        .GetMember(nameof(UserRole.Principal))[0]
+        .GetCustomAttributes(typeof(DisplayAttribute), false)
+        .Cast<DisplayAttribute>()
+        .FirstOrDefault()
+        ?.GetName() ?? nameof(UserRole.Principal);
+}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Клас @Model.ClassName - NemeBook</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="nb-principal-body">
+    <div class="nb-principal-shell">
+        <aside class="nb-principal-sidebar" aria-label="Главна навигация">
+            <a class="nb-principal-logo" asp-controller="Home" asp-action="Index">
+                <span class="nb-principal-logo-mark">
+                    <i class="bi bi-book-half" aria-hidden="true"></i>
+                </span>
+                <span>
+                    <strong>NemeBook</strong>
+                    <small>@principalDisplayName</small>
+                </span>
+            </a>
+
+            <nav class="nb-principal-nav">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-house-fill" aria-hidden="true"></i>
+                    <span>Начало</span>
+                </a>
+                <a href="#">
+                    <i class="bi bi-newspaper" aria-hidden="true"></i>
+                    <span>Новини</span>
+                </a>
+                <a class="is-active" asp-controller="Grade" asp-action="AllClasses">
+                    <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
+                    <span>Класове</span>
+                </a>
+                <a asp-controller="Chat" asp-action="Index">
+                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                    <span>Учителски чатове</span>
+                </a>
+                <a asp-controller="ProfileImport" asp-action="Index">
+                    <i class="bi bi-upload" aria-hidden="true"></i>
+                    <span>Импорт на профили</span>
+                </a>
+            </nav>
+
+            <a class="nb-principal-user-card" asp-controller="Account" asp-action="Profile">
+                <span class="nb-principal-user-avatar"></span>
+                <span>
+                    <strong>@(User.FindFirst("FullName")?.Value ?? "Директор")</strong>
+                    <small>Директорски профил</small>
+                </span>
+            </a>
+        </aside>
+
+        <main class="nb-principal-main">
+            <header class="nb-principal-topbar">
+                <h1>Клас @Model.ClassName</h1>
+                <div class="nb-principal-top-actions">
+                    <a class="nb-principal-action-btn" asp-controller="Grade" asp-action="AllClasses" asp-route-grade="@GetGradeNumber(Model.ClassName)">
+                        <span>Всички класове</span>
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    <form asp-action="Logout" asp-controller="Account" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="nb-principal-action-btn is-logout" type="submit">
+                            <span>Изход</span>
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <section class="nb-principal-content nb-class-management-content" aria-label="Управление на клас">
+                <nav class="nb-class-management-tabs" aria-label="Секции на класа">
+                    <a class="@GetTabClass("Students")" asp-controller="ClassManagement" asp-action="Students" asp-route-classId="@Model.ClassId">Ученици</a>
+                    <a class="@GetTabClass("Subjects")" asp-controller="ClassManagement" asp-action="Subjects" asp-route-classId="@Model.ClassId">Предмети</a>
+                    <a class="@GetTabClass("Schedule")" asp-controller="ClassManagement" asp-action="Schedule" asp-route-classId="@Model.ClassId">Програма</a>
+                    <a class="@GetTabClass("Events")" asp-controller="ClassManagement" asp-action="Events" asp-route-classId="@Model.ClassId">Събития</a>
+                </nav>
+
+                <section class="nb-class-students-panel" aria-labelledby="class-students-title">
+                    <div class="nb-class-section-header">
+                        <h2 id="class-students-title">Ученици</h2>
+                        <span>@Model.Students.Count ученици</span>
+                    </div>
+
+                    <div class="nb-student-list">
+                        @foreach (var student in Model.Students)
+                        {
+                            <article class="nb-student-card">
+                                <div class="nb-student-main">
+                                    <span class="nb-student-number">@student.ClassNumber</span>
+                                    <strong>@student.FullName</strong>
+                                </div>
+
+                                <div class="nb-student-stats" aria-label="Статистика">
+                                    <span>
+                                        <small>Среден успех</small>
+                                        <strong>@FormatAverage(student.AverageGrade)</strong>
+                                    </span>
+                                    <span>
+                                        <small>Похвали</small>
+                                        <strong>@student.PraiseCount</strong>
+                                    </span>
+                                    <span>
+                                        <small>Забележки</small>
+                                        <strong>@student.RemarkCount</strong>
+                                    </span>
+                                    <span>
+                                        <small>Отсъствия и закъснения</small>
+                                        <strong>@student.AbsenceAndLatenessCount</strong>
+                                    </span>
+                                </div>
+
+                                <button class="nb-student-chat-btn" type="button" aria-label="Чат с @student.FullName">
+                                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                                </button>
+                            </article>
+                        }
+                    </div>
+                </section>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
+
+@functions {
+    private string GetTabClass(string tab)
+    {
+        return Model.ActiveTab == tab ? "is-active" : string.Empty;
+    }
+
+    private static string FormatAverage(decimal? average)
+    {
+        return average.HasValue ? average.Value.ToString("0.00") : "-";
+    }
+
+    private static int GetGradeNumber(string className)
+    {
+        var digits = new string(className.TakeWhile(char.IsDigit).ToArray());
+        return int.TryParse(digits, out var gradeNumber) ? gradeNumber : 1;
+    }
+}
