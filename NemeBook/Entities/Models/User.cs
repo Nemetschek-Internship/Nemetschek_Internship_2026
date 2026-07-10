@@ -21,6 +21,8 @@ public class User
     
     public bool IsDeleted { get; set; }
 
+    public bool IsActive { get; set; }
+
     public UserRole Role { get; set; }
 
     public Student? Student { get; set; }
