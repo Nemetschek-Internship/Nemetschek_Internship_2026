@@ -33,6 +33,7 @@ using Services.Services.Security;
 using Services.Services.Students;
 using Services.Services.Subjects;
 using Services.Services.Teachers;
+using Web.Hubs;
 using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -148,6 +149,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<BackgroundEmailQueue>();
 builder.Services.AddSingleton<IBackgroundEmailQueue>(serviceProvider => serviceProvider.GetRequiredService<BackgroundEmailQueue>());
@@ -180,6 +182,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapHub<ChatHub>("/chatHub");
 
 app.MapControllerRoute(
         name: "default",

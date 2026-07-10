@@ -1,0 +1,565 @@
+@model Web.ViewModels.Chat.ChatIndexViewModel
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Чатове";
+}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f97316" />
+    <title>@ViewData["Title"] - NemeBook</title>
+    <link rel="manifest" href="~/manifest.webmanifest" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .nb-chat-shell { background: #fbf3ec; }
+        .nb-chat-main { min-height: 100vh; }
+        .nb-chat-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border: 1px solid #efe4d8;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #6b7280;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .nb-chat-connection-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16);
+        }
+        .nb-chat-connection-dot.is-online {
+            background: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+        }
+        .nb-chat-connection-dot.is-offline {
+            background: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+        }
+        .nb-chat-page {
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+            gap: 22px;
+            padding: 28px 34px 34px;
+        }
+        .nb-chat-list-panel,
+        .nb-chat-room-panel {
+            min-width: 0;
+            border: 1px solid #efe3d8;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 18px 45px rgba(99, 68, 42, 0.08);
+        }
+        .nb-chat-list-panel {
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+        }
+        .nb-chat-list-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .nb-chat-list-heading span {
+            display: block;
+            color: #9a7c65;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .nb-chat-list-heading strong {
+            display: block;
+            color: #1f232b;
+            font-size: 16px;
+            font-weight: 900;
+        }
+        .nb-chat-new-button,
+        .nb-chat-icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 8px;
+            background: #f97316;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 850;
+        }
+        .nb-chat-new-button {
+            gap: 6px;
+            min-height: 36px;
+            padding: 0 12px;
+            font-size: 12px;
+        }
+        .nb-chat-icon-button {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 auto;
+            background: #fff0dc;
+            color: #d95f16;
+        }
+        .nb-chat-search-panel {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding: 10px;
+            border: 1px solid #f1dfcf;
+            border-radius: 8px;
+            background: #fffaf5;
+        }
+        .nb-chat-search-panel[hidden] { display: none; }
+        .nb-chat-search-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 42px;
+            gap: 8px;
+        }
+        .nb-chat-search {
+            height: 42px;
+            display: grid;
+            grid-template-columns: 22px minmax(0, 1fr);
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            border: 1px solid #eee0d2;
+            border-radius: 8px;
+            background: #fff8f1;
+            color: #ea5b10;
+        }
+        .nb-chat-search input {
+            min-width: 0;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #1f232b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .nb-chat-search input::placeholder { color: #a08d7c; }
+        .nb-chat-contacts {
+            display: grid;
+            gap: 8px;
+            max-height: 270px;
+            overflow: auto;
+        }
+        .nb-chat-contact,
+        .nb-chat-list-item {
+            width: 100%;
+            min-width: 0;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .nb-chat-contact {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+        }
+        .nb-chat-contact:hover,
+        .nb-chat-contact:focus-visible,
+        .nb-chat-list-item:hover,
+        .nb-chat-list-item:focus-visible,
+        .nb-chat-list-item.is-active {
+            background: #fff0dc;
+        }
+        .nb-chat-contact strong,
+        .nb-chat-list-item strong {
+            display: block;
+            overflow: hidden;
+            color: #1f232b;
+            font-size: 13px;
+            font-weight: 850;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .nb-chat-contact small,
+        .nb-chat-list-item small {
+            display: block;
+            overflow: hidden;
+            margin-top: 2px;
+            color: #7a6f66;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .nb-chat-avatar {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: #ffdcb8;
+            color: #dc550c;
+            font-size: 11px;
+            font-weight: 950;
+        }
+        .nb-chat-avatar.is-large {
+            width: 44px;
+            height: 44px;
+            font-size: 13px;
+        }
+        .nb-chat-contact-empty,
+        .nb-chat-empty {
+            padding: 12px;
+            border-radius: 8px;
+            background: #fff8f1;
+            color: #9a7c65;
+            font-size: 12px;
+            font-weight: 750;
+            text-align: center;
+        }
+        .nb-chat-empty {
+            display: none;
+            margin-top: 10px;
+        }
+        .nb-chat-empty.is-visible { display: block; }
+        .nb-chat-section-title {
+            margin: 2px 4px 10px;
+            color: #9a7c65;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .nb-chat-list {
+            min-height: 0;
+            display: grid;
+            gap: 8px;
+            overflow: auto;
+        }
+        .nb-chat-list-item {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 9px;
+        }
+        .nb-chat-list-copy { min-width: 0; }
+        .nb-chat-list-item em {
+            align-self: start;
+            color: #aa8b72;
+            font-size: 10px;
+            font-style: normal;
+            font-weight: 800;
+        }
+        .nb-chat-room-panel {
+            min-height: 620px;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            overflow: hidden;
+        }
+        .nb-chat-room-panel.is-idle {
+            grid-template-rows: minmax(0, 1fr);
+            background: #fffdfb;
+        }
+        .nb-chat-room-panel.is-idle .nb-chat-room-header,
+        .nb-chat-room-panel.is-idle .nb-chat-composer {
+            display: none;
+        }
+        .nb-chat-room-header {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 18px;
+            border-bottom: 1px solid #efe3d8;
+            background: #ffffff;
+        }
+        .nb-chat-room-header h2 {
+            margin: 0;
+            overflow: hidden;
+            color: #1f232b;
+            font-size: 17px;
+            font-weight: 900;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .nb-chat-room-header p {
+            margin: 2px 0 0;
+            overflow: hidden;
+            color: #8b7766;
+            font-size: 12px;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .nb-chat-messages {
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 18px;
+            overflow: auto;
+            background: linear-gradient(180deg, rgba(255, 248, 241, 0.9), rgba(251, 243, 236, 0.95));
+        }
+        .nb-chat-room-panel.is-idle .nb-chat-messages {
+            background: #fffdfb;
+        }
+        .nb-chat-welcome {
+            max-width: 340px;
+            margin: auto;
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            color: #8b7766;
+            text-align: center;
+        }
+        .nb-chat-welcome i {
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #ffe4c5;
+            color: #ea5b10;
+            font-size: 20px;
+        }
+        .nb-chat-welcome strong {
+            color: #1f232b;
+            font-size: 15px;
+            font-weight: 900;
+        }
+        .nb-chat-welcome span {
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .nb-chat-message {
+            display: flex;
+            justify-content: flex-start;
+        }
+        .nb-chat-message.is-mine { justify-content: flex-end; }
+        .nb-chat-bubble {
+            max-width: min(620px, 78%);
+            padding: 10px 12px;
+            border: 1px solid #efe0d0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #1f232b;
+            box-shadow: 0 8px 20px rgba(99, 68, 42, 0.07);
+        }
+        .nb-chat-message.is-mine .nb-chat-bubble {
+            border-color: #ea5b10;
+            background: #f97316;
+            color: #ffffff;
+        }
+        .nb-chat-message-meta {
+            display: block;
+            margin-bottom: 4px;
+            color: #9a7c65;
+            font-size: 10px;
+            font-weight: 850;
+        }
+        .nb-chat-message.is-mine .nb-chat-message-meta { color: rgba(255, 255, 255, 0.78); }
+        .nb-chat-bubble p {
+            margin: 0;
+            overflow-wrap: anywhere;
+            font-size: 13px;
+            font-weight: 650;
+            line-height: 1.45;
+            white-space: pre-wrap;
+        }
+        .nb-chat-composer {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 44px;
+            gap: 10px;
+            padding: 14px;
+            border-top: 1px solid #efe3d8;
+            background: #ffffff;
+        }
+        .nb-chat-composer input {
+            min-width: 0;
+            height: 44px;
+            padding: 0 14px;
+            border: 1px solid #eadbcb;
+            border-radius: 8px;
+            outline: 0;
+            background: #fff8f1;
+            color: #1f232b;
+            font-size: 13px;
+            font-weight: 750;
+        }
+        .nb-chat-composer input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+        }
+        .nb-chat-composer button {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border: 0;
+            border-radius: 8px;
+            background: #f97316;
+            color: #ffffff;
+            cursor: pointer;
+        }
+        .nb-chat-composer button:disabled,
+        .nb-chat-composer input:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+        @@media (max-width: 920px) {
+            .nb-chat-page {
+                grid-template-columns: 1fr;
+                padding: 18px;
+            }
+            .nb-chat-room-panel { min-height: 560px; }
+        }
+        @@media (max-width: 640px) {
+            .nb-chat-page {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+            .nb-chat-list-item {
+                grid-template-columns: 34px minmax(0, 1fr);
+            }
+            .nb-chat-list-item em { display: none; }
+            .nb-chat-room-panel { min-height: 500px; }
+            .nb-chat-bubble { max-width: 90%; }
+        }
+    </style>
+</head>
+<body class="nb-student-body">
+    <div class="nb-student-shell nb-chat-shell">
+        <aside class="nb-student-sidebar" aria-label="Навигация">
+            <a class="nb-student-brand" asp-controller="Home" asp-action="Index">
+                <span class="nb-student-brand-mark">N</span>
+                <span>
+                    <strong>NemeBook</strong>
+                    <small>@Model.CurrentUserRole</small>
+                </span>
+            </a>
+
+            <nav class="nb-student-nav">
+                <a asp-controller="Student" asp-action="Index"><i class="bi bi-house-fill"></i><span>Начало</span></a>
+                <a asp-controller="Grade" asp-action="MyGrades"><i class="bi bi-journal-bookmark"></i><span>Оценки</span></a>
+                <a class="is-active" asp-controller="Chat" asp-action="Index"><i class="bi bi-chat-dots-fill"></i><span>Чатове</span></a>
+                <a href="#" aria-disabled="true"><i class="bi bi-calendar3"></i><span>Календар</span></a>
+                <a asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i><span>Профил</span></a>
+            </nav>
+
+            <div class="nb-student-user">
+                <span class="nb-student-avatar">@Model.CurrentUserInitials</span>
+                <span>
+                    <strong>@Model.CurrentUserName</strong>
+                    <small>@Model.CurrentUserRole</small>
+                </span>
+            </div>
+        </aside>
+
+        <main class="nb-student-main nb-chat-main"
+              data-current-user-id="@Model.CurrentUserId"
+              data-current-user-name="@Model.CurrentUserName">
+            <header class="nb-student-topbar">
+                <h1>Чатове</h1>
+                <div class="nb-student-top-actions">
+                    <button class="nb-notification-button" type="button" data-notification-bell aria-label="Нотификации" title="Нотификации">
+                        <i class="bi bi-bell-fill"></i>
+                        <span class="nb-notification-dot"></span>
+                    </button>
+                    <div class="nb-chat-status">
+                        <span id="chatConnectionDot" class="nb-chat-connection-dot"></span>
+                        <span id="chatConnectionText">Свързване</span>
+                    </div>
+                </div>
+            </header>
+
+            <section class="nb-chat-page">
+                <aside class="nb-chat-list-panel">
+                    <div class="nb-chat-list-heading">
+                        <div>
+                            <span>Скорошни</span>
+                            <strong>Разговори</strong>
+                        </div>
+                        <button id="chatNewButton" class="nb-chat-new-button" type="button" aria-expanded="false" aria-controls="chatSearchPanel">
+                            <i class="bi bi-plus-lg"></i>
+                            <span>Нов чат</span>
+                        </button>
+                    </div>
+
+                    <div id="chatSearchPanel" class="nb-chat-search-panel" hidden>
+                        <div class="nb-chat-search-row">
+                            <div class="nb-chat-search">
+                                <i class="bi bi-search"></i>
+                                <input id="chatContactSearch" type="search" placeholder="Търсене на ученик или учител" autocomplete="off" />
+                            </div>
+                            <button id="chatSearchClose" class="nb-chat-icon-button" type="button" aria-label="Затвори търсенето">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+
+                        <div id="chatContacts" class="nb-chat-contacts" aria-live="polite">
+                            <div class="nb-chat-contact-empty">Потърсете ученик или учител, за да започнете чат.</div>
+                        </div>
+                    </div>
+
+                    <div class="nb-chat-section-title">Скорошни чатове</div>
+
+                    <div id="chatList" class="nb-chat-list">
+                        @foreach (var chat in Model.Chats)
+                        {
+                            <button class="nb-chat-list-item" type="button" data-chat-id="@chat.Id">
+                                <span class="nb-chat-avatar">@chat.Initials</span>
+                                <span class="nb-chat-list-copy">
+                                    <strong>@chat.Title</strong>
+                                    <small>@(chat.LastMessage ?? chat.Subtitle)</small>
+                                </span>
+                                <em>@chat.LastMessageTime</em>
+                            </button>
+                        }
+                    </div>
+
+                    <div id="chatEmptyState" class="nb-chat-empty @(Model.Chats.Any() ? string.Empty : "is-visible")">
+                        Няма активни разговори.
+                    </div>
+                </aside>
+
+                <section id="chatRoomPanel" class="nb-chat-room-panel is-idle">
+                    <div class="nb-chat-room-header">
+                        <span id="activeChatAvatar" class="nb-chat-avatar is-large"></span>
+                        <div>
+                            <h2 id="activeChatTitle"></h2>
+                            <p id="activeChatSubtitle"></p>
+                        </div>
+                    </div>
+
+                    <div id="chatMessages" class="nb-chat-messages">
+                    </div>
+
+                    <form id="chatMessageForm" class="nb-chat-composer">
+                        <input id="chatMessageInput" type="text" maxlength="4000" placeholder="Напишете съобщение..." autocomplete="off" disabled />
+                        <button id="chatSendButton" type="submit" disabled aria-label="Изпрати">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </form>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <script src="~/microsoft-signalr/signalr.min.js" asp-append-version="true"></script>
+    <script src="~/js/nemebook-chat.js" asp-append-version="true"></script>
+    <script src="~/js/pwa.js" asp-append-version="true"></script>
+</body>
+</html>
