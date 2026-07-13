@@ -61,6 +61,7 @@ public class NemeBookDbContext : DbContext
             entity.Property(user => user.Email).HasMaxLength(256);
             entity.Property(user => user.Password).HasMaxLength(512);
             entity.Property(user => user.PhoneNumber).HasMaxLength(30);
+            entity.Property(user => user.IsActive).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<Student>()

@@ -1,81 +1,173 @@
+@using System.ComponentModel.DataAnnotations
+@using Entities.Enums
+@model Web.ViewModels.PrincipalHomeViewModel
+
 @{
+    var isPrincipal = User.IsInRole("Principal");
+    var principalDisplayName = typeof(UserRole)
+        .GetMember(nameof(UserRole.Principal))[0]
+        .GetCustomAttributes(typeof(DisplayAttribute), false)
+        .Cast<DisplayAttribute>()
+        .FirstOrDefault()
+        ?.GetName() ?? nameof(UserRole.Principal);
+
+    Layout = isPrincipal ? null : "_Layout";
     ViewData["Title"] = "Начало";
 }
 
-<style>
-    .nb-home {
-        min-height: calc(100vh - 160px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px 0 48px;
-    }
-
-    .nb-home-panel {
-        width: 100%;
-        max-width: 760px;
-        border: 1px solid #ebecef;
-        border-radius: 20px;
-        background: #ffffff;
-        box-shadow: 0 12px 42px rgba(20, 25, 35, 0.1);
-        padding: 28px;
-        text-align: center;
-    }
-
-    .nb-home-title {
-        margin: 0 0 8px;
-        color: #25262b;
-        font-size: 38px;
-        font-weight: 800;
-    }
-
-    .nb-home-text {
-        margin: 0 auto 20px;
-        max-width: 560px;
-        color: #737a85;
-        font-size: 16px;
-    }
-
-    .nb-admin-actions {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .nb-admin-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-height: 44px;
-        padding: 0 18px;
-        border-radius: 11px;
-        background: #f37021;
-        color: #ffffff;
-        font-weight: 700;
-        text-decoration: none;
-    }
-
-    .nb-admin-btn:hover {
-        background: #d95f16;
-        color: #ffffff;
-    }
-</style>
-
-<div class="nb-home">
-    <section class="nb-home-panel">
-        <h1 class="nb-home-title">Добре дошли в NemeBook</h1>
-        <p class="nb-home-text">Управлявайте училищна информация, профили и комуникация от едно място.</p>
-
-        @if (User.IsInRole("Principal"))
-        {
-            <div class="nb-admin-actions">
-                <a class="nb-admin-btn" asp-controller="ProfileImport" asp-action="Index">
-                    <i class="bi bi-file-earmark-spreadsheet"></i>
-                    Импорт на профили
+@if (isPrincipal)
+{
+    <!DOCTYPE html>
+    <html lang="bg">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Начало - NemeBook</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    </head>
+    <body class="nb-principal-body">
+        <div class="nb-principal-shell">
+            <aside class="nb-principal-sidebar" aria-label="Главна навигация">
+                <a class="nb-principal-logo" asp-controller="Home" asp-action="Index">
+                    <span class="nb-principal-logo-mark">
+                        <i class="bi bi-book-half" aria-hidden="true"></i>
+                    </span>
+                    <span>
+                        <strong>NemeBook</strong>
+                        <small>@principalDisplayName</small>
+                    </span>
                 </a>
-            </div>
-        }
-    </section>
-</div>
+
+                <nav class="nb-principal-nav">
+                    <a class="is-active" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-house-fill" aria-hidden="true"></i>
+                        <span>Начало</span>
+                    </a>
+                    <a href="#">
+                        <i class="bi bi-newspaper" aria-hidden="true"></i>
+                        <span>Новини</span>
+                    </a>
+                    <a asp-controller="Grade" asp-action="AllClasses">
+                        <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
+                        <span>Класове</span>
+                    </a>
+                    <a asp-controller="Chat" asp-action="Index">
+                        <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                        <span>Учителски чатове</span>
+                    </a>
+                    <a asp-controller="ProfileImport" asp-action="Index">
+                        <i class="bi bi-upload" aria-hidden="true"></i>
+                        <span>Импорт на профили</span>
+                    </a>
+                </nav>
+
+                <a class="nb-principal-user-card" asp-controller="Account" asp-action="Profile">
+                    <span class="nb-principal-user-avatar"></span>
+                    <span>
+                        <strong>@(User.FindFirst("FullName")?.Value ?? "Директор")</strong>
+                        <small>Директорски профил</small>
+                    </span>
+                </a>
+            </aside>
+
+            <main class="nb-principal-main">
+                <header class="nb-principal-topbar">
+                    <h1>Начало</h1>
+                    <partial name="_PrincipalStudentSearch" />
+                    <div class="nb-principal-top-actions">
+                        <form asp-action="Logout" asp-controller="Account" method="post">
+                            @Html.AntiForgeryToken()
+                            <button class="nb-principal-action-btn is-logout" type="submit">
+                                <span>Изход</span>
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </div>
+                </header>
+
+                <section class="nb-principal-content" aria-label="Директорски панел">
+                    <div class="nb-principal-summary">
+                        <article class="nb-principal-average-card">
+                            <span>Среден успех на училището</span>
+                            @if (Model.SchoolAverageGrade.HasValue)
+                            {
+                                <strong>@Model.SchoolAverageGrade.Value.ToString("0.00")</strong>
+                                <a asp-controller="Grade" asp-action="AllClasses">Виж всички класове <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                                <span class="nb-principal-average-dot" aria-hidden="true"></span>
+                            }
+                        </article>
+
+                        <article class="nb-principal-card nb-principal-insights">
+                            <h2>Справки</h2>
+                            @foreach (var report in Model.Reports)
+                            {
+                                <a class="nb-principal-insight-row @report.CssClass" href="#">
+                                    <span class="nb-principal-row-icon"></span>
+                                    <span>@report.Label</span>
+                                    <em>@report.Value</em>
+                                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            }
+                        </article>
+
+                        <article class="nb-principal-card nb-principal-attention">
+                            <h2>Изисква внимание</h2>
+                            @foreach (var schoolClass in Model.ClassesNeedingAttention)
+                            {
+                                <div class="nb-principal-attention-row">
+                                    <strong>@schoolClass.ClassName</strong>
+                                    <span></span>
+                                    <em class="@(schoolClass.AverageGrade < 4.50m ? "is-red" : null)">
+                                        @schoolClass.AverageGrade.ToString("0.00")
+                                    </em>
+                                </div>
+                            }
+                        </article>
+                    </div>
+
+                    <section class="nb-principal-card nb-principal-chart-card">
+                        <div class="nb-principal-chart-header">
+                            <h2>Разпределение на оценките</h2>
+                        </div>
+
+                        <div class="nb-principal-chart" aria-label="Разпределение по оценки">
+                            @foreach (var item in Model.GradeDistribution)
+                            {
+                                <div class="nb-principal-bar-item">
+                                    <span class="nb-principal-bar is-grade-@item.Grade" style="height: @item.BarHeight.ToString()px"></span>
+                                    <small>@GetGradeLabel(item.Grade) (@item.Count)</small>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                </section>
+            </main>
+        </div>
+    </body>
+    </html>
+}
+else
+{
+    <div class="nb-home">
+        <section class="nb-home-panel">
+            <h1 class="nb-home-title">Добре дошли в NemeBook</h1>
+            <p class="nb-home-text">Следете оценки, съобщения и училищна информация от едно място.</p>
+        </section>
+    </div>
+}
+
+@functions {
+    private static string GetGradeLabel(int grade)
+    {
+        return grade switch
+        {
+            2 => "Слаб 2",
+            3 => "Среден 3",
+            4 => "Добър 4",
+            5 => "Много добър 5",
+            6 => "Отличен 6",
+            _ => grade.ToString(),
+        };
+    }
+}
