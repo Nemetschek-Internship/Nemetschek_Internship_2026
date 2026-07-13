@@ -9,13 +9,13 @@ namespace Web.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly IAuthService _authService;
-    private readonly ILogger<HomeController> _logger;
+    private readonly IAuthService authService;
+    private readonly ILogger<HomeController> logger;
 
     public HomeController(IAuthService authService, ILogger<HomeController> logger)
     {
-        _authService = authService;
-        _logger = logger;
+        this.authService = authService;
+        this.logger = logger;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -23,11 +23,16 @@ public class HomeController : Controller
         var userId = GetCurrentUserId();
         if (userId.HasValue)
         {
-            var currentUser = await _authService.GetUserByIdAsync(userId.Value, cancellationToken);
+            var currentUser = await authService.GetUserByIdAsync(userId.Value, cancellationToken);
             if (currentUser?.Role == UserRole.Student)
             {
                 return RedirectToAction("Index", "Student");
             }
+        }
+
+        if (User.IsInRole("Principal"))
+        {
+            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
         }
 
         return View();
