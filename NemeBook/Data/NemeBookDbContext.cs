@@ -185,6 +185,11 @@ public class NemeBookDbContext : DbContext
                 .WithMany(classSubject => classSubject.ScheduleEntries)
                 .HasForeignKey(scheduleEntry => scheduleEntry.ClassSubjectId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(scheduleEntry => scheduleEntry.SubstituteTeacher)
+                .WithMany()
+                .HasForeignKey(scheduleEntry => scheduleEntry.SubstituteTeacherId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 

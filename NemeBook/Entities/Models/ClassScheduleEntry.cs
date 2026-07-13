@@ -10,6 +10,9 @@ public class ClassScheduleEntry
     public Guid ClassSubjectId { get; set; }
     public ClassSubject ClassSubject { get; set; } = null!;
 
+    public Guid? SubstituteTeacherId { get; set; }
+    public Teacher? SubstituteTeacher { get; set; }
+
     public DayOfWeek DayOfWeek { get; set; }
 
     public int PeriodNumber { get; set; }

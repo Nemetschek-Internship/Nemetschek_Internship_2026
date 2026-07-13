@@ -254,16 +254,16 @@ public class RegistrationService : IRegistrationService
 
         if (invitation.UserId is null)
         {
-            throw new InvalidOperationException("Invitation is not connected to a user account.");
+            throw new InvalidOperationException("Поканата не е свързана с потребителски профил.");
         }
 
         if (invitation.Role is not UserRole.Student and not UserRole.Teacher)
         {
-            throw new InvalidOperationException("This invitation cannot be used to set a student or teacher password.");
+            throw new InvalidOperationException("Тази покана не може да се използва за задаване на парола на ученик или учител.");
         }
 
         var user = await accountsRepository.GetByIdAsync(invitation.UserId.Value, cancellationToken)
-            ?? throw new InvalidOperationException("User was not found.");
+            ?? throw new InvalidOperationException("Потребителят не беше намерен.");
 
         user.Password = passwordHasher.HashPassword(request.Password);
         user.IsActive = true;
@@ -290,7 +290,7 @@ public class RegistrationService : IRegistrationService
 
         if (invitation.Role != UserRole.Parent)
         {
-            throw new InvalidOperationException("This invitation cannot be used for parent sign-up.");
+            throw new InvalidOperationException("Тази покана не може да се използва за регистрация на родител.");
         }
 
         var user = await accountsRepository.GetByEmailAsync(invitation.Email, cancellationToken);
@@ -313,7 +313,7 @@ public class RegistrationService : IRegistrationService
         }
         else if (user.Role != UserRole.Parent)
         {
-            throw new InvalidOperationException("Invitation email is already used by a non-parent account.");
+            throw new InvalidOperationException("Имейлът от поканата вече се използва от профил, който не е родител.");
         }
         else
         {
@@ -366,7 +366,7 @@ public class RegistrationService : IRegistrationService
         {
             if (existingUser.Role != role)
             {
-                throw new InvalidOperationException($"A non-{role.ToString().ToLowerInvariant()} account already uses this email.");
+                throw new InvalidOperationException("Този имейл вече се използва от профил с различна роля.");
             }
 
             if (!existingUser.IsActive)
@@ -450,7 +450,7 @@ public class RegistrationService : IRegistrationService
                 if (activeParentInvitation.Students.All(student => student.Id != studentId))
                 {
                     var student = await studentRepository.GetByIdAsync(studentId, cancellationToken)
-                        ?? throw new InvalidOperationException("Student was not found.");
+                        ?? throw new InvalidOperationException("Ученикът не беше намерен.");
 
                     activeParentInvitation.Students.Add(student);
                 }
@@ -498,7 +498,7 @@ public class RegistrationService : IRegistrationService
                     if (activeInvitation.Students.All(student => student.Id != studentId))
                     {
                         var student = await studentRepository.GetByIdAsync(studentId, cancellationToken)
-                            ?? throw new InvalidOperationException("Student was not found.");
+                            ?? throw new InvalidOperationException("Ученикът не беше намерен.");
 
                         activeInvitation.Students.Add(student);
                     }
@@ -565,7 +565,7 @@ public class RegistrationService : IRegistrationService
         foreach (var studentId in studentIds.Distinct())
         {
             var student = await studentRepository.GetByIdAsync(studentId, cancellationToken)
-                ?? throw new InvalidOperationException("Invitation points to a student that no longer exists.");
+                ?? throw new InvalidOperationException("Поканата сочи към ученик, който вече не съществува.");
 
             students.Add(student);
         }
@@ -617,26 +617,26 @@ public class RegistrationService : IRegistrationService
     {
         if (string.IsNullOrWhiteSpace(token))
         {
-            throw new ArgumentException("Token cannot be empty.", nameof(token));
+            throw new ArgumentException("Токенът не може да бъде празен.", nameof(token));
         }
 
         var tokenHash = invitationTokenService.HashToken(token);
         var invitation = await invitationRepository.GetByTokenHashAsync(tokenHash, cancellationToken)
-            ?? throw new InvalidOperationException("Invitation was not found.");
+            ?? throw new InvalidOperationException("Поканата не беше намерена.");
 
         if (invitation.Type != type)
         {
-            throw new InvalidOperationException("Invitation type is invalid.");
+            throw new InvalidOperationException("Типът на поканата е невалиден.");
         }
 
         if (invitation.UsedAtUtc is not null)
         {
-            throw new InvalidOperationException("Invitation has already been used.");
+            throw new InvalidOperationException("Поканата вече е използвана.");
         }
 
         if (invitation.ExpiresAtUtc <= DateTime.UtcNow)
         {
-            throw new InvalidOperationException("Invitation has expired.");
+            throw new InvalidOperationException("Поканата е изтекла.");
         }
 
         return invitation;
@@ -910,7 +910,7 @@ public class RegistrationService : IRegistrationService
     {
         if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > 100)
         {
-            throw new ArgumentException("Name is required and cannot exceed 100 characters.", parameterName);
+            throw new ArgumentException("Името е задължително и не може да бъде по-дълго от 100 символа.", parameterName);
         }
     }
 
@@ -918,7 +918,7 @@ public class RegistrationService : IRegistrationService
     {
         if (!string.IsNullOrWhiteSpace(value) && value.Trim().Length > 100)
         {
-            throw new ArgumentException("Name cannot exceed 100 characters.", parameterName);
+            throw new ArgumentException("Името не може да бъде по-дълго от 100 символа.", parameterName);
         }
     }
 
@@ -926,7 +926,7 @@ public class RegistrationService : IRegistrationService
     {
         if (!IsValidEmail(NormalizeEmail(value)))
         {
-            throw new ArgumentException("Email is invalid.", parameterName);
+            throw new ArgumentException("Имейлът е невалиден.", parameterName);
         }
     }
 
@@ -934,7 +934,7 @@ public class RegistrationService : IRegistrationService
     {
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
         {
-            throw new ArgumentException("Password must be at least 8 characters.", nameof(password));
+            throw new ArgumentException("Паролата трябва да бъде поне 8 символа.", nameof(password));
         }
     }
 

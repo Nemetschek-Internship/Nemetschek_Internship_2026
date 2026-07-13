@@ -18,6 +18,10 @@ public class PrincipalClassManagementViewModel
 
     public List<PrincipalClassSubjectViewModel> ClassSubjects { get; set; } = new List<PrincipalClassSubjectViewModel>();
 
+    public List<PrincipalScheduleDayViewModel> ScheduleDays { get; set; } = new List<PrincipalScheduleDayViewModel>();
+
+    public PrincipalScheduleConflictViewModel? ScheduleConflict { get; set; }
+
     public List<PrincipalSubjectOptionViewModel> SubjectOptions { get; set; } = new List<PrincipalSubjectOptionViewModel>();
 
     public List<PrincipalClassStudentViewModel> Students { get; set; } = new List<PrincipalClassStudentViewModel>();
@@ -58,4 +62,60 @@ public class PrincipalClassStudentViewModel
     public int RemarkCount { get; set; }
 
     public int AbsenceAndLatenessCount { get; set; }
+}
+
+public class PrincipalScheduleDayViewModel
+{
+    public DayOfWeek DayOfWeek { get; set; }
+
+    public string DayName { get; set; } = string.Empty;
+
+    public int NextPeriodNumber { get; set; }
+
+    public string NextPeriodTimeRange { get; set; } = string.Empty;
+
+    public List<PrincipalScheduleEntryViewModel> Entries { get; set; } = new List<PrincipalScheduleEntryViewModel>();
+}
+
+public class PrincipalScheduleEntryViewModel
+{
+    public Guid Id { get; set; }
+
+    public Guid ClassSubjectId { get; set; }
+
+    public Guid? SubstituteTeacherId { get; set; }
+
+    public DayOfWeek DayOfWeek { get; set; }
+
+    public int PeriodNumber { get; set; }
+
+    public string SubjectName { get; set; } = string.Empty;
+
+    public string? TeacherName { get; set; }
+
+    public string? SubstituteTeacherName { get; set; }
+
+    public string TimeRange { get; set; } = string.Empty;
+}
+
+public class PrincipalScheduleConflictViewModel
+{
+    public string TeacherName { get; set; } = string.Empty;
+
+    public string ClassName { get; set; } = string.Empty;
+
+    public Guid ClassId { get; set; }
+
+    public string DayName { get; set; } = string.Empty;
+
+    public int PeriodNumber { get; set; }
+
+    public string TimeRange { get; set; } = string.Empty;
+}
+
+public class PrincipalScheduleTeacherOptionViewModel
+{
+    public Guid Id { get; set; }
+
+    public string FullName { get; set; } = string.Empty;
 }

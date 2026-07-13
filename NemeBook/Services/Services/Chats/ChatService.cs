@@ -84,23 +84,23 @@ public class ChatService : IChatService
     {
         if (requesterUserId == Guid.Empty)
         {
-            throw new ArgumentException("Requester user id cannot be empty.", nameof(requesterUserId));
+            throw new ArgumentException("Идентификаторът на потребителя заявител не може да бъде празен.", nameof(requesterUserId));
         }
 
         if (targetUserId == Guid.Empty)
         {
-            throw new ArgumentException("Target user id cannot be empty.", nameof(targetUserId));
+            throw new ArgumentException("Идентификаторът на избрания потребител не може да бъде празен.", nameof(targetUserId));
         }
 
         if (requesterUserId == targetUserId)
         {
-            throw new InvalidOperationException("Cannot start chat with the same user.");
+            throw new InvalidOperationException("Не може да започнете чат със същия потребител.");
         }
 
         var allowedContactIds = await GetAllowedDirectContactIdsAsync(requesterUserId, cancellationToken);
         if (!allowedContactIds.Contains(targetUserId))
         {
-            throw new InvalidOperationException("This direct chat is not allowed for the current user role.");
+            throw new InvalidOperationException("Този директен чат не е разрешен за текущата потребителска роля.");
         }
 
         var chats = await chatRepository.GetAllAsync(cancellationToken);
@@ -131,13 +131,13 @@ public class ChatService : IChatService
     {
         if (classId == Guid.Empty)
         {
-            throw new ArgumentException("Class id cannot be empty.", nameof(classId));
+            throw new ArgumentException("Идентификаторът на класа не може да бъде празен.", nameof(classId));
         }
 
         var creator = await GetUserOrThrowAsync(creatorUserId, cancellationToken);
         if (creator.Role is not UserRole.Teacher and not UserRole.Principal)
         {
-            throw new InvalidOperationException("Only teacher or principal can create class chat.");
+            throw new InvalidOperationException("Само учител или директор може да създаде чат на клас.");
         }
 
         if (creator.Role == UserRole.Teacher)
@@ -145,12 +145,12 @@ public class ChatService : IChatService
             var teacherClassIds = await GetTeacherClassIdsByUserIdAsync(creatorUserId, cancellationToken);
             if (!teacherClassIds.Contains(classId))
             {
-                throw new InvalidOperationException("Teacher is not related to this class.");
+                throw new InvalidOperationException("Учителят не е свързан с този клас.");
             }
         }
 
         var schoolClass = await classRepository.GetByIdAsync(classId, cancellationToken)
-            ?? throw new InvalidOperationException("Class was not found.");
+            ?? throw new InvalidOperationException("Класът не беше намерен.");
 
         var chatName = $"{ClassChatPrefix}{classId}";
         var chats = await chatRepository.GetAllAsync(cancellationToken);
@@ -188,7 +188,7 @@ public class ChatService : IChatService
         var creator = await GetUserOrThrowAsync(creatorUserId, cancellationToken);
         if (creator.Role is not UserRole.Teacher and not UserRole.Principal)
         {
-            throw new InvalidOperationException("Only teacher or principal can create teachers group chat.");
+            throw new InvalidOperationException("Само учител или директор може да създаде групов чат за учители.");
         }
 
         var chats = await chatRepository.GetAllAsync(cancellationToken);
@@ -219,12 +219,12 @@ public class ChatService : IChatService
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            throw new ArgumentException("Message text cannot be empty.", nameof(text));
+            throw new ArgumentException("Текстът на съобщението не може да бъде празен.", nameof(text));
         }
 
         if (text.Length > 4000)
         {
-            throw new ArgumentException("Message text cannot exceed 4000 characters.", nameof(text));
+            throw new ArgumentException("Текстът на съобщението не може да бъде по-дълъг от 4000 символа.", nameof(text));
         }
 
         await EnsureUserCanAccessChatAsync(senderUserId, chatId, cancellationToken);
@@ -248,17 +248,17 @@ public class ChatService : IChatService
     {
         if (userId == Guid.Empty)
         {
-            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+            throw new ArgumentException("Идентификаторът на потребителя не може да бъде празен.", nameof(userId));
         }
 
         return await userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new InvalidOperationException("User was not found.");
+            ?? throw new InvalidOperationException("Потребителят не беше намерен.");
     }
 
     private async Task EnsureUserCanAccessChatAsync(Guid userId, Guid chatId, CancellationToken cancellationToken)
     {
         var chat = await chatRepository.GetByIdAsync(chatId, cancellationToken)
-            ?? throw new InvalidOperationException("Chat was not found.");
+            ?? throw new InvalidOperationException("Чатът не беше намерен.");
 
         if (chat.Users.All(user => user.Id != userId))
         {
@@ -304,7 +304,7 @@ public class ChatService : IChatService
         IReadOnlyDictionary<Guid, Guid> teacherUserByTeacherId)
     {
         var student = students.FirstOrDefault(currentStudent => currentStudent.UserId == requesterUserId)
-            ?? throw new InvalidOperationException("Student profile was not found.");
+            ?? throw new InvalidOperationException("Профилът на ученика не беше намерен.");
 
         var classTeacherIds = classSubjects
             .Where(classSubject => classSubject.ClassId == student.ClassId)
@@ -336,7 +336,7 @@ public class ChatService : IChatService
         IReadOnlySet<Guid> principalIds)
     {
         var parent = parents.FirstOrDefault(currentParent => currentParent.UserId == requesterUserId)
-            ?? throw new InvalidOperationException("Parent profile was not found.");
+            ?? throw new InvalidOperationException("Профилът на родителя не беше намерен.");
 
         var childClassIds = parent.Students
             .Select(student => student.ClassId)
@@ -381,7 +381,7 @@ public class ChatService : IChatService
         IReadOnlySet<Guid> principalIds)
     {
         var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == requesterUserId)
-            ?? throw new InvalidOperationException("Teacher profile was not found.");
+            ?? throw new InvalidOperationException("Профилът на учителя не беше намерен.");
 
         var classIds = classSubjects
             .Where(classSubject => classSubject.TeacherId == teacher.Id)
@@ -433,7 +433,7 @@ public class ChatService : IChatService
         var classSubjects = await classSubjectRepository.GetAllAsync(cancellationToken);
 
         var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == teacherUserId)
-            ?? throw new InvalidOperationException("Teacher profile was not found.");
+            ?? throw new InvalidOperationException("Профилът на учителя не беше намерен.");
 
         var classIds = classSubjects
             .Where(classSubject => classSubject.TeacherId == teacher.Id)

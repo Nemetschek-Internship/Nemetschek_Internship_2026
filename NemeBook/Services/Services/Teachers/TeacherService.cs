@@ -16,7 +16,7 @@ public class TeacherService : ITeacherService
     public Task<Teacher?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("Teacher id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на учителя не може да бъде празен.", nameof(id));
 
         return _teacherRepository.GetByIdAsync(id, cancellationToken);
     }
@@ -31,7 +31,7 @@ public class TeacherService : ITeacherService
         ArgumentNullException.ThrowIfNull(teacher);
 
         if (teacher.UserId == Guid.Empty)
-            throw new ArgumentException("Teacher UserId cannot be empty.", nameof(teacher));
+            throw new ArgumentException("Идентификаторът на потребителя за този учител не може да бъде празен.", nameof(teacher));
 
         await _teacherRepository.CreateAsync(teacher, cancellationToken);
     }
@@ -42,7 +42,7 @@ public class TeacherService : ITeacherService
 
         var existing = await _teacherRepository.GetByIdAsync(teacher.Id, cancellationToken);
         if (existing is null)
-            throw new InvalidOperationException("Teacher not found.");
+            throw new InvalidOperationException("Учителят не беше намерен.");
 
         await _teacherRepository.UpdateAsync(teacher, cancellationToken);
     }
@@ -50,7 +50,7 @@ public class TeacherService : ITeacherService
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("Teacher id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на учителя не може да бъде празен.", nameof(id));
 
         await _teacherRepository.DeleteAsync(id, cancellationToken);
     }
