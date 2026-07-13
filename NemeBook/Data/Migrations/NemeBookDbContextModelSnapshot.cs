@@ -80,6 +80,9 @@ namespace Data.Migrations
                     b.Property<int?>("ExcuseReason")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<int>("LessonNumber")
                         .HasColumnType("int");
 
