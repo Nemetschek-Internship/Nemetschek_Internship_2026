@@ -63,7 +63,7 @@
                     <div class="nb-main-teacher-dropdown" role="listbox" hidden></div>
                 </div>
 
-                <button class="nb-main-teacher-submit" type="submit" disabled>Назначи</button>
+                <button class="nb-main-teacher-submit" type="submit">Назначи</button>
             </form>
         }
     </section>
@@ -138,7 +138,6 @@ dropdown.innerHTML = '';
 
 function clearSelection() {
 teacherId.value = '';
-submit.disabled = true;
 }
 
 function searchTeachers(clearSelectedTeacher) {
@@ -194,8 +193,8 @@ results.forEach(function (teacher) {
     button.addEventListener('click', function () {
         input.value = teacher.fullName;
         teacherId.value = teacher.id;
-        submit.disabled = false;
         closeDropdown();
+        submit.focus();
     });
 
     dropdown.appendChild(button);
@@ -222,6 +221,8 @@ if (event.key === 'Escape') {
 form.addEventListener('submit', function (event) {
 if (!teacherId.value) {
     event.preventDefault();
+    searchTeachers(false);
+    input.focus();
 }
 });
 

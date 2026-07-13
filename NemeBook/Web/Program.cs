@@ -118,6 +118,7 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<INotificationPushService, SignalRNotificationPushService>();
 builder.Services.AddScoped<IStudentHomeService, StudentHomeService>();
+builder.Services.AddScoped<ITeacherHomeService, TeacherHomeService>();
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));

@@ -1,0 +1,54 @@
+@model Entities.ViewModels.Teachers.TeacherHomeViewModel
+
+@{
+    Layout = "_AppShell";
+    ViewData["ShellUserName"] = Model.TeacherName;
+    ViewData["ShellUserMeta"] = Model.MainMeta;
+    ViewData["ShellUserInitials"] = Model.TeacherInitials;
+}
+
+@section Styles {
+<style>
+    .nb-teacher-placeholder {
+        min-height: calc(100vh - 78px);
+        display: grid;
+        place-items: center;
+        padding: 28px 34px;
+    }
+    .nb-teacher-placeholder-card {
+        width: min(100%, 620px);
+        display: grid;
+        gap: 12px;
+        padding: 28px;
+        border: 1px solid #eee7df;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
+        text-align: center;
+    }
+    .nb-teacher-placeholder-card i {
+        color: #f97316;
+        font-size: 28px;
+    }
+    .nb-teacher-placeholder-card h2 {
+        margin: 0;
+        color: #1f232b;
+        font-size: 20px;
+        font-weight: 950;
+    }
+    .nb-teacher-placeholder-card p {
+        margin: 0;
+        color: #887f76;
+        font-size: 13px;
+        font-weight: 800;
+    }
+</style>
+}
+
+<section class="nb-teacher-placeholder" aria-label="@ViewData["Title"]">
+    <article class="nb-teacher-placeholder-card">
+        <i class="bi bi-calendar3" aria-hidden="true"></i>
+        <h2>@ViewData["Title"]</h2>
+        <p>0 записа</p>
+    </article>
+</section>

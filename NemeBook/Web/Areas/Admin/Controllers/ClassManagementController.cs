@@ -70,6 +70,7 @@ public class ClassManagementController : Controller
                 AbsenceAndLatenessCount = student.AbsenceAndLatenessCount,
             })
             .ToList();
+        viewModel.AvailableMainTeachers = await GetAvailableMainTeacherOptionsAsync(classId, cancellationToken);
 
         return View(viewModel);
     }
@@ -595,6 +596,38 @@ public class ClassManagementController : Controller
                     schoolClass.MainTeacherLastName ?? string.Empty)
                 : null,
         };
+    }
+
+    private async Task<List<PrincipalTeacherOptionViewModel>> GetAvailableMainTeacherOptionsAsync(
+        Guid classId,
+        CancellationToken cancellationToken)
+    {
+        var teacherRows = await dbContext.Teachers
+            .AsNoTracking()
+            .Where(teacher =>
+                teacher.User.IsActive &&
+                !dbContext.Classes.Any(schoolClass =>
+                    schoolClass.Id != classId &&
+                    schoolClass.MainTeacherId == teacher.Id))
+            .OrderBy(teacher => teacher.User.FirstName)
+            .ThenBy(teacher => teacher.User.MiddleName)
+            .ThenBy(teacher => teacher.User.LastName)
+            .Select(teacher => new
+            {
+                teacher.Id,
+                teacher.User.FirstName,
+                teacher.User.MiddleName,
+                teacher.User.LastName,
+            })
+            .ToListAsync(cancellationToken);
+
+        return teacherRows
+            .Select(teacher => new PrincipalTeacherOptionViewModel
+            {
+                Id = teacher.Id,
+                FullName = FormatFullName(teacher.FirstName, teacher.MiddleName, teacher.LastName),
+            })
+            .ToList();
     }
 
     private static string FormatFullName(string firstName, string? middleName, string lastName)

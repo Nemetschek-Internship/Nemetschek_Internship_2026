@@ -120,6 +120,13 @@
             font-weight: 900;
             cursor: pointer;
         }
+        .nb-grade-chip {
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+        }
+        .nb-grade-chip:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(42, 35, 29, 0.1);
+        }
         .nb-grade-chip:focus-visible,
         .nb-list-button:focus-visible,
         .nb-popup-close:focus-visible,
@@ -292,6 +299,32 @@
             gap: 12px;
             padding: 18px 20px 20px;
         }
+        .nb-grade-detail-grid {
+            display: grid;
+            gap: 9px;
+        }
+        .nb-grade-detail-row {
+            min-height: 38px;
+            display: grid;
+            grid-template-columns: 90px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+            padding: 9px 10px;
+            border-radius: 8px;
+            background: #fbf7f2;
+        }
+        .nb-grade-detail-row span:first-child {
+            color: #8d867c;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        .nb-grade-detail-row span:last-child {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            color: #242832;
+            font-size: 13px;
+            font-weight: 850;
+        }
         .nb-popup-meta {
             display: flex;
             flex-wrap: wrap;
@@ -359,6 +392,10 @@
             .nb-popup-backdrop {
                 padding: 12px;
             }
+            .nb-grade-detail-row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
         }
     </style>
 }
@@ -388,7 +425,11 @@
                                 var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
                                 var gradeValue = grade.Value.ToString("0.##");
 
-                                <button class="nb-grade-chip @gradeTone" type="button" data-nb-popup-open="@modalId" aria-label="Отвори детайли за оценка @gradeValue по @subject.SubjectName">
+                                <button class="nb-grade-chip @gradeTone"
+                                        type="button"
+                                        data-nb-popup-open="@modalId"
+                                        title="Детайли за оценката"
+                                        aria-label="Отвори детайли за оценка @gradeValue по @subject.SubjectName">
                                     @gradeValue
                                 </button>
                             }
@@ -502,11 +543,28 @@ var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is
     </header>
     <div class="nb-popup-body">
         <span class="nb-popup-grade @gradeTone">@grade.Value.ToString("0.##")</span>
-        <div class="nb-popup-meta">
-            <span>@grade.TeacherName</span>
-            <span>@grade.Date.ToString("dd.MM.yyyy HH:mm")</span>
+        <div class="nb-grade-detail-grid">
+            <div class="nb-grade-detail-row">
+                <span>Предмет</span>
+                <span>@grade.SubjectName</span>
+            </div>
+            <div class="nb-grade-detail-row">
+                <span>Учител</span>
+                <span>@grade.TeacherName</span>
+            </div>
+            <div class="nb-grade-detail-row">
+                <span>Тип</span>
+                <span>@grade.Type</span>
+            </div>
+            <div class="nb-grade-detail-row">
+                <span>Дата</span>
+                <span>@grade.Date.ToString("dd.MM.yyyy HH:mm")</span>
+            </div>
+            <div class="nb-grade-detail-row">
+                <span>Бележка</span>
+                <span>@grade.Comment</span>
+            </div>
         </div>
-        <p class="nb-popup-comment">@grade.Comment</p>
     </div>
 </section>
 </div>
