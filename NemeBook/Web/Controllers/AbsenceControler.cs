@@ -171,6 +171,37 @@ public class AbsencesController : ControllerBase
         return Ok(absences.Select(AbsenceDto.FromEntity).ToList());
     }
 
+    /// <summary>
+    /// Soft delete на отсъствие - само за администрация. Записът остава в базата (IsDeleted = true)
+    /// за одит, но изчезва от справките.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Principal")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var role = GetCurrentUserRole();
+        if (role is null)
+            return Unauthorized();
+
+        try
+        {
+            await _absenceService.DeleteAsync(id, role.Value, cancellationToken);
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     // ---------- helpers ----------
     // Стил, огледан от Web/Controllers/AccountController.cs (SignInUserAsync / GetCurrentUserId).
 

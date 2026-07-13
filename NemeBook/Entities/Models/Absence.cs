@@ -5,10 +5,10 @@ namespace Entities.Models;
 public class Absence
 {
     public Guid Id { get; set; }
-    
+
     public Guid ClassSubjectId { get; set; }
     public ClassSubject ClassSubject { get; set; } = null!;
-    
+
     public Guid StudentId { get; set; }
     public Student Student { get; set; } = null!;
 
@@ -18,7 +18,7 @@ public class Absence
     public DateOnly Date { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     public int LessonNumber { get; set; } // Hour Number
 
     public AbsenceType Type { get; set; }
@@ -28,4 +28,7 @@ public class Absence
     public AbsenceExcuseReason? ExcuseReason { get; set; }
 
     public string ExcuseNote { get; set; } = string.Empty;
+
+    // ДОБАВЕНО за т.8 - soft delete от администрация (за одит при жалби от родители).
+    public bool IsDeleted { get; set; }
 }

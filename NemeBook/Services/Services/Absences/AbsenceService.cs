@@ -16,11 +16,17 @@ namespace Services.Services.Absences;
 ///    вече съществуват и имат метод GetByIdAsync(Guid, CancellationToken), аналогично на IClassRepository.
 ///  - Teacher.MainClass се използва, за да се определи дали учителят е класен ръководител
 ///    на класа, в който е ученикът.
-///  - При 3-ти клик (отсъствието вече е Type = Absence) в момента се хвърля InvalidOperationException.
-///    Кажи ми какво да прави тук (нищо, undo/toggle off и т.н.) - лесно се сменя.
+///  - 20-минутният прозорец за редакция се смята от Absence.CreatedAt (UTC).
+///  - "3-ти клик" -> цикълът се връща обратно към Lateness (1-во състояние), не се трие записа.
+///    Т.е. кликовете циклират: Lateness -> Absence -> Lateness -> Absence -> ... в рамките
+///    на 20-минутния прозорец за редакция.
+///  - Soft delete (IsDeleted) е отделен, административен flow (DeleteAsync метода тук),
+///    предназначен за трайно уредени случаи, не за корекция на "клик по грешка".
 /// </summary>
 public class AbsenceService : IAbsenceService
 {
+    private static readonly TimeSpan EditWindow = TimeSpan.FromMinutes(20);
+
     private readonly IAbsenceRepository _absenceRepository;
     private readonly ITeacherRepository _teacherRepository;
     private readonly IStudentRepository _studentRepository;
@@ -113,7 +119,8 @@ public class AbsenceService : IAbsenceService
         var existing = allAbsences.FirstOrDefault(a =>
             a.StudentId == studentId &&
             a.ClassScheduleEntryId == classScheduleEntryId &&
-            a.Date == date);
+            a.Date == date &&
+            !a.IsDeleted);
 
         if (existing is null)
         {
@@ -134,6 +141,12 @@ public class AbsenceService : IAbsenceService
             return absence;
         }
 
+        if (!IsWithinEditWindow(existing))
+        {
+            throw new InvalidOperationException(
+                "20-минутният прозорец за редакция е изтекъл. За промяна се обърнете към класния ръководител или администрацията.");
+        }
+
         if (existing.Type == AbsenceType.Lateness)
         {
             // 2-ри клик -> ъпгрейд до неизвинено отсъствие
@@ -144,8 +157,12 @@ public class AbsenceService : IAbsenceService
             return existing;
         }
 
-        // Вече е маркиран като Absence - поведението за 3-ти клик предстои да се уточни.
-        throw new InvalidOperationException("Student is already marked as absent for this lesson.");
+        // 3-ти клик -> цикълът се връща обратно към първото състояние (закъснение).
+        existing.Type = AbsenceType.Lateness;
+        existing.Status = AbsenceStatus.Unexcused;
+
+        await _absenceRepository.UpdateAsync(existing, cancellationToken);
+        return existing;
     }
 
     public async Task<Absence> ExcuseAsync(
@@ -168,7 +185,7 @@ public class AbsenceService : IAbsenceService
             throw new ArgumentException("Acting user id cannot be empty.", nameof(actingUserId));
 
         var absence = await _absenceRepository.GetByIdAsync(absenceId, cancellationToken);
-        if (absence is null)
+        if (absence is null || absence.IsDeleted)
             throw new InvalidOperationException("Absence not found.");
 
         var student = await _studentRepository.GetByIdAsync(absence.StudentId, cancellationToken);
@@ -193,6 +210,28 @@ public class AbsenceService : IAbsenceService
         return absence;
     }
 
+    public async Task DeleteAsync(
+        Guid absenceId,
+        UserRole actingUserRole,
+        CancellationToken cancellationToken = default)
+    {
+        if (absenceId == Guid.Empty)
+            throw new ArgumentException("Absence id cannot be empty.", nameof(absenceId));
+
+        // Само администрация (Principal) може да трие отсъствия - и то само soft delete,
+        // за да остане следа за одит при жалби от родители.
+        if (actingUserRole != UserRole.Principal)
+            throw new UnauthorizedAccessException("Only administration can delete absences.");
+
+        var absence = await _absenceRepository.GetByIdAsync(absenceId, cancellationToken);
+        if (absence is null || absence.IsDeleted)
+            throw new InvalidOperationException("Absence not found.");
+
+        absence.IsDeleted = true;
+
+        await _absenceRepository.UpdateAsync(absence, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Absence>> GetByStudentAsync(Guid studentId, CancellationToken cancellationToken = default)
     {
         if (studentId == Guid.Empty)
@@ -200,7 +239,7 @@ public class AbsenceService : IAbsenceService
 
         var allAbsences = await _absenceRepository.GetAllAsync(cancellationToken);
 
-        return allAbsences.Where(a => a.StudentId == studentId).ToList();
+        return allAbsences.Where(a => a.StudentId == studentId && !a.IsDeleted).ToList();
     }
 
     public async Task<IReadOnlyList<Absence>> GetByClassAsync(Guid classId, CancellationToken cancellationToken = default)
@@ -222,7 +261,12 @@ public class AbsenceService : IAbsenceService
 
         var allAbsences = await _absenceRepository.GetAllAsync(cancellationToken);
 
-        return allAbsences.Where(a => studentIdsInClass.Contains(a.StudentId)).ToList();
+        return allAbsences.Where(a => studentIdsInClass.Contains(a.StudentId) && !a.IsDeleted).ToList();
+    }
+
+    private static bool IsWithinEditWindow(Absence absence)
+    {
+        return DateTime.UtcNow - absence.CreatedAt <= EditWindow;
     }
 
     private async Task<bool> IsMainClassTeacherAsync(Guid teacherId, Guid classId, CancellationToken cancellationToken)

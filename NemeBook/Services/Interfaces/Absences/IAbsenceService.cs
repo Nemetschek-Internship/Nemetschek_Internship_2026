@@ -23,9 +23,12 @@ public interface IAbsenceService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Маркира ученик за текущия учебен час.
+    /// Маркира ученик за текущия учебен час. Работи на цикличен "клик" принцип:
     /// 1-ви клик -> закъснение (Lateness / Unexcused).
     /// 2-ри клик (същия ученик, час, дата) -> ъпгрейд до неизвинено отсъствие (Absence / Unexcused).
+    /// 3-ти клик -> цикълът се връща обратно към закъснение (1-во състояние), и т.н.
+    /// Разрешено е само в рамките на 20-минутен прозорец от създаването на записа
+    /// - след това хвърля InvalidOperationException.
     /// </summary>
     /// <param name="teacherId">Id на учителя, който въвежда отсъствието (трябва да преподава ClassSubject-а).</param>
     /// <param name="studentId">Id на ученика.</param>
@@ -47,6 +50,15 @@ public interface IAbsenceService
         UserRole actingUserRole,
         AbsenceExcuseReason excuseReason,
         string? excuseNote,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Soft delete на отсъствие - само за администрация (UserRole.Principal). Пази записа за одит
+    /// (напр. при жалби от родители), само го маркира като IsDeleted = true.
+    /// </summary>
+    Task DeleteAsync(
+        Guid absenceId,
+        UserRole actingUserRole,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Absence>> GetByStudentAsync(Guid studentId, CancellationToken cancellationToken = default);

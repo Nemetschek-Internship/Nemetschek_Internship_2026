@@ -6,7 +6,7 @@ using Services.Repositories;
 using Services.Services.Absences;
 using Xunit;
 
-namespace Tests;
+namespace Tests.Absences;
 
 public class AbsenceServiceTests
 {
@@ -14,6 +14,7 @@ public class AbsenceServiceTests
     private readonly Mock<ITeacherRepository> _teacherRepository = new();
     private readonly Mock<IStudentRepository> _studentRepository = new();
     private readonly Mock<IClassScheduleEntryRepository> _scheduleRepository = new();
+    private readonly Mock<IClassSubjectRepository> _classSubjectRepository = new();
 
     private readonly IAbsenceService _sut;
 
@@ -23,7 +24,8 @@ public class AbsenceServiceTests
             _absenceRepository.Object,
             _teacherRepository.Object,
             _studentRepository.Object,
-            _scheduleRepository.Object);
+            _scheduleRepository.Object,
+            _classSubjectRepository.Object);
     }
 
     // ---------- helpers ----------
@@ -125,7 +127,7 @@ public class AbsenceServiceTests
     }
 
     [Fact]
-    public async Task MarkAsync_ThirdClick_ThrowsInvalidOperationException()
+    public async Task MarkAsync_ThirdClick_CyclesBackToLateness()
     {
         var classId = Guid.NewGuid();
         var teacherId = Guid.NewGuid();
@@ -141,7 +143,45 @@ public class AbsenceServiceTests
             ClassScheduleEntryId = scheduleEntry.Id,
             ClassSubjectId = classSubjectId,
             Date = DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedAt = DateTime.UtcNow,
             Type = AbsenceType.Absence,
+            Status = AbsenceStatus.Unexcused
+        };
+
+        _scheduleRepository.Setup(r => r.GetByIdAsync(scheduleEntry.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(scheduleEntry);
+        _studentRepository.Setup(r => r.GetByIdAsync(student.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(student);
+        _absenceRepository.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Absence> { existing });
+
+        var result = await _sut.MarkAsync(teacherId, student.Id, scheduleEntry.Id);
+
+        Assert.Equal(AbsenceType.Lateness, result.Type);
+        Assert.Equal(AbsenceStatus.Unexcused, result.Status);
+        _absenceRepository.Verify(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>()), Times.Once);
+        _absenceRepository.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task MarkAsync_OutsideEditWindow_ThrowsInvalidOperationException()
+    {
+        var classId = Guid.NewGuid();
+        var teacherId = Guid.NewGuid();
+        var classSubjectId = Guid.NewGuid();
+
+        var scheduleEntry = CreateScheduleEntry(classId, classSubjectId, teacherId);
+        var student = CreateStudent(classId);
+
+        var existing = new Absence
+        {
+            Id = Guid.NewGuid(),
+            StudentId = student.Id,
+            ClassScheduleEntryId = scheduleEntry.Id,
+            ClassSubjectId = classSubjectId,
+            Date = DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedAt = DateTime.UtcNow.AddMinutes(-25), // извън 20-минутния прозорец
+            Type = AbsenceType.Lateness,
             Status = AbsenceStatus.Unexcused
         };
 
@@ -154,6 +194,8 @@ public class AbsenceServiceTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _sut.MarkAsync(teacherId, student.Id, scheduleEntry.Id));
+
+        _absenceRepository.Verify(r => r.UpdateAsync(It.IsAny<Absence>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -288,5 +330,33 @@ public class AbsenceServiceTests
 
         Assert.Empty(result);
         _absenceRepository.Verify(r => r.GetAllAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ---------- DeleteAsync (soft delete от администрация) ----------
+
+    [Fact]
+    public async Task DeleteAsync_Principal_SoftDeletesAbsence()
+    {
+        var absence = new Absence { Id = Guid.NewGuid(), IsDeleted = false };
+
+        _absenceRepository.Setup(r => r.GetByIdAsync(absence.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(absence);
+
+        await _sut.DeleteAsync(absence.Id, UserRole.Principal);
+
+        Assert.True(absence.IsDeleted);
+        _absenceRepository.Verify(r => r.UpdateAsync(absence, It.IsAny<CancellationToken>()), Times.Once);
+        _absenceRepository.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_NonPrincipal_ThrowsUnauthorized()
+    {
+        var absence = new Absence { Id = Guid.NewGuid() };
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => _sut.DeleteAsync(absence.Id, UserRole.Teacher));
+
+        _absenceRepository.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
