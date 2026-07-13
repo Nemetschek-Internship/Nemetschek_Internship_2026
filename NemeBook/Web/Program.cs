@@ -10,6 +10,7 @@ using Services.Interfaces;
 using Services.Interfaces.Chats;
 using Services.Interfaces.Classes;
 using Services.Interfaces.ClassSubjects;
+using Services.Interfaces.Feedbacks;
 using Services.Interfaces.Grades;
 using Services.Interfaces.Parents;
 using Services.Interfaces.Registration;
@@ -17,6 +18,7 @@ using Services.Interfaces.Security;
 using Services.Interfaces.Students;
 using Services.Interfaces.Subjects;
 using Services.Interfaces.Teachers;
+using Services.Interfaces.Feedbacks;
 using Services.Options;
 using Services.Repositories;
 using Services.Services.Accounts;
@@ -25,6 +27,7 @@ using Services.Services.Chats;
 using Services.Services.Classes;
 using Services.Services.ClassSubjects;
 using Services.Services.Email;
+using Services.Services.Feedbacks;
 using Services.Services.Grades;
 using Services.Services.Notifications;
 using Services.Services.Parents;
@@ -89,13 +92,7 @@ builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// Grade Repository
-builder.Services.AddScoped<IGradeRepository, GradeRepository>();
-
-// Grade Service
-builder.Services.AddScoped<IGradeService, GradeService>();
-
-//User Service
+// User Service
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
@@ -115,6 +112,8 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IGradeService, GradeService>();
+builder.Services.AddScoped(typeof(IFeedbackService), typeof(FeedbackService));
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));

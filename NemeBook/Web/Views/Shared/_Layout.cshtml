@@ -1,4 +1,7 @@
-﻿<!-- Web/Views/Shared/_Layout.cshtml -->
+﻿@{
+    var hideChrome = string.Equals(ViewData["HideChrome"]?.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+    var hideNav = hideChrome || string.Equals(ViewData["HideNav"]?.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,147 +12,131 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">NemeBook</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
+<body class="@(hideChrome ? "nb-auth-body" : "nb-app-body")">
+@if (hideChrome)
+{
+    <main role="main">
+        @RenderBody()
+    </main>
+}
+else
+{
+    <div class="nb-app-shell">
+        @if (!hideNav)
+        {
+            <aside class="nb-app-sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="appSidebar" aria-labelledby="appSidebarLabel">
+                <div class="offcanvas-header d-lg-none">
+                    <h5 class="offcanvas-title" id="appSidebarLabel">NemeBook</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Close"></button>
+                </div>
 
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <!-- GRADE МЕНЮ -->
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="gradesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-journal-bookmark-fill"></i> Оценки
+                <div class="offcanvas-body p-0">
+                    <div class="nb-app-sidebar-inner">
+                        <a class="nb-app-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="bi bi-journal-bookmark-fill"></i>
+                            <span>NemeBook</span>
+                        </a>
+
+                        <nav class="nb-app-nav">
+                            <a class="nb-app-nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door"></i> Home
+                            </a>
+
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <a class="nb-app-nav-link" asp-controller="Grade" asp-action="MyGrades">
+                                    <i class="bi bi-person"></i> Моите оценки
                                 </a>
-                                <ul class="dropdown-menu" aria-labelledby="gradesDropdown">
-                                    <!-- Моите оценки - достъпно за всички -->
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Grade" asp-action="MyGrades">
-                                            <i class="bi bi-person"></i> Моите оценки
-                                        </a>
-                                    </li>
 
-                                    <!-- Разделител -->
-                                    <li><hr class="dropdown-divider" /></li>
+                                @if (User.IsInRole("Teacher") || User.IsInRole("Principal"))
+                                {
+                                    <a class="nb-app-nav-link" asp-controller="Grade" asp-action="ClassGrades"
+                                       asp-route-classId="@ViewBag.ClassId" asp-route-subjectId="@ViewBag.SubjectId">
+                                        <i class="bi bi-people"></i> Оценки на клас
+                                    </a>
+                                    <a class="nb-app-nav-link" asp-controller="Grade" asp-action="Ranking"
+                                       asp-route-classId="@ViewBag.ClassId" asp-route-subjectId="@ViewBag.SubjectId">
+                                        <i class="bi bi-trophy"></i> Класация
+                                    </a>
+                                }
 
-                                    <!-- Учителски функционалности -->
-                                    @if (User.IsInRole("Teacher") || User.IsInRole("Principal"))
-                                    {
-                                        <li>
-                                            <a class="dropdown-item" asp-controller="Grade" asp-action="ClassGrades"
-                                               asp-route-classId="@ViewBag.ClassId" asp-route-subjectId="@ViewBag.SubjectId">
-                                                <i class="bi bi-people"></i> Оценки на клас
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" asp-controller="Grade" asp-action="Ranking"
-                                               asp-route-classId="@ViewBag.ClassId" asp-route-subjectId="@ViewBag.SubjectId">
-                                                <i class="bi bi-trophy"></i> Класация
-                                            </a>
-                                        </li>
-                                    }
+                                @if (User.IsInRole("Parent"))
+                                {
+                                    <a class="nb-app-nav-link" asp-controller="Grade" asp-action="MyChildrenGrades">
+                                        <i class="bi bi-people-fill"></i> Оценки на децата
+                                    </a>
+                                }
 
-                                    <!-- Родителски функционалности -->
-                                    @if (User.IsInRole("Parent"))
-                                    {
-                                        <li>
-                                            <a class="dropdown-item" asp-controller="Grade" asp-action="MyChildrenGrades">
-                                                <i class="bi bi-people"></i> Оценки на децата
-                                            </a>
-                                        </li>
-                                    }
+                                @if (User.IsInRole("Principal"))
+                                {
+                                    <a class="nb-app-nav-link" asp-controller="Grade" asp-action="AllClasses">
+                                        <i class="bi bi-building"></i> Всички класове
+                                    </a>
+                                }
 
-                                    <!-- Директорски функционалности -->
-                                    @if (User.IsInRole("Principal"))
-                                    {
-                                        <li><hr class="dropdown-divider" /></li>
-                                        <li>
-                                            <a class="dropdown-item" asp-controller="Grade" asp-action="AllClasses">
-                                                <i class="bi bi-building"></i> Всички класове
-                                            </a>
-                                        </li>
-                                    }
-                                </ul>
-                            </li>
-
-                            <!-- CHAT МЕНЮ -->
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Chat" asp-action="Index">
+                                <a class="nb-app-nav-link" asp-area="" asp-controller="Chat" asp-action="Index">
                                     <i class="bi bi-chat-dots-fill"></i> Чатове
                                 </a>
-                            </li>
-                        }
-                    </ul>
+                            }
+                        </nav>
 
-                    <ul class="navbar-nav ms-auto">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-person-circle"></i> @User.FindFirst("FullName")?.Value
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                    <li>
-                                        <a class="dropdown-item" asp-action="Profile" asp-controller="Account">
-                                            <i class="bi bi-person"></i> Профил
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-action="ChangePassword" asp-controller="Account">
-                                            <i class="bi bi-key"></i> Смяна на парола
-                                        </a>
-                                    </li>
-                                    <li><hr class="dropdown-divider" /></li>
-                                    <li>
-                                        <form asp-action="Logout" asp-controller="Account" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="dropdown-item">
-                                                <i class="bi bi-box-arrow-right"></i> Изход
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-action="Login" asp-controller="Account">
+                        <div class="nb-app-sidebar-bottom">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <div class="dropdown">
+                                    <button class="btn nb-user-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-person-circle"></i> @User.FindFirst("FullName")?.Value
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-action="Profile" asp-controller="Account"><i class="bi bi-person"></i> Профил</a></li>
+                                        <li><a class="dropdown-item" asp-action="ChangePassword" asp-controller="Account"><i class="bi bi-key"></i> Смяна на парола</a></li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li>
+                                            <form asp-action="Logout" asp-controller="Account" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Изход</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            }
+                            else
+                            {
+                                <a class="nb-app-nav-link" asp-action="Login" asp-controller="Account">
                                     <i class="bi bi-box-arrow-in-right"></i> Вход
                                 </a>
-                            </li>
-                        }
-                    </ul>
+                            }
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
+            </aside>
+        }
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+        <div class="nb-app-main">
+            <header class="nb-app-topbar">
+                @if (!hideNav)
+                {
+                    <button class="btn nb-menu-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+                }
+                <div class="nb-app-topbar-title">@ViewData["Title"]</div>
+            </header>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.Now.Year - NemeBook - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <main role="main" class="nb-app-content">
+                @RenderBody()
+            </main>
+
+            <footer class="nb-app-footer text-muted">
+                &copy; @DateTime.Now.Year - NemeBook - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </footer>
         </div>
-    </footer>
+    </div>
+}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
