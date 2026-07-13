@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Web.ViewModels;
 
-namespace Web.Areas.Admin.Controllers;
+namespace Web.Controllers.Admin;
 
-[Area("Admin")]
+[Route("Admin/[controller]/[action]")]
 [Authorize(Roles = "Principal")]
 public class DashboardController : Controller
 {
@@ -21,6 +21,8 @@ public class DashboardController : Controller
         this.dbContext = dbContext;
     }
 
+    [HttpGet("/Admin")]
+    [HttpGet("/Admin/Dashboard")]
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {

@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Web.ViewModels;
 
-namespace Web.Areas.Admin.Controllers;
+namespace Web.Controllers.Admin;
 
-[Area("Admin")]
+[Route("Admin/[controller]/[action]")]
 [Authorize(Roles = "Principal")]
 public class ClassesController : Controller
 {
