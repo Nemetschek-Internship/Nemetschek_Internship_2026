@@ -64,7 +64,7 @@ public class NotificationController : Controller
     }
 
     [HttpPost("read-all")]
-    public async Task<IActionResult> MarkAllAsRead(CancellationToken cancellationToken = default)
+    [ValidateAntiForgeryToken]
     {
         var userId = GetCurrentUserId();
         if (!userId.HasValue)
