@@ -22,6 +22,18 @@ public class PrincipalClassManagementViewModel
 
     public PrincipalScheduleConflictViewModel? ScheduleConflict { get; set; }
 
+    public int EventsYear { get; set; }
+
+    public int EventsMonth { get; set; }
+
+    public string EventsMonthName { get; set; } = string.Empty;
+
+    public List<PrincipalCalendarDayViewModel> CalendarDays { get; set; } = new List<PrincipalCalendarDayViewModel>();
+
+    public List<PrincipalClassEventViewModel> UpcomingEvents { get; set; } = new List<PrincipalClassEventViewModel>();
+
+    public List<PrincipalEventTypeOptionViewModel> EventTypeOptions { get; set; } = new List<PrincipalEventTypeOptionViewModel>();
+
     public List<PrincipalSubjectOptionViewModel> SubjectOptions { get; set; } = new List<PrincipalSubjectOptionViewModel>();
 
     public List<PrincipalClassStudentViewModel> Students { get; set; } = new List<PrincipalClassStudentViewModel>();
@@ -118,4 +130,51 @@ public class PrincipalScheduleTeacherOptionViewModel
     public Guid Id { get; set; }
 
     public string FullName { get; set; } = string.Empty;
+}
+
+public class PrincipalCalendarDayViewModel
+{
+    public DateTime Date { get; set; }
+
+    public int DayNumber { get; set; }
+
+    public bool IsCurrentMonth { get; set; }
+
+    public bool IsToday { get; set; }
+
+    public List<PrincipalClassEventViewModel> Events { get; set; } = new List<PrincipalClassEventViewModel>();
+}
+
+public class PrincipalClassEventViewModel
+{
+    public Guid Id { get; set; }
+
+    public string Title { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public string EventTypeName { get; set; } = string.Empty;
+
+    public string EventTypeValue { get; set; } = string.Empty;
+
+    public string EventTypeCssClass { get; set; } = string.Empty;
+
+    public Guid? ClassSubjectId { get; set; }
+
+    public string? ClassSubjectName { get; set; }
+
+    public DateTime Date { get; set; }
+
+    public string EditDateValue { get; set; } = string.Empty;
+
+    public string DayLabel { get; set; } = string.Empty;
+
+    public string TimeLabel { get; set; } = string.Empty;
+}
+
+public class PrincipalEventTypeOptionViewModel
+{
+    public string Value { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
 }

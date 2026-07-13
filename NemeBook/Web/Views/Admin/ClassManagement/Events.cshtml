@@ -1,0 +1,580 @@
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@using Entities.Enums
+@model Web.ViewModels.PrincipalClassManagementViewModel
+
+@{
+    Layout = null;
+    ViewData["Title"] = $"Клас {Model.ClassName} - Събития";
+
+    var principalDisplayName = typeof(UserRole)
+        .GetMember(nameof(UserRole.Principal))[0]
+        .GetCustomAttributes(typeof(DisplayAttribute), false)
+        .Cast<DisplayAttribute>()
+        .FirstOrDefault()
+        ?.GetName() ?? nameof(UserRole.Principal);
+
+    var selectedMonth = new DateTime(Model.EventsYear, Model.EventsMonth, 1);
+    var previousMonth = selectedMonth.AddMonths(-1);
+    var nextMonth = selectedMonth.AddMonths(1);
+    var defaultEventDate = DateTime.Now.AddMinutes(30).ToString("yyyy-MM-ddTHH:mm");
+    var addEventUrl = Url.Action("AddClassEvent", "ClassManagement") ?? string.Empty;
+    var updateEventUrl = Url.Action("UpdateClassEvent", "ClassManagement") ?? string.Empty;
+    var deleteEventUrl = Url.Action("DeleteClassEvent", "ClassManagement") ?? string.Empty;
+    var calendarDaysJson = JsonSerializer.Serialize(Model.CalendarDays.Select(day => new
+    {
+        key = day.Date.ToString("yyyy-MM-dd"),
+        label = day.Date.ToString("dd.MM.yyyy"),
+        events = day.Events.Select(schoolEvent => new
+        {
+            id = schoolEvent.Id,
+            title = schoolEvent.Title,
+            description = schoolEvent.Description,
+            type = schoolEvent.EventTypeName,
+            typeValue = schoolEvent.EventTypeValue,
+            typeClass = schoolEvent.EventTypeCssClass,
+            classSubjectId = schoolEvent.ClassSubjectId,
+            subject = schoolEvent.ClassSubjectName,
+            date = schoolEvent.DayLabel,
+            time = schoolEvent.TimeLabel,
+            editDate = schoolEvent.EditDateValue,
+        }),
+    }));
+}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Клас @Model.ClassName - Събития - NemeBook</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="nb-principal-body">
+    <div class="nb-principal-shell">
+        <aside class="nb-principal-sidebar" aria-label="Главна навигация">
+            <a class="nb-principal-logo" asp-controller="Dashboard" asp-action="Index">
+                <span class="nb-principal-logo-mark">
+                    <i class="bi bi-book-half" aria-hidden="true"></i>
+                </span>
+                <span>
+                    <strong>NemeBook</strong>
+                    <small>@principalDisplayName</small>
+                </span>
+            </a>
+
+            <nav class="nb-principal-nav">
+                <a asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-house-fill" aria-hidden="true"></i>
+                    <span>Начало</span>
+                </a>
+                <a href="#">
+                    <i class="bi bi-newspaper" aria-hidden="true"></i>
+                    <span>Новини</span>
+                </a>
+                <a class="is-active" asp-controller="Classes" asp-action="AllClasses">
+                    <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
+                    <span>Класове</span>
+                </a>
+                <a asp-area="" asp-controller="Chat" asp-action="Index">
+                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                    <span>Учителски чатове</span>
+                </a>
+                <a asp-controller="ProfileImport" asp-action="Index">
+                    <i class="bi bi-upload" aria-hidden="true"></i>
+                    <span>Импорт на профили</span>
+                </a>
+            </nav>
+
+            <a class="nb-principal-user-card" asp-area="" asp-controller="Account" asp-action="Profile">
+                <span class="nb-principal-user-avatar"></span>
+                <span>
+                    <strong>@(User.FindFirst("FullName")?.Value ?? "Директор")</strong>
+                    <small>Директорски профил</small>
+                </span>
+            </a>
+        </aside>
+
+        <main class="nb-principal-main">
+            <header class="nb-principal-topbar">
+                <h1>Клас @Model.ClassName</h1>
+                <partial name="_PrincipalStudentSearch" />
+                <div class="nb-principal-top-actions">
+                    <form asp-action="Logout" asp-area="" asp-controller="Account" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="nb-principal-action-btn is-logout" type="submit">
+                            <span>Изход</span>
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <section class="nb-principal-content nb-class-management-content" aria-label="Управление на клас">
+                <div class="nb-class-management-tabs-row">
+                    <nav class="nb-class-management-tabs" aria-label="Секции на класа">
+                        <a class="@GetTabClass("Class")" asp-controller="ClassManagement" asp-action="Students" asp-route-classId="@Model.ClassId">Клас</a>
+                        <a class="@GetTabClass("Subjects")" asp-controller="ClassManagement" asp-action="Subjects" asp-route-classId="@Model.ClassId">Предмети</a>
+                        <a class="@GetTabClass("Schedule")" asp-controller="ClassManagement" asp-action="Schedule" asp-route-classId="@Model.ClassId">Програма</a>
+                        <a class="@GetTabClass("Events")" asp-controller="ClassManagement" asp-action="Events" asp-route-classId="@Model.ClassId">Събития</a>
+                    </nav>
+                    <a class="nb-principal-action-btn nb-class-back-btn" asp-controller="Classes" asp-action="AllClasses" asp-route-grade="@GetGradeNumber(Model.ClassName)">
+                        <span>Всички класове</span>
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    </a>
+                </div>
+
+                <section class="nb-class-events-layout" aria-label="Събития">
+                    <section class="nb-class-events-calendar" aria-labelledby="class-events-title">
+                        <div class="nb-class-events-toolbar">
+                            <div class="nb-class-events-month">
+                                <a asp-controller="ClassManagement"
+                                   asp-action="Events"
+                                   asp-route-classId="@Model.ClassId"
+                                   asp-route-year="@previousMonth.Year"
+                                   asp-route-month="@previousMonth.Month"
+                                   aria-label="Предишен месец">
+                                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                </a>
+                                <h2 id="class-events-title">@Capitalize(Model.EventsMonthName) @Model.EventsYear</h2>
+                                <a asp-controller="ClassManagement"
+                                   asp-action="Events"
+                                   asp-route-classId="@Model.ClassId"
+                                   asp-route-year="@nextMonth.Year"
+                                   asp-route-month="@nextMonth.Month"
+                                   aria-label="Следващ месец">
+                                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </div>
+
+                            <button class="nb-class-add-event-btn" type="button" id="openEventDialog">
+                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                <span>Добави събитие</span>
+                            </button>
+                        </div>
+
+                        @if (TempData["ClassEventMessage"] is string eventMessage)
+                        {
+                            <div class="nb-class-event-alert">@eventMessage</div>
+                        }
+
+                        <div class="nb-class-events-legend" aria-label="Легенда за типовете събития">
+                            @foreach (var option in Model.EventTypeOptions)
+                            {
+                                <span>
+                                    <i class="@GetEventTypeClass(option.Value)" aria-hidden="true"></i>
+                                    @option.Name
+                                </span>
+                            }
+                        </div>
+
+                        <div class="nb-calendar-weekdays" aria-hidden="true">
+                            <span>Пон</span>
+                            <span>Вто</span>
+                            <span>Сря</span>
+                            <span>Чет</span>
+                            <span>Пет</span>
+                            <span>Съб</span>
+                            <span>Нед</span>
+                        </div>
+
+                        <div class="nb-calendar-grid">
+                            @foreach (var day in Model.CalendarDays)
+                            {
+                                <button class="nb-calendar-day js-calendar-day @(day.IsCurrentMonth ? null : "is-muted") @(day.IsToday ? "is-today" : null)"
+                                        type="button"
+                                        data-date-key="@day.Date.ToString("yyyy-MM-dd")"
+                                        aria-label="Виж събития за @day.Date.ToString("dd.MM.yyyy")">
+                                    <span class="nb-calendar-day-number">@day.DayNumber</span>
+
+                                    <div class="nb-calendar-event-lines">
+                                        @foreach (var schoolEvent in day.Events.Take(3))
+                                        {
+                                            <span class="nb-calendar-event-line @schoolEvent.EventTypeCssClass"
+                                                  title="@schoolEvent.Title">
+                                                @schoolEvent.Title
+                                            </span>
+                                        }
+
+                                        @if (day.Events.Count > 3)
+                                        {
+                                            <span class="nb-calendar-more">+@(day.Events.Count - 3)</span>
+                                        }
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    </section>
+
+                    <aside class="nb-class-upcoming-events" aria-labelledby="upcoming-events-title">
+                        <div class="nb-class-section-header">
+                            <h2 id="upcoming-events-title">Предстоящи събития</h2>
+                        </div>
+
+                        @if (Model.UpcomingEvents.Count == 0)
+                        {
+                            <div class="nb-class-events-empty">Няма предстоящи събития.</div>
+                        }
+                        else
+                        {
+                            <div class="nb-upcoming-event-list">
+                                @foreach (var schoolEvent in Model.UpcomingEvents)
+                                {
+                                    <article class="nb-upcoming-event-card">
+                                        <span class="nb-upcoming-event-icon @schoolEvent.EventTypeCssClass"></span>
+                                        <div class="nb-upcoming-event-info">
+                                            <strong>@schoolEvent.Title</strong>
+                                            <span>@schoolEvent.DayLabel, @schoolEvent.TimeLabel</span>
+                                            <small>
+                                                @schoolEvent.EventTypeName
+                                                @if (!string.IsNullOrWhiteSpace(schoolEvent.ClassSubjectName))
+                                                {
+                                                    <text> · @schoolEvent.ClassSubjectName</text>
+                                                }
+                                            </small>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </aside>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <div class="nb-modal-backdrop" id="eventDialog" aria-hidden="true">
+        <section class="nb-event-dialog" role="dialog" aria-modal="true" aria-labelledby="event-dialog-title">
+            <div class="nb-subject-dialog-header">
+                <h2 id="event-dialog-title">Добави събитие</h2>
+                <button class="nb-dialog-close" type="button" id="closeEventDialog" aria-label="Затвори">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <form asp-controller="ClassManagement"
+                  asp-action="AddClassEvent"
+                  method="post"
+                  id="eventForm"
+                  data-add-url="@addEventUrl"
+                  data-update-url="@updateEventUrl"
+                  data-delete-url="@deleteEventUrl">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="classId" value="@Model.ClassId" />
+                <input type="hidden" name="eventId" id="eventIdInput" />
+                <input type="hidden" name="returnYear" value="@Model.EventsYear" />
+                <input type="hidden" name="returnMonth" value="@Model.EventsMonth" />
+
+                <div class="nb-event-form-grid">
+                    <label class="nb-event-form-field">
+                        <span>Заглавие</span>
+                        <input name="title" id="eventTitleInput" type="text" maxlength="200" required />
+                    </label>
+
+                    <label class="nb-event-form-field">
+                        <span>Тип</span>
+                        <select name="eventType" id="eventTypeSelect" required>
+                            @foreach (var option in Model.EventTypeOptions)
+                            {
+                                <option value="@option.Value">@option.Name</option>
+                            }
+                        </select>
+                    </label>
+
+                    <label class="nb-event-form-field">
+                        <span>Дата и час</span>
+                        <input name="date" id="eventDateInput" type="datetime-local" value="@defaultEventDate" required />
+                    </label>
+
+                    <label class="nb-event-form-field" id="eventSubjectField">
+                        <span>Предмет</span>
+                        <select name="classSubjectId" id="eventSubjectSelect" required>
+                            @if (Model.ClassSubjects.Count == 0)
+                            {
+                                <option value="" selected disabled>Няма добавени предмети</option>
+                            }
+                            else
+                            {
+                                @foreach (var classSubject in Model.ClassSubjects)
+                                {
+                                    <option value="@classSubject.ClassSubjectId">@classSubject.SubjectName</option>
+                                }
+                            }
+                        </select>
+                    </label>
+                </div>
+
+                <label class="nb-event-form-field">
+                    <span>Описание</span>
+                    <textarea name="description" id="eventDescriptionInput" maxlength="4000" rows="4"></textarea>
+                </label>
+
+                <button class="nb-class-add-event-submit" id="eventSubmitButton" type="submit">Добави</button>
+            </form>
+        </section>
+    </div>
+
+    <div class="nb-modal-backdrop" id="dayEventsDialog" aria-hidden="true">
+        <section class="nb-day-events-dialog" role="dialog" aria-modal="true" aria-labelledby="day-events-title">
+            <div class="nb-subject-dialog-header">
+                <h2 id="day-events-title">Събития</h2>
+                <button class="nb-dialog-close" type="button" id="closeDayEventsDialog" aria-label="Затвори">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="nb-day-events-list" id="dayEventsList"></div>
+        </section>
+    </div>
+
+    <script>
+        (function () {
+            const calendarDays = @Html.Raw(calendarDaysJson);
+            const eventDialog = document.getElementById('eventDialog');
+            const openEventDialog = document.getElementById('openEventDialog');
+            const closeEventDialog = document.getElementById('closeEventDialog');
+            const eventForm = document.getElementById('eventForm');
+            const eventDialogTitle = document.getElementById('event-dialog-title');
+            const eventSubmitButton = document.getElementById('eventSubmitButton');
+            const eventIdInput = document.getElementById('eventIdInput');
+            const eventTitleInput = document.getElementById('eventTitleInput');
+            const eventDateInput = document.getElementById('eventDateInput');
+            const eventDescriptionInput = document.getElementById('eventDescriptionInput');
+            const dayEventsDialog = document.getElementById('dayEventsDialog');
+            const closeDayEventsDialog = document.getElementById('closeDayEventsDialog');
+            const dayEventsTitle = document.getElementById('day-events-title');
+            const dayEventsList = document.getElementById('dayEventsList');
+            const eventTypeSelect = document.getElementById('eventTypeSelect');
+            const eventSubjectField = document.getElementById('eventSubjectField');
+            const eventSubjectSelect = document.getElementById('eventSubjectSelect');
+            const antiForgeryToken = eventForm.querySelector('input[name="__RequestVerificationToken"]').value;
+            const daysByKey = new Map(calendarDays.map(function (day) {
+                return [day.key, day];
+            }));
+
+            function openDialog() {
+                eventDialog.classList.add('is-visible');
+                eventDialog.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeDialog() {
+                eventDialog.classList.remove('is-visible');
+                eventDialog.setAttribute('aria-hidden', 'true');
+            }
+
+            function resetEventForm() {
+                eventForm.action = eventForm.dataset.addUrl;
+                eventForm.reset();
+                eventIdInput.value = '';
+                eventDateInput.value = '@defaultEventDate';
+                eventDialogTitle.textContent = 'Добави събитие';
+                eventSubmitButton.textContent = 'Добави';
+                updateSubjectVisibility();
+            }
+
+            function openAddEventDialog() {
+                resetEventForm();
+                openDialog();
+            }
+
+            function openEditEventDialog(schoolEvent) {
+                eventForm.action = eventForm.dataset.updateUrl;
+                eventIdInput.value = schoolEvent.id;
+                eventTitleInput.value = schoolEvent.title;
+                eventTypeSelect.value = schoolEvent.typeValue;
+                eventDateInput.value = schoolEvent.editDate;
+                eventDescriptionInput.value = schoolEvent.description || '';
+                eventSubjectSelect.value = schoolEvent.classSubjectId || '';
+                eventDialogTitle.textContent = 'Редактирай събитие';
+                eventSubmitButton.textContent = 'Запази';
+                updateSubjectVisibility();
+                closeDayDialog();
+                openDialog();
+            }
+
+            function createDeleteForm(schoolEvent) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = eventForm.dataset.deleteUrl;
+                form.addEventListener('submit', function (event) {
+                    if (!confirm('Сигурни ли сте, че искате да изтриете това събитие?')) {
+                        event.preventDefault();
+                    }
+                });
+
+                const fields = {
+                    __RequestVerificationToken: antiForgeryToken,
+                    classId: '@Model.ClassId',
+                    eventId: schoolEvent.id,
+                    returnYear: '@Model.EventsYear',
+                    returnMonth: '@Model.EventsMonth'
+                };
+
+                Object.keys(fields).forEach(function (name) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = fields[name];
+                    form.appendChild(input);
+                });
+
+                const button = document.createElement('button');
+                button.className = 'nb-day-event-action is-danger';
+                button.type = 'submit';
+                button.innerHTML = '<i class="bi bi-trash3" aria-hidden="true"></i><span>Изтрий</span>';
+                form.appendChild(button);
+
+                return form;
+            }
+
+            function openDayEventsDialog(day) {
+                dayEventsTitle.textContent = 'Събития за ' + day.label;
+                dayEventsList.replaceChildren();
+
+                if (!day.events.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'nb-day-events-empty';
+                    empty.textContent = 'Няма събития за тази дата.';
+                    dayEventsList.appendChild(empty);
+                } else {
+                    day.events.forEach(function (schoolEvent) {
+                        const card = document.createElement('article');
+                        card.className = 'nb-day-event-card';
+
+                        const marker = document.createElement('span');
+                        marker.className = 'nb-day-event-marker ' + schoolEvent.typeClass;
+
+                        const content = document.createElement('div');
+                        content.className = 'nb-day-event-content';
+
+                        const title = document.createElement('h3');
+                        title.textContent = schoolEvent.title;
+
+                        const meta = document.createElement('span');
+                        meta.textContent = [
+                            schoolEvent.type,
+                            schoolEvent.subject,
+                            schoolEvent.time
+                        ].filter(Boolean).join(' · ');
+
+                        content.append(title, meta);
+
+                        if (schoolEvent.description) {
+                            const description = document.createElement('p');
+                            description.textContent = schoolEvent.description;
+                            content.appendChild(description);
+                        }
+
+                        const actions = document.createElement('div');
+                        actions.className = 'nb-day-event-actions';
+
+                        const editButton = document.createElement('button');
+                        editButton.className = 'nb-day-event-action';
+                        editButton.type = 'button';
+                        editButton.innerHTML = '<i class="bi bi-pencil-square" aria-hidden="true"></i><span>Редактирай</span>';
+                        editButton.addEventListener('click', function () {
+                            openEditEventDialog(schoolEvent);
+                        });
+
+                        actions.append(editButton, createDeleteForm(schoolEvent));
+                        content.appendChild(actions);
+
+                        card.append(marker, content);
+                        dayEventsList.appendChild(card);
+                    });
+                }
+
+                dayEventsDialog.classList.add('is-visible');
+                dayEventsDialog.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeDayDialog() {
+                dayEventsDialog.classList.remove('is-visible');
+                dayEventsDialog.setAttribute('aria-hidden', 'true');
+            }
+
+            function updateSubjectVisibility() {
+                const shouldShowSubject = eventTypeSelect.value === 'Test' || eventTypeSelect.value === 'Homework';
+                eventSubjectField.hidden = !shouldShowSubject;
+                eventSubjectSelect.disabled = !shouldShowSubject;
+                eventSubjectSelect.required = shouldShowSubject;
+
+                if (!shouldShowSubject) {
+                    eventSubjectSelect.value = '';
+                } else if (!eventSubjectSelect.value &&
+                           eventSubjectSelect.options.length > 0 &&
+                           !eventSubjectSelect.options[0].disabled) {
+                    eventSubjectSelect.value = eventSubjectSelect.options[0].value;
+                }
+            }
+
+            openEventDialog.addEventListener('click', openAddEventDialog);
+            closeEventDialog.addEventListener('click', closeDialog);
+            closeDayEventsDialog.addEventListener('click', closeDayDialog);
+            eventTypeSelect.addEventListener('change', updateSubjectVisibility);
+
+            eventDialog.addEventListener('click', function (event) {
+                if (event.target === eventDialog) {
+                    closeDialog();
+                }
+            });
+
+            dayEventsDialog.addEventListener('click', function (event) {
+                if (event.target === dayEventsDialog) {
+                    closeDayDialog();
+                }
+            });
+
+            document.querySelectorAll('.js-calendar-day').forEach(function (dayButton) {
+                dayButton.addEventListener('click', function () {
+                    const day = daysByKey.get(dayButton.dataset.dateKey);
+                    if (day) {
+                        openDayEventsDialog(day);
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeDialog();
+                    closeDayDialog();
+                }
+            });
+
+            updateSubjectVisibility();
+        }());
+    </script>
+</body>
+</html>
+
+@functions {
+    private string GetTabClass(string tab)
+    {
+        return Model.ActiveTab == tab ? "is-active" : string.Empty;
+    }
+
+    private static int GetGradeNumber(string className)
+    {
+        var digits = new string(className.TakeWhile(char.IsDigit).ToArray());
+        return int.TryParse(digits, out var gradeNumber) ? gradeNumber : 1;
+    }
+
+    private static string Capitalize(string value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? value
+            : char.ToUpper(value[0]) + value[1..];
+    }
+
+    private static string GetEventTypeClass(string eventType)
+    {
+        return eventType switch
+        {
+            nameof(EventType.Test) => "is-purple",
+            nameof(EventType.Homework) => "is-blue",
+            nameof(EventType.Trip) => "is-green",
+            _ => "is-orange",
+        };
+    }
+}

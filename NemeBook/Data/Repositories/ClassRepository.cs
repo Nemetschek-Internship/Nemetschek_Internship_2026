@@ -17,10 +17,12 @@ public class ClassRepository : IClassRepository
     {
         return dbContext.Classes
             .Include(schoolClass => schoolClass.MainTeacher)
+            .ThenInclude(teacher => teacher!.User)
             .Include(schoolClass => schoolClass.Students)
             .ThenInclude(student => student.User)
             .Include(schoolClass => schoolClass.ClassSubjects)
             .ThenInclude(classSubject => classSubject.Subject)
+            .Include(schoolClass => schoolClass.Events)
             .Include(schoolClass => schoolClass.ScheduleEntries)
             .FirstOrDefaultAsync(schoolClass => schoolClass.Id == id, cancellationToken);
     }
@@ -29,10 +31,12 @@ public class ClassRepository : IClassRepository
     {
         return await dbContext.Classes
             .Include(schoolClass => schoolClass.MainTeacher)
+            .ThenInclude(teacher => teacher!.User)
             .Include(schoolClass => schoolClass.Students)
             .ThenInclude(student => student.User)
             .Include(schoolClass => schoolClass.ClassSubjects)
             .ThenInclude(classSubject => classSubject.Subject)
+            .Include(schoolClass => schoolClass.Events)
             .Include(schoolClass => schoolClass.ScheduleEntries)
             .ToListAsync(cancellationToken);
     }

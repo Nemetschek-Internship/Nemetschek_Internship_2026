@@ -34,6 +34,7 @@ using Services.Services.Security;
 using Services.Services.Students;
 using Services.Services.Subjects;
 using Services.Services.Teachers;
+using Web.Services.Admin;
 using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -116,6 +117,9 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IPrincipalDashboardService, PrincipalDashboardService>();
+builder.Services.AddScoped<IPrincipalClassesService, PrincipalClassesService>();
+builder.Services.AddScoped<IPrincipalClassManagementService, PrincipalClassManagementService>();
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));

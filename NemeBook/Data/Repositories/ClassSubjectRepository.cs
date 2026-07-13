@@ -19,6 +19,7 @@ public class ClassSubjectRepository : IClassSubjectRepository
             .Include(classSubject => classSubject.Class)
             .Include(classSubject => classSubject.Subject)
             .Include(classSubject => classSubject.Teacher)
+            .ThenInclude(teacher => teacher!.User)
             .FirstOrDefaultAsync(classSubject => classSubject.Id == id, cancellationToken);
     }
 
@@ -28,6 +29,7 @@ public class ClassSubjectRepository : IClassSubjectRepository
             .Include(classSubject => classSubject.Class)
             .Include(classSubject => classSubject.Subject)
             .Include(classSubject => classSubject.Teacher)
+            .ThenInclude(teacher => teacher!.User)
             .ToListAsync(cancellationToken);
     }
 
