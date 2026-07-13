@@ -33,6 +33,7 @@ using Services.Services.Security;
 using Services.Services.Students;
 using Services.Services.Subjects;
 using Services.Services.Teachers;
+using Web.Hubs;
 using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -115,6 +116,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<INotificationPushService, SignalRNotificationPushService>();
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));
@@ -147,6 +149,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<BackgroundEmailQueue>();
 builder.Services.AddSingleton<IBackgroundEmailQueue>(serviceProvider => serviceProvider.GetRequiredService<BackgroundEmailQueue>());
@@ -184,6 +187,8 @@ app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();
 
