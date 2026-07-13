@@ -14,9 +14,15 @@ public class StudentHomeViewModel
 
     public IReadOnlyList<StudentSubjectProgressItem> SubjectProgress { get; set; } = Array.Empty<StudentSubjectProgressItem>();
 
+    public IReadOnlyList<StudentAcademicSubjectItem> AcademicSubjects { get; set; } = Array.Empty<StudentAcademicSubjectItem>();
+
     public IReadOnlyList<StudentTimelineItem> RecentGrades { get; set; } = Array.Empty<StudentTimelineItem>();
 
+    public IReadOnlyList<StudentFeedbackDetailItem> Feedbacks { get; set; } = Array.Empty<StudentFeedbackDetailItem>();
+
     public StudentSummaryCard FeedbackSummary { get; set; } = new();
+
+    public IReadOnlyList<StudentAbsenceDetailItem> Absences { get; set; } = Array.Empty<StudentAbsenceDetailItem>();
 
     public StudentSummaryCard AbsenceSummary { get; set; } = new();
 
@@ -36,6 +42,64 @@ public class StudentSubjectProgressItem
     public int ProgressPercent { get; set; }
 
     public string AccentClass { get; set; } = string.Empty;
+}
+
+public class StudentAcademicSubjectItem
+{
+    public string SubjectName { get; set; } = string.Empty;
+
+    public decimal Average { get; set; }
+
+    public int GradeCount { get; set; }
+
+    public IReadOnlyList<StudentGradeDetailItem> Grades { get; set; } = Array.Empty<StudentGradeDetailItem>();
+}
+
+public class StudentGradeDetailItem
+{
+    public string SubjectName { get; set; } = string.Empty;
+
+    public decimal Value { get; set; }
+
+    public string Type { get; set; } = string.Empty;
+
+    public string TeacherName { get; set; } = string.Empty;
+
+    public DateTime Date { get; set; }
+
+    public string Comment { get; set; } = string.Empty;
+}
+
+public class StudentFeedbackDetailItem
+{
+    public string SubjectName { get; set; } = string.Empty;
+
+    public string Type { get; set; } = string.Empty;
+
+    public string TeacherName { get; set; } = string.Empty;
+
+    public DateOnly Date { get; set; }
+
+    public string Comment { get; set; } = string.Empty;
+}
+
+public class StudentAbsenceDetailItem
+{
+    public string SubjectName { get; set; } = string.Empty;
+
+    public string Type { get; set; } = string.Empty;
+
+    public string Status { get; set; } = string.Empty;
+
+    public string TeacherName { get; set; } = string.Empty;
+
+    public DateOnly Date { get; set; }
+
+    public int LessonNumber { get; set; }
+
+    public string ExcuseReason { get; set; } = string.Empty;
+
+    public string Comment { get; set; } = string.Empty;
 }
 
 public class StudentTimelineItem

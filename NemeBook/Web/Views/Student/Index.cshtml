@@ -216,6 +216,40 @@
             justify-content: space-between;
             gap: 14px;
             padding: 22px;
+            color: inherit;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+        }
+        .nb-mini-card:hover,
+        .nb-mini-card:focus-visible,
+        .nb-subject-grade-row:hover,
+        .nb-subject-grade-row:focus-visible,
+        .nb-card-action:hover,
+        .nb-card-action:focus-visible,
+        .nb-empty-button:hover,
+        .nb-empty-button:focus-visible {
+            border-color: #f97316;
+            box-shadow: 0 12px 26px rgba(42, 35, 29, 0.08);
+            outline: none;
+        }
+        .nb-mini-card:active,
+        .nb-subject-grade-row:active,
+        .nb-card-action:active,
+        .nb-empty-button:active {
+            transform: translateY(1px);
+        }
+        a.nb-student-user {
+            color: inherit;
+            text-decoration: none;
+            transition: background 0.16s ease, box-shadow 0.16s ease;
+        }
+        a.nb-student-user:hover,
+        a.nb-student-user:focus-visible {
+            background: #ffeede;
+            box-shadow: 0 10px 20px rgba(42, 35, 29, 0.06);
+            outline: none;
         }
         .nb-mini-card h3,
         .nb-card-heading h2 {
@@ -409,12 +443,305 @@
             min-height: 74px;
             display: grid;
             place-items: center;
+            border: 0;
             border-radius: 8px;
             background: #fbf7f2;
             color: #a49c92;
             font-size: 13px;
             font-weight: 800;
             text-align: center;
+        }
+        .nb-empty-button {
+            width: 100%;
+            border: 1px solid #eee7df;
+            font: inherit;
+            cursor: pointer;
+        }
+        .nb-card-action {
+            min-height: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0 10px;
+            border: 1px solid #f5d3b5;
+            border-radius: 999px;
+            background: #fff6ee;
+            color: #f15d10;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 850;
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .nb-card-action i {
+            font-size: 16px;
+            line-height: 1;
+        }
+        .nb-subject-grade-list {
+            display: grid;
+            gap: 8px;
+        }
+        .nb-subject-grade-row {
+            width: 100%;
+            min-height: 54px;
+            display: grid;
+            grid-template-columns: 28px minmax(0, 1fr) auto 54px;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            text-decoration: none;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+        }
+        .nb-subject-grade-row:nth-child(odd) {
+            background: #fffaf5;
+        }
+        .nb-subject-dot {
+            width: 24px;
+            height: 24px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: #e9ddff;
+            color: #7447ff;
+        }
+        .nb-subject-dot::after {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .nb-subject-grade-name {
+            min-width: 0;
+        }
+        .nb-subject-grade-name strong {
+            display: block;
+            overflow: hidden;
+            color: #353942;
+            font-size: 13px;
+            font-weight: 850;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .nb-subject-grade-name small {
+            display: block;
+            margin-top: 2px;
+            color: #a49c92;
+            font-size: 11px;
+            font-weight: 750;
+        }
+        .nb-subject-grade-chips {
+            display: inline-flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+        .nb-subject-grade-chips span,
+        .nb-modal-grade {
+            min-width: 24px;
+            min-height: 22px;
+            display: inline-grid;
+            place-items: center;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: #eee7df;
+            color: #8d867c;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        .nb-subject-grade-chips .is-good,
+        .nb-modal-grade.is-good {
+            background: #dff8e9;
+            color: #16a34a;
+        }
+        .nb-subject-grade-chips .is-mid,
+        .nb-modal-grade.is-mid {
+            background: #fff0d8;
+            color: #e77817;
+        }
+        .nb-subject-grade-chips .is-low,
+        .nb-modal-grade.is-low {
+            background: #ffe0dc;
+            color: #e04434;
+        }
+        .nb-subject-grade-row em {
+            justify-self: end;
+            min-width: 44px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: #f45d0a;
+            color: #ffffff;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 900;
+            text-align: center;
+        }
+        .nb-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: rgba(31, 35, 43, 0.42);
+        }
+        .nb-modal-backdrop[hidden] {
+            display: none;
+        }
+        .nb-modal {
+            width: min(760px, 100%);
+            max-height: min(760px, calc(100vh - 48px));
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            overflow: hidden;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 30px 80px rgba(31, 35, 43, 0.28);
+        }
+        .nb-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px 22px;
+            border-bottom: 1px solid #eee7df;
+        }
+        .nb-modal-header h2 {
+            margin: 0;
+            color: #20232a;
+            font-size: 17px;
+            font-weight: 900;
+        }
+        .nb-modal-header p {
+            margin: 4px 0 0;
+            color: #9a938b;
+            font-size: 12px;
+            font-weight: 750;
+        }
+        .nb-modal-close {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border: 1px solid #f0ded0;
+            border-radius: 50%;
+            background: #fff8f1;
+            color: #e95b0c;
+            cursor: pointer;
+        }
+        .nb-modal-close:focus-visible {
+            outline: 2px solid #ffb36d;
+            outline-offset: 2px;
+        }
+        .nb-modal-body {
+            min-height: 0;
+            overflow: auto;
+            padding: 18px 22px 22px;
+        }
+        .nb-modal-section {
+            display: grid;
+            gap: 10px;
+        }
+        .nb-modal-section + .nb-modal-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f1ebe5;
+        }
+        .nb-modal-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+        .nb-modal-section-header h3 {
+            margin: 0;
+            color: #2b3038;
+            font-size: 14px;
+            font-weight: 900;
+        }
+        .nb-modal-section-header span {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #fff1e6;
+            color: #f15d10;
+            font-size: 12px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .nb-modal-list {
+            display: grid;
+            gap: 10px;
+        }
+        .nb-modal-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid #f0e8df;
+            border-radius: 8px;
+            background: #fffaf5;
+        }
+        .nb-modal-row-main {
+            min-width: 0;
+            display: grid;
+            gap: 6px;
+        }
+        .nb-modal-row-main strong {
+            color: #282c34;
+            font-size: 13px;
+            font-weight: 900;
+        }
+        .nb-modal-row-main p {
+            margin: 0;
+            color: #615b55;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .nb-modal-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .nb-modal-meta span {
+            min-height: 22px;
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #f0ebe4;
+            color: #81786f;
+            font-size: 11px;
+            font-weight: 800;
+        }
+        .nb-modal-status-good {
+            background: #dff8e9 !important;
+            color: #16a34a !important;
+        }
+        .nb-modal-status-low {
+            background: #ffe0dc !important;
+            color: #e04434 !important;
+        }
+        .nb-modal-empty {
+            min-height: 92px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: #fbf7f2;
+            color: #9f978e;
+            font-size: 13px;
+            font-weight: 850;
+            text-align: center;
+        }
+        body.nb-modal-open {
+            overflow: hidden;
         }
         @@media (max-width: 1180px) {
             .nb-student-hero {
@@ -451,6 +778,31 @@
                 grid-template-columns: 28px minmax(0, 1fr);
             }
             .nb-schedule-item em { grid-column: 2; }
+            .nb-subject-grade-row {
+                grid-template-columns: 24px minmax(0, 1fr) auto;
+            }
+            .nb-subject-grade-chips {
+                grid-column: 2 / -1;
+                justify-content: flex-start;
+            }
+            .nb-subject-grade-row em {
+                grid-column: 3;
+                grid-row: 1;
+            }
+            .nb-modal-backdrop {
+                padding: 12px;
+            }
+            .nb-modal {
+                max-height: calc(100vh - 24px);
+            }
+            .nb-modal-header,
+            .nb-modal-body {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            .nb-modal-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -473,23 +825,24 @@
                 <a asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i><span>Профил</span></a>
             </nav>
 
-            <div class="nb-student-user">
+            <a class="nb-student-user" asp-controller="Account" asp-action="Profile" aria-label="Отвори профила">
                 <span class="nb-student-avatar">@Model.StudentInitials</span>
                 <span>
                     <strong>@Model.StudentName</strong>
                     <small>@Model.ClassName</small>
                 </span>
-            </div>
+            </a>
         </aside>
 
         <main class="nb-student-main">
             <header class="nb-student-topbar">
                 <h1>Начало</h1>
                 <div class="nb-student-top-actions">
-                    <button class="nb-notification-button" type="button" data-notification-bell aria-label="Нотификации" title="Нотификации">
-                        <i class="bi bi-bell-fill"></i>
-                        <span class="nb-notification-dot"></span>
-                    </button>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        <button class="nb-notification-button" type="submit" aria-label="Изход от профила" title="Изход">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
                     <span class="nb-student-avatar" aria-hidden="true">@Model.StudentInitials</span>
                 </div>
             </header>
@@ -536,57 +889,73 @@
                     </div>
 
                     <div class="nb-student-side-stack">
-                        <article class="nb-mini-card">
+                        <button class="nb-mini-card" type="button" data-nb-modal-open="student-feedback-modal">
                             <div>
                                 <h3>Отзиви</h3>
                                 <strong>@Model.FeedbackSummary.Count</strong>
                                 <p>@Model.FeedbackSummary.Detail</p>
                             </div>
                             <i class="bi bi-chat-square-text-fill"></i>
-                        </article>
+                        </button>
 
-                        <article class="nb-mini-card">
+                        <button class="nb-mini-card" type="button" data-nb-modal-open="student-absences-modal">
                             <div>
                                 <h3>Отсъствия</h3>
                                 <strong>@Model.AbsenceSummary.Count</strong>
                                 <p>@Model.AbsenceSummary.Detail</p>
                             </div>
                             <i class="bi bi-exclamation-circle-fill"></i>
-                        </article>
+                        </button>
                     </div>
                 </section>
 
                 <section class="nb-student-lower">
-                    <article class="nb-timeline-card">
+                    <article class="nb-timeline-card nb-grades-overview-card">
                         <div class="nb-card-heading">
-                            <h2>Данни</h2>
-                        </div>
-                        <div class="nb-timeline-tabs" aria-hidden="true">
-                            <span class="is-active"></span>
-                            <span></span>
-                            <span></span>
+                            <h2>Оценки</h2>
+                            <a class="nb-card-action" asp-controller="Grade" asp-action="MyGrades">
+                                <span>Детайли</span>
+                                <i class="bi bi-arrow-right-short"></i>
+                            </a>
                         </div>
 
-                        @if (Model.RecentGrades.Any())
+                        @if (Model.AcademicSubjects.Any())
                         {
-                            <div class="nb-timeline-list">
-                                @foreach (var grade in Model.RecentGrades)
+                            <div class="nb-subject-grade-list">
+                                @foreach (var subject in Model.AcademicSubjects)
                                 {
-                                    <div class="nb-timeline-item">
-                                        <span class="nb-timeline-dot"></span>
-                                        <span class="nb-timeline-marker"></span>
-                                        <div>
-                                            <strong>@grade.Title</strong>
-                                            <small>@grade.Detail</small>
+                                    var latestGrades = subject.Grades.Take(3).ToList();
+
+                                    <a class="nb-subject-grade-row" asp-controller="Grade" asp-action="MyGrades">
+                                        <span class="nb-subject-dot" aria-hidden="true"></span>
+                                        <div class="nb-subject-grade-name">
+                                            <strong>@subject.SubjectName</strong>
+                                            <small>@subject.GradeCount оценки</small>
                                         </div>
-                                        <em>@grade.Value</em>
-                                    </div>
+                                        <div class="nb-subject-grade-chips" aria-label="Последни оценки">
+                                            @if (latestGrades.Any())
+                                            {
+                                                @foreach (var grade in latestGrades)
+                                                {
+                                                    var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
+                                                    <span class="@gradeTone">@grade.Value.ToString("0.##")</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span>0</span>
+                                            }
+                                        </div>
+                                        <em>@subject.Average.ToString("0.00")</em>
+                                    </a>
                                 }
                             </div>
                         }
                         else
                         {
-                            <div class="nb-empty-panel">Все още няма оценки. Средният успех е 0.00.</div>
+                            <a class="nb-empty-panel nb-empty-button" asp-controller="Grade" asp-action="MyGrades">
+                                Няма добавени предмети. Средният успех е 0.00.
+                            </a>
                         }
                     </article>
 
@@ -597,13 +966,20 @@
                         </div>
 
                         <div class="nb-schedule-list">
-                            @foreach (var item in Model.TodaysSchedule)
+                            @if (Model.TodaysSchedule.Any())
                             {
-                                <div class="nb-schedule-item">
-                                    <span>@item.PeriodNumber</span>
-                                    <strong>@item.SubjectName</strong>
-                                    <em>@item.TimeRange</em>
-                                </div>
+                                @foreach (var item in Model.TodaysSchedule)
+                                {
+                                    <div class="nb-schedule-item">
+                                        <span>@item.PeriodNumber</span>
+                                        <strong>@item.SubjectName</strong>
+                                        <em>@item.TimeRange</em>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="nb-empty-panel">Няма програма за днес.</div>
                             }
                         </div>
                     </article>
@@ -611,6 +987,149 @@
             </section>
         </main>
     </div>
+
+    <div class="nb-modal-backdrop" data-nb-modal="student-feedback-modal" hidden>
+        <section class="nb-modal" role="dialog" aria-modal="true" aria-labelledby="student-feedback-title" tabindex="-1">
+            <header class="nb-modal-header">
+                <div>
+                    <h2 id="student-feedback-title">Отзиви</h2>
+                    <p>@Model.FeedbackSummary.Count @Model.FeedbackSummary.Label</p>
+                </div>
+                <button class="nb-modal-close" type="button" data-nb-modal-close aria-label="Затвори">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </header>
+            <div class="nb-modal-body">
+                @if (Model.Feedbacks.Any())
+                {
+                    <div class="nb-modal-list">
+                        @foreach (var feedback in Model.Feedbacks)
+                        {
+                            var feedbackTone = feedback.Type == "Похвала" ? "nb-modal-status-good" : "nb-modal-status-low";
+
+                            <article class="nb-modal-row">
+                                <span class="nb-modal-grade @feedbackTone"><i class="bi bi-chat-square-text-fill"></i></span>
+                                <div class="nb-modal-row-main">
+                                    <strong>@feedback.SubjectName</strong>
+                                    <div class="nb-modal-meta">
+                                        <span class="@feedbackTone">@feedback.Type</span>
+                                        <span>@feedback.TeacherName</span>
+                                        <span>@feedback.Date.ToString("dd.MM.yyyy")</span>
+                                    </div>
+                                    <p>@feedback.Comment</p>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="nb-modal-empty">Няма въведени отзиви.</div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="nb-modal-backdrop" data-nb-modal="student-absences-modal" hidden>
+        <section class="nb-modal" role="dialog" aria-modal="true" aria-labelledby="student-absences-title" tabindex="-1">
+            <header class="nb-modal-header">
+                <div>
+                    <h2 id="student-absences-title">Отсъствия</h2>
+                    <p>@Model.AbsenceSummary.Count @Model.AbsenceSummary.Label</p>
+                </div>
+                <button class="nb-modal-close" type="button" data-nb-modal-close aria-label="Затвори">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </header>
+            <div class="nb-modal-body">
+                @if (Model.Absences.Any())
+                {
+                    <div class="nb-modal-list">
+                        @foreach (var absence in Model.Absences)
+                        {
+                            var absenceTone = absence.Status == "Уважено" ? "nb-modal-status-good" : "nb-modal-status-low";
+
+                            <article class="nb-modal-row">
+                                <span class="nb-modal-grade @absenceTone">@absence.LessonNumber</span>
+                                <div class="nb-modal-row-main">
+                                    <strong>@absence.SubjectName</strong>
+                                    <div class="nb-modal-meta">
+                                        <span>@absence.Type</span>
+                                        <span class="@absenceTone">@absence.Status</span>
+                                        <span>@absence.TeacherName</span>
+                                        <span>@absence.Date.ToString("dd.MM.yyyy")</span>
+                                        <span>@absence.ExcuseReason</span>
+                                    </div>
+                                    <p>@absence.Comment</p>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="nb-modal-empty">Няма въведени отсъствия.</div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <script>
+        (() => {
+            const openButtons = document.querySelectorAll("[data-nb-modal-open]");
+            const modals = document.querySelectorAll("[data-nb-modal]");
+            let activeTrigger = null;
+
+            const closeModal = (modal) => {
+                if (!modal) {
+                    return;
+                }
+
+                modal.hidden = true;
+                document.body.classList.remove("nb-modal-open");
+
+                if (activeTrigger) {
+                    activeTrigger.focus();
+                    activeTrigger = null;
+                }
+            };
+
+            const openModal = (id, trigger) => {
+                const modal = document.querySelector(`[data-nb-modal="${id}"]`);
+                if (!modal) {
+                    return;
+                }
+
+                activeTrigger = trigger;
+                modal.hidden = false;
+                document.body.classList.add("nb-modal-open");
+                modal.querySelector(".nb-modal")?.focus();
+            };
+
+            openButtons.forEach((button) => {
+                button.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    openModal(button.dataset.nbModalOpen, button);
+                });
+            });
+
+            modals.forEach((modal) => {
+                modal.addEventListener("click", (event) => {
+                    if (event.target === modal || event.target.closest("[data-nb-modal-close]")) {
+                        closeModal(modal);
+                    }
+                });
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key !== "Escape") {
+                    return;
+                }
+
+                closeModal(document.querySelector("[data-nb-modal]:not([hidden])"));
+            });
+        })();
+    </script>
     <script src="~/js/pwa.js" asp-append-version="true"></script>
 </body>
 </html>

@@ -63,6 +63,11 @@ public class StudentHomeService : IStudentHomeService
             .ToDictionary(
                 classSubject => classSubject.Id,
                 classSubject => classSubject.Subject.Name);
+        var teacherByClassSubjectId = classSubjects
+            .Where(classSubject => classSubject.ClassId == student.ClassId)
+            .ToDictionary(
+                classSubject => classSubject.Id,
+                classSubject => FormatTeacherName(classSubject.Teacher));
 
         var grades = await gradeRepository.GetGradesByStudentIdAsync(student.Id, cancellationToken: cancellationToken);
         var feedbacks = await feedbackRepository.GetAllAsync(cancellationToken);
@@ -89,8 +94,11 @@ public class StudentHomeService : IStudentHomeService
             GradeCount = grades.Count,
             OverallAverage = grades.Any() ? Math.Round(grades.Average(grade => grade.Value), 2) : 0,
             SubjectProgress = BuildSubjectProgress(grades, subjectByClassSubjectId),
+            AcademicSubjects = BuildAcademicSubjects(grades, subjectByClassSubjectId, teacherByClassSubjectId),
             RecentGrades = BuildRecentGrades(grades, subjectByClassSubjectId),
+            Feedbacks = BuildFeedbackDetails(studentFeedbacks, subjectByClassSubjectId, teacherByClassSubjectId),
             FeedbackSummary = BuildFeedbackSummary(studentFeedbacks, subjectByClassSubjectId),
+            Absences = BuildAbsenceDetails(studentAbsences, subjectByClassSubjectId, teacherByClassSubjectId),
             AbsenceSummary = BuildAbsenceSummary(studentAbsences, subjectByClassSubjectId),
             TodaysSchedule = BuildTodaysSchedule(scheduleEntries, student.ClassId)
         };
@@ -103,7 +111,7 @@ public class StudentHomeService : IStudentHomeService
             StudentName = FormatUserName(user),
             StudentInitials = FormatInitials(user.FirstName, user.LastName),
             ClassName = "Няма зададен клас",
-            TodaysSchedule = CreateExampleSchedule(),
+            TodaysSchedule = Array.Empty<StudentScheduleItem>(),
             FeedbackSummary = new StudentSummaryCard
             {
                 Count = 0,
@@ -160,6 +168,46 @@ public class StudentHomeService : IStudentHomeService
             .ToList();
     }
 
+    private static IReadOnlyList<StudentAcademicSubjectItem> BuildAcademicSubjects(
+        IReadOnlyList<Grade> grades,
+        IReadOnlyDictionary<Guid, string> subjectByClassSubjectId,
+        IReadOnlyDictionary<Guid, string> teacherByClassSubjectId)
+    {
+        var gradesBySubject = grades
+            .GroupBy(grade => grade.ClassSubjectId)
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(grade => grade.CreatedAt).ToList());
+
+        return subjectByClassSubjectId
+            .OrderBy(subject => subject.Value)
+            .Select(subject =>
+            {
+                var subjectGrades = gradesBySubject.GetValueOrDefault(subject.Key, new List<Grade>());
+
+                return new StudentAcademicSubjectItem
+                {
+                    SubjectName = subject.Value,
+                    Average = subjectGrades.Any()
+                        ? Math.Round(subjectGrades.Average(grade => grade.Value), 2)
+                        : 0,
+                    GradeCount = subjectGrades.Count,
+                    Grades = subjectGrades
+                        .Select(grade => new StudentGradeDetailItem
+                        {
+                            SubjectName = subject.Value,
+                            Value = grade.Value,
+                            Type = GetDisplayName(grade.Type),
+                            TeacherName = GetTeacherName(grade.ClassSubjectId, teacherByClassSubjectId),
+                            Date = grade.CreatedAt,
+                            Comment = string.IsNullOrWhiteSpace(grade.Note)
+                                ? "Няма коментар"
+                                : grade.Note
+                        })
+                        .ToList()
+                };
+            })
+            .ToList();
+    }
+
     private static IReadOnlyList<StudentTimelineItem> BuildRecentGrades(
         IReadOnlyList<Grade> grades,
         IReadOnlyDictionary<Guid, string> subjectByClassSubjectId)
@@ -172,6 +220,25 @@ public class StudentHomeService : IStudentHomeService
                 Title = GetSubjectName(grade.ClassSubjectId, subjectByClassSubjectId),
                 Detail = $"{GetDisplayName(grade.Type)} - {grade.CreatedAt:dd.MM.yyyy}",
                 Value = grade.Value.ToString("0.##")
+            })
+            .ToList();
+    }
+
+    private static IReadOnlyList<StudentFeedbackDetailItem> BuildFeedbackDetails(
+        IReadOnlyList<Feedback> feedbacks,
+        IReadOnlyDictionary<Guid, string> subjectByClassSubjectId,
+        IReadOnlyDictionary<Guid, string> teacherByClassSubjectId)
+    {
+        return feedbacks
+            .Select(feedback => new StudentFeedbackDetailItem
+            {
+                SubjectName = GetSubjectName(feedback.ClassSubjectId, subjectByClassSubjectId),
+                Type = GetDisplayName(feedback.Type),
+                TeacherName = GetTeacherName(feedback.ClassSubjectId, teacherByClassSubjectId),
+                Date = feedback.Date,
+                Comment = string.IsNullOrWhiteSpace(feedback.Description)
+                    ? "Няма коментар"
+                    : feedback.Description
             })
             .ToList();
     }
@@ -189,7 +256,31 @@ public class StudentHomeService : IStudentHomeService
             Detail = latestFeedback is null
                 ? "Няма скорошни отзиви"
                 : $"{GetSubjectName(latestFeedback.ClassSubjectId, subjectByClassSubjectId)} - {latestFeedback.Date:dd.MM}"
-        };
+            };
+    }
+
+    private static IReadOnlyList<StudentAbsenceDetailItem> BuildAbsenceDetails(
+        IReadOnlyList<Absence> absences,
+        IReadOnlyDictionary<Guid, string> subjectByClassSubjectId,
+        IReadOnlyDictionary<Guid, string> teacherByClassSubjectId)
+    {
+        return absences
+            .Select(absence => new StudentAbsenceDetailItem
+            {
+                SubjectName = GetSubjectName(absence.ClassSubjectId, subjectByClassSubjectId),
+                Type = GetDisplayName(absence.Type),
+                Status = GetDisplayName(absence.Status),
+                TeacherName = GetTeacherName(absence.ClassSubjectId, teacherByClassSubjectId),
+                Date = absence.Date,
+                LessonNumber = absence.LessonNumber,
+                ExcuseReason = absence.ExcuseReason.HasValue
+                    ? GetDisplayName(absence.ExcuseReason.Value)
+                    : "Няма причина",
+                Comment = string.IsNullOrWhiteSpace(absence.ExcuseNote)
+                    ? "Няма коментар"
+                    : absence.ExcuseNote
+            })
+            .ToList();
     }
 
     private static StudentSummaryCard BuildAbsenceSummary(
@@ -227,17 +318,7 @@ public class StudentHomeService : IStudentHomeService
 
         return todaySchedule.Count > 0
             ? todaySchedule
-            : CreateExampleSchedule();
-    }
-
-    private static IReadOnlyList<StudentScheduleItem> CreateExampleSchedule()
-    {
-        return new List<StudentScheduleItem>
-        {
-            new() { PeriodNumber = 1, SubjectName = "Математика", TimeRange = "08:00 - 08:45" },
-            new() { PeriodNumber = 2, SubjectName = "Български език", TimeRange = "08:55 - 09:40" },
-            new() { PeriodNumber = 3, SubjectName = "История", TimeRange = "09:50 - 10:35" }
-        };
+            : Array.Empty<StudentScheduleItem>();
     }
 
     private static string FormatStudentName(Student student)
@@ -264,6 +345,18 @@ public class StudentHomeService : IStudentHomeService
     private static string GetSubjectName(Guid classSubjectId, IReadOnlyDictionary<Guid, string> subjectByClassSubjectId)
     {
         return subjectByClassSubjectId.GetValueOrDefault(classSubjectId, "Предмет");
+    }
+
+    private static string GetTeacherName(Guid classSubjectId, IReadOnlyDictionary<Guid, string> teacherByClassSubjectId)
+    {
+        return teacherByClassSubjectId.GetValueOrDefault(classSubjectId, "Няма зададен учител");
+    }
+
+    private static string FormatTeacherName(Teacher? teacher)
+    {
+        return teacher?.User is null
+            ? "Няма зададен учител"
+            : FormatUserName(teacher.User);
     }
 
     private static string GetDisplayName(Enum value)

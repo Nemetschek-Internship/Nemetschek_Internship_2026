@@ -17,6 +17,7 @@ public class GradeController : Controller
 {
     private readonly IGradeService _gradeService;
     private readonly IStudentService _studentService;
+    private readonly IStudentHomeService _studentHomeService;
     private readonly IClassService _classService;
     private readonly ISubjectService _subjectService;
     private readonly ITeacherService _teacherService;
@@ -27,6 +28,7 @@ public class GradeController : Controller
     public GradeController(
         IGradeService gradeService,
         IStudentService studentService,
+        IStudentHomeService studentHomeService,
         IClassService classService,
         ISubjectService subjectService,
         ITeacherService teacherService,
@@ -36,6 +38,7 @@ public class GradeController : Controller
     {
         _gradeService = gradeService;
         _studentService = studentService;
+        _studentHomeService = studentHomeService;
         _classService = classService;
         _subjectService = subjectService;
         _teacherService = teacherService;
@@ -45,31 +48,17 @@ public class GradeController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> MyGrades(GradeFilterRequest? filter = null)
+    public async Task<IActionResult> MyGrades()
     {
         var userId = GetCurrentUserId();
         if (!userId.HasValue)
             return RedirectToAction("Login", "Account");
 
-        var students = await _studentService.GetAllAsync();
-        var student = students.FirstOrDefault(s => s.UserId == userId.Value);
-
-        if (student is null)
+        var viewModel = await _studentHomeService.GetHomeAsync(userId.Value);
+        if (viewModel is null)
             return RedirectToAction("AccessDenied", "Account");
 
-        var viewModel = await _gradeService.GetStudentGradesAsync(
-            student.Id,
-            filter,
-            CancellationToken.None);
-
-        ViewBag.Subjects = await GetSubjectsForStudentAsync(student.Id);
-        ViewBag.FromDate = filter?.FromDate?.ToString("yyyy-MM-dd");
-        ViewBag.ToDate = filter?.ToDate?.ToString("yyyy-MM-dd");
-
-        await SetTeacherViewBagDataAsync(); 
-
         return View(viewModel);
-
     }
     private async Task SetTeacherViewBagDataAsync()
     {
