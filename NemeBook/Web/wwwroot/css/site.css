@@ -597,27 +597,286 @@ body {
     font-weight: 700;
 }
 
-@media (max-width: 991px) {
-    .nb-student-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .nb-student-sidebar {
-        position: static;
-        height: auto;
-    }
-
-    .nb-dashboard-grid {
-        grid-template-columns: 1fr;
-    }
+.nb-login-mobile-progress,
+.nb-login-mobile-brand {
+    display: none;
 }
 
 @media (max-width: 900px) {
+    body {
+        margin-bottom: 0;
+        background: #f2ece6;
+    }
+
     .nb-login-page {
+        position: relative;
+        width: 100%;
+        min-height: 100dvh;
+        margin-left: 0;
         grid-template-columns: 1fr;
+        background: #f2ece6;
+        padding: 20px 12px 24px;
+        overflow: hidden;
+    }
+
+    .nb-login-page::before {
+        content: "";
+        position: absolute;
+        left: -36px;
+        bottom: 36px;
+        width: 92px;
+        height: 92px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, #ff8a2a, #f46a16);
+        transform: rotate(45deg);
+        z-index: 0;
+    }
+
+    .nb-login-page::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        bottom: 56px;
+        width: 38px;
+        height: 28px;
+        opacity: 0.25;
+        background-image: radial-gradient(#f46a16 1px, transparent 1px);
+        background-size: 8px 8px;
+        z-index: 0;
     }
 
     .nb-login-brand-panel {
-        min-height: 220px;
+        display: none;
+    }
+
+    .nb-login-card-area {
+        position: relative;
+        z-index: 1;
+        padding: 0;
+        gap: 12px;
+        align-content: start;
+        background: transparent;
+    }
+
+    .nb-login-mobile-progress {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        margin-bottom: 4px;
+    }
+
+    .nb-login-mobile-step-label {
+        color: #f46a16;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .12em;
+    }
+
+    .nb-login-mobile-steps {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .nb-login-mobile-steps span {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #dbd7d1;
+    }
+
+    .nb-login-mobile-steps span.is-active {
+        background: #f46a16;
+    }
+
+    .nb-login-panel {
+        width: 100%;
+        max-width: 360px;
+        padding: 18px 14px 14px;
+        border-radius: 16px;
+        box-shadow: 0 10px 24px rgba(45, 33, 22, 0.10);
+    }
+
+    .nb-login-mobile-brand {
+        display: grid;
+        justify-items: center;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+    .nb-login-mobile-logo {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        color: #f46a16;
+        background: #fff2e7;
+        font-size: 18px;
+    }
+
+    .nb-login-mobile-wordmark {
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1;
+        color: #111;
+    }
+
+    .nb-login-mobile-wordmark span {
+        color: #f46a16;
+    }
+
+    .nb-login-panel h1 {
+        font-size: 32px;
+        margin-bottom: 4px;
+    }
+
+    .nb-login-subtitle {
+        font-size: 12px;
+        margin-bottom: 14px;
+    }
+
+    .nb-form-label {
+        font-size: 11px;
+        margin-bottom: 5px;
+    }
+
+    .nb-login-input {
+        height: 40px;
+        border-radius: 9px;
+        font-size: 13px;
+    }
+
+    .nb-login-options {
+        font-size: 11px;
+        margin: 4px 0 12px;
+    }
+
+    .nb-primary-action {
+        min-height: 42px;
+        border-radius: 10px;
+        font-size: 14px;
+    }
+
+    .nb-login-help {
+        margin-top: 10px;
+        font-size: 10.5px;
+    }
+}
+
+/* App shell sidebar layout */
+.nb-app-body {
+    margin: 0;
+    background: #f7efe6;
+}
+
+.nb-app-shell {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.nb-app-sidebar {
+    border-right: 1px solid #ece6de;
+    background: #fff;
+}
+
+.nb-app-sidebar-inner {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+}
+
+.nb-app-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: #f46a16;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.nb-app-nav {
+    display: grid;
+    gap: 4px;
+}
+
+.nb-app-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 10px;
+    color: #4f5562;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.nb-app-nav-link:hover {
+    background: #fff1e5;
+    color: #f46a16;
+}
+
+.nb-app-sidebar-bottom {
+    margin-top: auto;
+    padding-top: 10px;
+}
+
+.nb-user-btn {
+    width: 100%;
+    text-align: left;
+    border: 1px solid #ece6de;
+    background: #fffaf5;
+    color: #3d4451;
+    font-weight: 600;
+}
+
+.nb-app-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.nb-app-topbar {
+    height: 56px;
+    border-bottom: 1px solid #ece6de;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+}
+
+.nb-menu-btn {
+    border: 1px solid #ece6de;
+    background: #fff;
+}
+
+.nb-app-topbar-title {
+    font-weight: 700;
+    color: #2d3340;
+}
+
+.nb-app-content {
+    flex: 1 1 auto;
+    padding: 16px;
+}
+
+.nb-app-footer {
+    border-top: 1px solid #ece6de;
+    background: #fff;
+    padding: 10px 16px;
+}
+
+@media (max-width: 991.98px) {
+    .nb-app-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .nb-app-sidebar {
+        width: 280px !important;
     }
 }
