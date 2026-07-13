@@ -41,11 +41,13 @@ public class ChatService : IChatService
 
     public async Task<IReadOnlyList<Chat>> GetChatsForUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        await GetUserOrThrowAsync(userId, cancellationToken);
+        var requester = await GetUserOrThrowAsync(userId, cancellationToken);
 
         var chats = await chatRepository.GetAllAsync(cancellationToken);
         return chats
             .Where(chat => chat.Users.Any(user => user.Id == userId))
+            .Where(chat => !IsCustomGroupChat(chat))
+            .Where(chat => CanUserSeeChat(requester, chat))
             .ToList();
     }
 
@@ -65,7 +67,7 @@ public class ChatService : IChatService
         var allowedContactIds = await GetAllowedDirectContactIdsAsync(requesterUserId, cancellationToken);
         var users = await userRepository.GetAllAsync(cancellationToken);
 
-        var query = users.Where(user => allowedContactIds.Contains(user.Id));
+        var query = users.Where(user => allowedContactIds.Contains(user.Id) && !user.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -77,7 +79,11 @@ public class ChatService : IChatService
                 user.Email.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
-        return query.ToList();
+        return query
+            .OrderBy(user => user.FirstName)
+            .ThenBy(user => user.LastName)
+            .ThenBy(user => user.Email)
+            .ToList();
     }
 
     public async Task<Chat> GetOrCreateDirectChatAsync(Guid requesterUserId, Guid targetUserId, CancellationToken cancellationToken = default)
@@ -105,6 +111,7 @@ public class ChatService : IChatService
 
         var chats = await chatRepository.GetAllAsync(cancellationToken);
         var existingDirectChat = chats.FirstOrDefault(chat =>
+            string.IsNullOrWhiteSpace(chat.Name) &&
             chat.Users.Count == 2 &&
             chat.Users.Any(user => user.Id == requesterUserId) &&
             chat.Users.Any(user => user.Id == targetUserId));
@@ -257,6 +264,7 @@ public class ChatService : IChatService
 
     private async Task EnsureUserCanAccessChatAsync(Guid userId, Guid chatId, CancellationToken cancellationToken)
     {
+        var requester = await GetUserOrThrowAsync(userId, cancellationToken);
         var chat = await chatRepository.GetByIdAsync(chatId, cancellationToken)
             ?? throw new InvalidOperationException("Chat was not found.");
 
@@ -264,36 +272,37 @@ public class ChatService : IChatService
         {
             throw new UnauthorizedAccessException("User is not part of this chat.");
         }
+
+        if (IsCustomGroupChat(chat))
+        {
+            throw new UnauthorizedAccessException("Custom group chats are disabled.");
+        }
+
+        if (!CanUserSeeChat(requester, chat))
+        {
+            throw new UnauthorizedAccessException("User is not allowed to access this chat.");
+        }
+    }
+
+    private static bool IsCustomGroupChat(Chat chat)
+    {
+        return chat.Name?.StartsWith("GROUP:", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static bool CanUserSeeChat(User requester, Chat chat)
+    {
+        return requester.Role != UserRole.Student || chat.Users.All(user => user.Role != UserRole.Principal);
     }
 
     private async Task<HashSet<Guid>> GetAllowedDirectContactIdsAsync(Guid requesterUserId, CancellationToken cancellationToken)
     {
-        var requester = await GetUserOrThrowAsync(requesterUserId, cancellationToken);
-
         var users = await userRepository.GetAllAsync(cancellationToken);
-        var students = await studentRepository.GetAllAsync(cancellationToken);
-        var parents = await parentRepository.GetAllAsync(cancellationToken);
-        var teachers = await teacherRepository.GetAllAsync(cancellationToken);
-        var classes = await classRepository.GetAllAsync(cancellationToken);
-        var classSubjects = await classSubjectRepository.GetAllAsync(cancellationToken);
-
-        var teacherUserByTeacherId = teachers.ToDictionary(teacher => teacher.Id, teacher => teacher.UserId);
-        var principalIds = users
-            .Where(user => user.Role == UserRole.Principal)
+        return users
+            .Where(user => user.Id != requesterUserId)
+            .Where(user => !user.IsDeleted)
+            .Where(user => user.Role is UserRole.Student or UserRole.Teacher)
             .Select(user => user.Id)
             .ToHashSet();
-
-        HashSet<Guid> allowedIds = requester.Role switch
-        {
-            UserRole.Student => GetAllowedForStudent(requesterUserId, students, classSubjects, classes, teacherUserByTeacherId),
-            UserRole.Parent => GetAllowedForParent(requesterUserId, parents, classSubjects, classes, teacherUserByTeacherId, principalIds),
-            UserRole.Teacher => GetAllowedForTeacher(requesterUserId, teachers, students, parents, classes, classSubjects, principalIds),
-            UserRole.Principal => GetAllowedForPrincipal(users),
-            _ => new HashSet<Guid>()
-        };
-
-        allowedIds.Remove(requesterUserId);
-        return allowedIds;
     }
 
     private static HashSet<Guid> GetAllowedForStudent(

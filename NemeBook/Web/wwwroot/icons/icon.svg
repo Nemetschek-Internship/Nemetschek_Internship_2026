@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="NemeBook">
+  <rect width="192" height="192" rx="42" fill="#f97316"/>
+  <path fill="#fff7ed" d="M52 46h23l43 62V46h25v100h-23L77 84v62H52z"/>
+  <circle cx="143" cy="49" r="11" fill="#1f232b"/>
+</svg>

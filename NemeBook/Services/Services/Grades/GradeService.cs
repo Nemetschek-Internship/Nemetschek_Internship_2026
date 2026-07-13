@@ -112,7 +112,7 @@ public class GradeService : IGradeService
             .Where(t => teacherIds.Contains(t.Id))
             .ToDictionary(
                 t => t.Id,
-                t => teacherNames.GetValueOrDefault(t.UserId, "Unknown"));
+                t => teacherNames.GetValueOrDefault(t.UserId, "Неизвестно"));
 
         // Student names
         var allStudents = await _studentRepository.GetAllAsync(cancellationToken);
@@ -129,19 +129,19 @@ public class GradeService : IGradeService
             .Where(s => studentIds.Contains(s.Id))
             .ToDictionary(
                 s => s.Id,
-                s => studentNames.GetValueOrDefault(s.UserId, "Unknown"));
+                s => studentNames.GetValueOrDefault(s.UserId, "Неизвестно"));
 
         var classSubjectSubjectDict = relevantClassSubjects
             .ToDictionary(
                 cs => cs.Id,
-                cs => subjectsDict.GetValueOrDefault(cs.SubjectId, "Unknown"));
+                cs => subjectsDict.GetValueOrDefault(cs.SubjectId, "Неизвестно"));
 
         var classSubjectTeacherDict = relevantClassSubjects
             .ToDictionary(
                 cs => cs.Id,
                 cs => cs.TeacherId.HasValue
-                    ? teacherNameByTeacherId.GetValueOrDefault(cs.TeacherId.Value, "Unknown")
-                    : "Unassigned");
+                    ? teacherNameByTeacherId.GetValueOrDefault(cs.TeacherId.Value, "Неизвестно")
+                    : "Няма назначен учител");
 
         var gradeDtos = grades.Select(g => new GradeDto
         {
@@ -151,11 +151,11 @@ public class GradeService : IGradeService
             Note = g.Note,
             Date = g.CreatedAt,
             SubjectId = relevantClassSubjects.FirstOrDefault(cs => cs.Id == g.ClassSubjectId)?.SubjectId ?? Guid.Empty,
-            SubjectName = classSubjectSubjectDict.GetValueOrDefault(g.ClassSubjectId, "Unknown"),
+            SubjectName = classSubjectSubjectDict.GetValueOrDefault(g.ClassSubjectId, "Неизвестно"),
             TeacherId = relevantClassSubjects.FirstOrDefault(cs => cs.Id == g.ClassSubjectId)?.TeacherId ?? Guid.Empty,
-            TeacherName = classSubjectTeacherDict.GetValueOrDefault(g.ClassSubjectId, "Unknown"),
+            TeacherName = classSubjectTeacherDict.GetValueOrDefault(g.ClassSubjectId, "Неизвестно"),
             StudentId = g.StudentId,
-            StudentName = studentNameByStudentId.GetValueOrDefault(g.StudentId, "Unknown")
+            StudentName = studentNameByStudentId.GetValueOrDefault(g.StudentId, "Неизвестно")
         }).ToList();
 
         var viewModel = new StudentGradesViewModel
@@ -219,7 +219,7 @@ public class GradeService : IGradeService
         if (classSubject is null)
             throw new InvalidOperationException("Subject is not taught in this class.");
 
-        var teacherName = "Unassigned";
+        var teacherName = "Няма назначен учител";
         if (classSubject.TeacherId.HasValue)
         {
             var teacher = await _teacherService.GetByIdAsync(classSubject.TeacherId.Value, cancellationToken);
@@ -229,7 +229,7 @@ public class GradeService : IGradeService
             var teacherUser = await _userRepository.GetByIdAsync(teacher.UserId, cancellationToken);
             teacherName = teacherUser is not null
                 ? $"{teacherUser.FirstName} {teacherUser.LastName}"
-                : "Unknown";
+                : "Неизвестно";
         }
 
         var gradeFilter = filter is not null ? new GradeFilter
@@ -258,7 +258,7 @@ public class GradeService : IGradeService
         var studentNameMap = studentsInClass
             .ToDictionary(
                 s => s.Id,
-                s => userNames.GetValueOrDefault(s.UserId, "Unknown"));
+                s => userNames.GetValueOrDefault(s.UserId, "Неизвестно"));
 
         var gradeDtos = grades.Select(g => new GradeDto
         {
@@ -272,7 +272,7 @@ public class GradeService : IGradeService
             TeacherId = classSubject.TeacherId ?? Guid.Empty,
             TeacherName = teacherName,
             StudentId = g.StudentId,
-            StudentName = studentNameMap.GetValueOrDefault(g.StudentId, "Unknown")
+            StudentName = studentNameMap.GetValueOrDefault(g.StudentId, "Неизвестно")
         }).ToList();
 
         var viewModel = new ClassGradesViewModel
@@ -294,7 +294,7 @@ public class GradeService : IGradeService
             var row = new StudentGradeRowDto
             {
                 StudentId = student.Id,
-                StudentName = studentNameMap.GetValueOrDefault(student.Id, "Unknown"),
+                StudentName = studentNameMap.GetValueOrDefault(student.Id, "Неизвестно"),
                 Grades = studentGrades,
                 Average = studentGrades.Any()
                     ? Math.Round(studentGrades.Average(g => g.Value), 2)

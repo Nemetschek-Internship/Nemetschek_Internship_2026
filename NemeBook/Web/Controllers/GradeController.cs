@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Entities.ViewModels.Grades;
 using Services.Interfaces.ClassSubjects;
 using Services.Interfaces.Classes;
 using Services.Interfaces.Grades;
-using Services.Interfaces.Parents;
-using Services.Interfaces.Students;
 using Services.Interfaces.Subjects;
 using Services.Interfaces.Teachers;
-using Entities.ViewModels.Grades;
 using System.Security.Claims;
 
 namespace Web.Controllers;
@@ -16,61 +14,34 @@ namespace Web.Controllers;
 public class GradeController : Controller
 {
     private readonly IGradeService _gradeService;
-    private readonly IStudentService _studentService;
     private readonly IClassService _classService;
     private readonly ISubjectService _subjectService;
     private readonly ITeacherService _teacherService;
-    private readonly IParentService _parentService;
     private readonly IClassSubjectService _classSubjectService;
     private readonly ILogger<GradeController> _logger;
 
     public GradeController(
         IGradeService gradeService,
-        IStudentService studentService,
         IClassService classService,
         ISubjectService subjectService,
         ITeacherService teacherService,
-        IParentService parentService,
         IClassSubjectService classSubjectService,
         ILogger<GradeController> logger)
     {
         _gradeService = gradeService;
-        _studentService = studentService;
         _classService = classService;
         _subjectService = subjectService;
         _teacherService = teacherService;
-        _parentService = parentService;
         _classSubjectService = classSubjectService;
         _logger = logger;
     }
 
     [HttpGet]
-    public async Task<IActionResult> MyGrades(GradeFilterRequest? filter = null)
+    public IActionResult MyGrades()
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return RedirectToAction("Login", "Account");
-
-        var students = await _studentService.GetAllAsync();
-        var student = students.FirstOrDefault(s => s.UserId == userId.Value);
-
-        if (student is null)
-            return RedirectToAction("AccessDenied", "Account");
-
-        var viewModel = await _gradeService.GetStudentGradesAsync(
-            student.Id,
-            filter,
-            CancellationToken.None);
-
-        ViewBag.Subjects = await GetSubjectsForStudentAsync(student.Id);
-        ViewBag.FromDate = filter?.FromDate?.ToString("yyyy-MM-dd");
-        ViewBag.ToDate = filter?.ToDate?.ToString("yyyy-MM-dd");
-
-        await SetTeacherViewBagDataAsync(); 
-
-        return View(viewModel);
-
+        return RedirectToAction("MyGrades", "Student");
     }
+
     private async Task SetTeacherViewBagDataAsync()
     {
         var userId = GetCurrentUserId();
@@ -96,25 +67,6 @@ public class GradeController : Controller
             }
         }
     }
-    [HttpGet]
-    [Authorize(Roles = "Teacher,Principal,Parent")]
-    public async Task<IActionResult> StudentGrades(Guid studentId, GradeFilterRequest? filter = null)
-    {
-        if (!await CanAccessStudentGradesAsync(studentId))
-            return RedirectToAction("AccessDenied", "Account");
-
-        var viewModel = await _gradeService.GetStudentGradesAsync(
-            studentId,
-            filter,
-            CancellationToken.None);
-
-        ViewBag.Subjects = await GetSubjectsForStudentAsync(studentId);
-        ViewBag.FromDate = filter?.FromDate?.ToString("yyyy-MM-dd");
-        ViewBag.ToDate = filter?.ToDate?.ToString("yyyy-MM-dd");
-
-        return View(viewModel);
-    }
-
     [HttpGet]
     [Authorize(Roles = "Teacher,Principal")]
     public async Task<IActionResult> ClassGrades(Guid classId, Guid subjectId, GradeFilterRequest? filter = null)
@@ -151,21 +103,10 @@ public class GradeController : Controller
 
         ViewBag.ClassName = classEntity is not null
             ? $"{classEntity.GradeNumber}{classEntity.Letter}"
-            : "Unknown";
-        ViewBag.SubjectName = subject?.Name ?? "Unknown";
+            : "Неизвестно";
+        ViewBag.SubjectName = subject?.Name ?? "Неизвестно";
 
         return View(ranking);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetAverage(Guid studentId, Guid? subjectId = null)
-    {
-        var average = await _gradeService.GetStudentAverageAsync(
-            studentId,
-            subjectId,
-            CancellationToken.None);
-
-        return Json(new { studentId, subjectId, average });
     }
 
     [HttpGet]
@@ -222,36 +163,6 @@ public IActionResult SelectClassAndSubject(Guid classId, Guid subjectId)
         return null;
     }
 
-    private async Task<bool> CanAccessStudentGradesAsync(Guid studentId)
-    {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue) return false;
-
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-
-        if (role == "Teacher" || role == "Principal")
-            return true;
-
-        if (role == "Parent")
-        {
-            var parents = await _parentService.GetAllAsync();
-            var parent = parents.FirstOrDefault(p => p.UserId == userId.Value);
-            if (parent is not null)
-            {
-                return parent.Students.Any(s => s.Id == studentId);
-            }
-        }
-
-        if (role == "Student")
-        {
-            var students = await _studentService.GetAllAsync();
-            var student = students.FirstOrDefault(s => s.UserId == userId.Value);
-            return student is not null && student.Id == studentId;
-        }
-
-        return false;
-    }
-
     private async Task<bool> CanAccessClassGradesAsync(Guid classId, Guid subjectId)
     {
         var userId = GetCurrentUserId();
@@ -277,30 +188,6 @@ public IActionResult SelectClassAndSubject(Guid classId, Guid subjectId)
         return false;
     }
 
-    private async Task<List<SubjectDto>> GetSubjectsForStudentAsync(Guid studentId)
-    {
-        var student = await _studentService.GetByIdAsync(studentId);
-        if (student is null) return new List<SubjectDto>();
-
-        var classSubjects = await _classSubjectService.GetAllAsync();
-        var subjectIds = classSubjects
-            .Where(cs => cs.ClassId == student.ClassId)
-            .Select(cs => cs.SubjectId)
-            .Distinct()
-            .ToList();
-
-        var subjects = await _subjectService.GetAllAsync();
-        return subjects
-            .Where(s => subjectIds.Contains(s.Id))
-            .Select(s => new SubjectDto { Id = s.Id, Name = s.Name })
-            .ToList();
-    }
-}
-
-public class SubjectDto
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
 }
 
 public class SelectClassSubjectViewModel

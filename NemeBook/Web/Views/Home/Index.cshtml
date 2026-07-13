@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Начало";
 }
 
 <style>
@@ -65,15 +65,15 @@
 
 <div class="nb-home">
     <section class="nb-home-panel">
-        <h1 class="nb-home-title">Welcome to NemeBook</h1>
-        <p class="nb-home-text">Manage school information, profiles and communication from one place.</p>
+        <h1 class="nb-home-title">Добре дошли в NemeBook</h1>
+        <p class="nb-home-text">Управлявайте училищна информация, профили и комуникация от едно място.</p>
 
         @if (User.IsInRole("Principal"))
         {
             <div class="nb-admin-actions">
                 <a class="nb-admin-btn" asp-controller="ProfileImport" asp-action="Index">
                     <i class="bi bi-file-earmark-spreadsheet"></i>
-                    Import profiles
+                    Импорт на профили
                 </a>
             </div>
         }
