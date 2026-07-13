@@ -2131,6 +2131,7 @@ body {
   color: var(--nb-orange);
   cursor: pointer;
   font-size: 17px;
+  text-decoration: none;
 }
 
 .nb-class-students-panel .nb-student-chat-btn:hover,
@@ -2158,6 +2159,57 @@ body {
 .nb-class-placeholder i {
   color: var(--nb-orange);
   font-size: 28px;
+}
+
+.nb-import-admin-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
+}
+
+.nb-import-admin-card {
+  width: 100%;
+  max-width: 860px;
+  padding: 30px;
+}
+
+.nb-import-admin-header {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.nb-import-admin-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #fff0e3;
+  color: var(--nb-orange);
+  font-size: 20px;
+}
+
+.nb-import-admin-header h2 {
+  margin: 0;
+  color: #25262b;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.nb-import-admin-header p {
+  margin: 5px 0 0;
+  color: var(--nb-muted);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.nb-import-submit {
+  max-width: none;
 }
 
 .nb-student-body {

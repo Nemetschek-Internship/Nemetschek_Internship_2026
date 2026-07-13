@@ -1,21 +1,16 @@
 @model Entities.ViewModels.Auth.AccountViewModel
 
 @{
-    Layout = null;
+    Layout = "_AppShell";
     ViewData["Title"] = "Профил";
+    ViewData["ActiveNav"] = "Profile";
+    ViewData["ShellUserName"] = Model.FullName;
+    ViewData["ShellUserMeta"] = Model.Role;
+    ViewData["ShellUserInitials"] = Model.Initials;
     var homeController = Model.Role == "Ученик" ? "Student" : "Home";
 }
 
-<!DOCTYPE html>
-<html lang="bg">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f97316" />
-    <title>@ViewData["Title"] - NemeBook</title>
-    <link rel="manifest" href="~/manifest.webmanifest" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+@section Styles {
 <style>
     .nb-profile-shell {
         min-height: 0;
@@ -224,118 +219,74 @@
         }
     }
 </style>
-</head>
-<body class="nb-student-body">
-    <div class="nb-student-shell">
-        <aside class="nb-student-sidebar" aria-label="Навигация">
-            <a class="nb-student-brand" asp-controller="@homeController" asp-action="Index">
-                <span class="nb-student-brand-mark">N</span>
-                <span>
-                    <strong>NemeBook</strong>
-                    <small>@Model.Role</small>
-                </span>
+}
+
+<section class="nb-profile-shell">
+<div class="nb-profile-wrap">
+    <aside class="nb-profile-card">
+        <div class="nb-profile-hero">
+            <div class="nb-profile-avatar">@Model.Initials</div>
+            <h1>@Model.FullName</h1>
+            <span class="nb-profile-role">@Model.Role</span>
+        </div>
+
+        <div class="nb-profile-actions">
+            <a asp-action="ChangePassword" class="nb-profile-action is-primary">
+                <i class="bi bi-key-fill"></i>
+                Смяна на парола
             </a>
+            <a asp-action="Index" asp-controller="@homeController" class="nb-profile-action is-secondary">
+                <i class="bi bi-house-fill"></i>
+                Начало
+            </a>
+        </div>
+    </aside>
 
-            <nav class="nb-student-nav">
-                <a asp-controller="@homeController" asp-action="Index"><i class="bi bi-house-fill"></i><span>Начало</span></a>
-                <a asp-controller="Student" asp-action="MyGrades"><i class="bi bi-journal-bookmark"></i><span>Оценки</span></a>
-                <a asp-controller="Chat" asp-action="Index"><i class="bi bi-chat-dots"></i><span>Чатове</span></a>
-                <a href="#" aria-disabled="true"><i class="bi bi-calendar3"></i><span>Календар</span></a>
-                <a class="is-active" asp-controller="Account" asp-action="Profile"><i class="bi bi-person-fill"></i><span>Профил</span></a>
-            </nav>
-
-            <div class="nb-student-user">
-                <span class="nb-student-avatar">@Model.Initials</span>
-                <span>
-                    <strong>@Model.FullName</strong>
-                    <small>@Model.Role</small>
-                </span>
+    <section class="nb-profile-panel">
+        @if (TempData["SuccessMessage"] is not null)
+        {
+            <div class="nb-profile-flash">
+                <i class="bi bi-check-circle-fill"></i>
+                @TempData["SuccessMessage"]
             </div>
-        </aside>
+        }
 
-        <main class="nb-student-main">
-            <header class="nb-student-topbar">
-                <h1>Профил</h1>
-                <div class="nb-student-top-actions">
-                    <button class="nb-notification-button" type="button" data-notification-bell aria-label="Нотификации" title="Нотификации">
-                        <i class="bi bi-bell-fill"></i>
-                        <span class="nb-notification-dot"></span>
-                    </button>
-                    <span class="nb-student-avatar" aria-hidden="true">@Model.Initials</span>
-                </div>
-            </header>
+        <div class="nb-profile-heading">
+            <h2>Профил</h2>
+            <span class="nb-profile-id">@Model.Id</span>
+        </div>
 
-            <section class="nb-profile-shell">
-                <div class="nb-profile-wrap">
-                    <aside class="nb-profile-card">
-                        <div class="nb-profile-hero">
-                            <div class="nb-profile-avatar">@Model.Initials</div>
-                            <h1>@Model.FullName</h1>
-                            <span class="nb-profile-role">@Model.Role</span>
-                        </div>
+        <div class="nb-profile-grid">
+            <article class="nb-profile-field">
+                <span><i class="bi bi-person-fill"></i>Име</span>
+                <strong>@Model.FirstName</strong>
+            </article>
 
-                        <div class="nb-profile-actions">
-                            <a asp-action="ChangePassword" class="nb-profile-action is-primary">
-                                <i class="bi bi-key-fill"></i>
-                                Смяна на парола
-                            </a>
-                            <a asp-action="Index" asp-controller="@homeController" class="nb-profile-action is-secondary">
-                                <i class="bi bi-house-fill"></i>
-                                Начало
-                            </a>
-                        </div>
-                    </aside>
+            <article class="nb-profile-field">
+                <span><i class="bi bi-person-fill"></i>Фамилия</span>
+                <strong>@Model.LastName</strong>
+            </article>
 
-                    <section class="nb-profile-panel">
-                        @if (TempData["SuccessMessage"] is not null)
-                        {
-                            <div class="nb-profile-flash">
-                                <i class="bi bi-check-circle-fill"></i>
-                                @TempData["SuccessMessage"]
-                            </div>
-                        }
+            <article class="nb-profile-field">
+                <span><i class="bi bi-person-lines-fill"></i>Презиме</span>
+                <strong>@(Model.MiddleName ?? "Не е посочено")</strong>
+            </article>
 
-                        <div class="nb-profile-heading">
-                            <h2>Профил</h2>
-                            <span class="nb-profile-id">@Model.Id</span>
-                        </div>
+            <article class="nb-profile-field">
+                <span><i class="bi bi-shield-lock-fill"></i>Роля</span>
+                <strong>@Model.Role</strong>
+            </article>
 
-                        <div class="nb-profile-grid">
-                            <article class="nb-profile-field">
-                                <span><i class="bi bi-person-fill"></i>Име</span>
-                                <strong>@Model.FirstName</strong>
-                            </article>
+            <article class="nb-profile-field is-wide">
+                <span><i class="bi bi-envelope-fill"></i>Имейл</span>
+                <strong>@Model.Email</strong>
+            </article>
 
-                            <article class="nb-profile-field">
-                                <span><i class="bi bi-person-fill"></i>Фамилия</span>
-                                <strong>@Model.LastName</strong>
-                            </article>
-
-                            <article class="nb-profile-field">
-                                <span><i class="bi bi-person-lines-fill"></i>Презиме</span>
-                                <strong>@(Model.MiddleName ?? "Не е посочено")</strong>
-                            </article>
-
-                            <article class="nb-profile-field">
-                                <span><i class="bi bi-shield-lock-fill"></i>Роля</span>
-                                <strong>@Model.Role</strong>
-                            </article>
-
-                            <article class="nb-profile-field is-wide">
-                                <span><i class="bi bi-envelope-fill"></i>Имейл</span>
-                                <strong>@Model.Email</strong>
-                            </article>
-
-                            <article class="nb-profile-field is-wide">
-                                <span><i class="bi bi-telephone-fill"></i>Телефон</span>
-                                <strong>@(Model.PhoneNumber ?? "Не е посочено")</strong>
-                            </article>
-                        </div>
-                    </section>
-                </div>
-            </section>
-        </main>
-    </div>
-    <script src="~/js/pwa.js" asp-append-version="true"></script>
-</body>
-</html>
+            <article class="nb-profile-field is-wide">
+                <span><i class="bi bi-telephone-fill"></i>Телефон</span>
+                <strong>@(Model.PhoneNumber ?? "Не е посочено")</strong>
+            </article>
+        </div>
+    </section>
+</div>
+</section>

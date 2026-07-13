@@ -27,7 +27,7 @@ public class AccountService : IAccountService
     public async Task<bool> SendPasswordResetAsync(string email, string resetUrlBase, CancellationToken cancellationToken = default)
     {
         var user = await _accountsRepository.GetByEmailAsync(email, cancellationToken);
-        if (user is null)
+        if (user is null || !user.IsActive)
         {
             return false;
         }
@@ -59,6 +59,7 @@ public class AccountService : IAccountService
 
         return passwordResetToken is not null
             && passwordResetToken.User is not null
+            && passwordResetToken.User.IsActive
             && passwordResetToken.ExpiresAt >= DateTime.UtcNow;
     }
 
@@ -75,7 +76,7 @@ public class AccountService : IAccountService
         }
 
         var passwordResetToken = await _passwordResetRepository.GetByTokenAsync(token, cancellationToken);
-        if (passwordResetToken is null || passwordResetToken.User is null)
+        if (passwordResetToken is null || passwordResetToken.User is null || !passwordResetToken.User.IsActive)
         {
             throw new InvalidOperationException("Password reset link is invalid.");
         }
@@ -87,6 +88,7 @@ public class AccountService : IAccountService
         }
 
         passwordResetToken.User.Password = _passwordHasher.HashPassword(password);
+        passwordResetToken.User.IsActive = true;
 
         await _accountsRepository.UpdateAsync(passwordResetToken.User, cancellationToken);
         await _passwordResetRepository.DeleteAsync(passwordResetToken.Id, cancellationToken);

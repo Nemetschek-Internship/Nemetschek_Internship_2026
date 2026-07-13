@@ -67,7 +67,7 @@ public class ChatService : IChatService
         var allowedContactIds = await GetAllowedDirectContactIdsAsync(requesterUserId, cancellationToken);
         var users = await userRepository.GetAllAsync(cancellationToken);
 
-        var query = users.Where(user => allowedContactIds.Contains(user.Id) && !user.IsDeleted);
+        var query = users.Where(user => allowedContactIds.Contains(user.Id) && !user.IsDeleted && user.IsActive);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -176,7 +176,7 @@ public class ChatService : IChatService
 
         var users = await userRepository.GetAllAsync(cancellationToken);
         var participants = users
-            .Where(user => participantIds.Contains(user.Id))
+            .Where(user => participantIds.Contains(user.Id) && user.IsActive)
             .ToList();
 
         var chat = new Chat
@@ -208,7 +208,7 @@ public class ChatService : IChatService
 
         var users = await userRepository.GetAllAsync(cancellationToken);
         var participants = users
-            .Where(user => user.Role is UserRole.Teacher or UserRole.Principal)
+            .Where(user => user.IsActive && (user.Role is UserRole.Teacher or UserRole.Principal))
             .ToList();
 
         var chat = new Chat
@@ -300,6 +300,7 @@ public class ChatService : IChatService
         return users
             .Where(user => user.Id != requesterUserId)
             .Where(user => !user.IsDeleted)
+            .Where(user => user.IsActive)
             .Where(user => user.Role is UserRole.Student or UserRole.Teacher)
             .Select(user => user.Id)
             .ToHashSet();

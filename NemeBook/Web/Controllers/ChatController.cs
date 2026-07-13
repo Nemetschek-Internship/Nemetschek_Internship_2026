@@ -27,7 +27,7 @@ public class ChatController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(Guid? targetUserId, CancellationToken cancellationToken)
     {
         var user = await GetCurrentUserAsync(cancellationToken);
         if (user is null)
@@ -43,6 +43,7 @@ public class ChatController : Controller
             CurrentUserName = FormatFullName(user),
             CurrentUserInitials = FormatInitials(user.FirstName, user.LastName),
             CurrentUserRole = GetRoleDisplayName(user.Role),
+            PendingTargetUserId = targetUserId,
             Chats = await MapChatsAsync(user.Id, chats, cancellationToken)
         };
 

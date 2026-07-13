@@ -1,0 +1,88 @@
+@{
+    var isAdminShell = User.IsInRole("Principal");
+    var shellPrefix = isAdminShell ? "nb-principal" : "nb-student";
+    var bodyClass = isAdminShell ? "nb-principal-body" : "nb-student-body";
+    var shellClass = $"{shellPrefix}-shell {ViewData["ShellClass"]}".Trim();
+    var mainClass = $"{shellPrefix}-main {ViewData["MainClass"]}".Trim();
+    var topbarClass = $"{shellPrefix}-topbar";
+    var topActionsClass = $"{shellPrefix}-top-actions";
+    var initials = ViewData["ShellUserInitials"]?.ToString() ?? User.FindFirst("Initials")?.Value ?? "N";
+}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f97316" />
+    <title>@ViewData["Title"] - NemeBook</title>
+    <link rel="manifest" href="~/manifest.webmanifest" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="@bodyClass">
+    <div class="@shellClass">
+        @if (isAdminShell)
+        {
+            <partial name="~/Views/Shared/Components/Admin/_AdminNavigation.cshtml" />
+        }
+        else
+        {
+            <partial name="~/Views/Shared/Components/Student/_StudentNavigation.cshtml" />
+        }
+
+        <main class="@mainClass"
+              data-current-user-id="@ViewData["ShellCurrentUserId"]"
+              data-current-user-name="@ViewData["ShellCurrentUserName"]"
+              data-pending-target-user-id="@ViewData["ShellPendingTargetUserId"]">
+            <header class="@topbarClass">
+                <h1>@ViewData["Title"]</h1>
+
+                @if (IsSectionDefined("TopbarCenter"))
+                {
+                    @await RenderSectionAsync("TopbarCenter", required: false)
+                }
+                else if (isAdminShell)
+                {
+                    <partial name="~/Views/Shared/Components/Admin/_AdminStudentSearch.cshtml" />
+                }
+
+                <div class="@topActionsClass">
+                    @if (IsSectionDefined("TopbarActions"))
+                    {
+                        @await RenderSectionAsync("TopbarActions", required: false)
+                    }
+                    else if (isAdminShell)
+                    {
+                        <form asp-action="Logout" asp-area="" asp-controller="Account" method="post">
+                            @Html.AntiForgeryToken()
+                            <button class="nb-principal-action-btn is-logout" type="submit">
+                                <span>Изход</span>
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            @Html.AntiForgeryToken()
+                            <button class="nb-notification-button" type="submit" aria-label="Изход от профила" title="Изход">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </button>
+                        </form>
+                        <span class="nb-student-avatar" aria-hidden="true">@initials</span>
+                    }
+                </div>
+            </header>
+
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/pwa.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

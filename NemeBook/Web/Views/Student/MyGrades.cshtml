@@ -1,24 +1,21 @@
 @model Entities.ViewModels.Students.StudentHomeViewModel
 
 @{
-    Layout = null;
+    Layout = "_AppShell";
     ViewData["Title"] = "Оценки";
+    ViewData["ActiveNav"] = "Grades";
+    ViewData["MainClass"] = "nb-academics-main";
+    ViewData["ShellUserName"] = Model.StudentName;
+    ViewData["ShellUserMeta"] = Model.ClassName;
+    ViewData["ShellUserInitials"] = Model.StudentInitials;
+
     var gradeModalIndex = 0;
     var feedbackModalIndex = 0;
     var absenceModalIndex = 0;
 }
 
-<!DOCTYPE html>
-<html lang="bg">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f97316" />
-    <title>@ViewData["Title"] - NemeBook</title>
-    <link rel="manifest" href="~/manifest.webmanifest" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <style>
+@section Styles {
+<style>
         .nb-academics-main {
             min-width: 0;
             background: #fbf3ec;
@@ -364,313 +361,270 @@
             }
         }
     </style>
-</head>
-<body class="nb-student-body">
-    <div class="nb-student-shell">
-        <aside class="nb-student-sidebar" aria-label="Навигация за ученик">
-            <a class="nb-student-brand" asp-controller="Student" asp-action="Index">
-                <span class="nb-student-brand-mark">N</span>
-                <span>
-                    <strong>NemeBook</strong>
-                    <small>Ученик</small>
-                </span>
-            </a>
+}
 
-            <nav class="nb-student-nav">
-                <a asp-controller="Student" asp-action="Index"><i class="bi bi-house-fill"></i><span>Начало</span></a>
-                <a class="is-active" asp-controller="Student" asp-action="MyGrades"><i class="bi bi-journal-bookmark"></i><span>Оценки</span></a>
-                <a asp-controller="Chat" asp-action="Index"><i class="bi bi-chat-dots"></i><span>Чатове</span></a>
-                <a href="#" aria-disabled="true"><i class="bi bi-calendar3"></i><span>Календар</span></a>
-                <a asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i><span>Профил</span></a>
-            </nav>
-
-            <a class="nb-student-user" asp-controller="Account" asp-action="Profile" aria-label="Отвори профила">
-                <span class="nb-student-avatar">@Model.StudentInitials</span>
-                <span>
-                    <strong>@Model.StudentName</strong>
-                    <small>@Model.ClassName</small>
-                </span>
-            </a>
-        </aside>
-
-        <main class="nb-student-main nb-academics-main">
-            <header class="nb-student-topbar">
-                <h1>Оценки</h1>
-                <div class="nb-student-top-actions">
-                    <form asp-controller="Account" asp-action="Logout" method="post">
-                        <button class="nb-notification-button" type="submit" aria-label="Изход от профила" title="Изход">
-                            <i class="bi bi-box-arrow-right"></i>
-                        </button>
-                    </form>
-                    <span class="nb-student-avatar" aria-hidden="true">@Model.StudentInitials</span>
-                </div>
-            </header>
-
-            <section class="nb-academics-content">
-                <article class="nb-academics-card nb-grades-panel">
-                    <div class="nb-academics-card-header">
-                        <h2>Оценки</h2>
-                        <span>Средно @Model.OverallAverage.ToString("0.00")</span>
-                    </div>
-
-                    @if (Model.AcademicSubjects.Any())
-                    {
-                        <div class="nb-subject-list">
-                            @foreach (var subject in Model.AcademicSubjects)
-                            {
-                                <div class="nb-subject-row">
-                                    <span class="nb-subject-dot" aria-hidden="true"></span>
-                                    <span class="nb-subject-name" title="@subject.SubjectName">@subject.SubjectName</span>
-                                    <span class="nb-grade-chip-list" aria-label="Оценки по @subject.SubjectName">
-                                        @if (subject.Grades.Any())
-                                        {
-                                            @foreach (var grade in subject.Grades)
-                                            {
-                                                gradeModalIndex++;
-                                                var modalId = $"grade-popup-{gradeModalIndex}";
-                                                var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
-                                                var gradeValue = grade.Value.ToString("0.##");
-
-                                                <button class="nb-grade-chip @gradeTone" type="button" data-nb-popup-open="@modalId" aria-label="Отвори детайли за оценка @gradeValue по @subject.SubjectName">
-                                                    @gradeValue
-                                                </button>
-                                            }
-                                        }
-                                        else
-                                        {
-                                            <span class="nb-grade-placeholder">0</span>
-                                        }
-                                    </span>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="nb-empty-state">Все още няма добавени предмети.</div>
-                    }
-                </article>
-
-                <div class="nb-academics-side">
-                    <article class="nb-academics-card nb-side-card">
-                        <div class="nb-academics-card-header">
-                            <h2>Отзиви</h2>
-                            <span>@Model.FeedbackSummary.Count</span>
-                        </div>
-
-                        @if (Model.Feedbacks.Any())
-                        {
-                            <div class="nb-side-list">
-                                @foreach (var feedback in Model.Feedbacks.Take(4))
-                                {
-                                    feedbackModalIndex++;
-                                    var modalId = $"feedback-popup-{feedbackModalIndex}";
-                                    var feedbackClass = feedback.Type == "Похвала" ? "is-praise" : "is-remark";
-
-                                    <button class="nb-list-button @feedbackClass" type="button" data-nb-popup-open="@modalId">
-                                        <span class="nb-list-pill">@feedback.Type</span>
-                                        <span class="nb-list-lines" aria-hidden="true">
-                                            <span class="nb-list-line"></span>
-                                            <span class="nb-list-line"></span>
-                                        </span>
-                                        <span class="nb-list-date">@feedback.Date.ToString("dd.MM")</span>
-                                    </button>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="nb-empty-state">Все още няма отзиви.</div>
-                        }
-                    </article>
-
-                    <article class="nb-academics-card nb-side-card">
-                        <div class="nb-academics-card-header">
-                            <h2>Отсъствия</h2>
-                            <span>@Model.AbsenceSummary.Count</span>
-                        </div>
-
-                        @if (Model.Absences.Any())
-                        {
-                            <div class="nb-side-list">
-                                @foreach (var absence in Model.Absences.Take(4))
-                                {
-                                    absenceModalIndex++;
-                                    var modalId = $"absence-popup-{absenceModalIndex}";
-                                    var absenceClass = absence.Status == "Уважено" ? "is-excused" : "is-unexcused";
-
-                                    <button class="nb-list-button @absenceClass" type="button" data-nb-popup-open="@modalId">
-                                        <span class="nb-list-lines" aria-hidden="true">
-                                            <span class="nb-list-line"></span>
-                                            <span class="nb-list-line"></span>
-                                        </span>
-                                        <span class="nb-list-date">@absence.Date.ToString("dd.MM")</span>
-                                        <span class="nb-list-pill">@absence.Status</span>
-                                    </button>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="nb-empty-state">Все още няма отсъствия.</div>
-                        }
-                    </article>
-                </div>
-            </section>
-        </main>
+<section class="nb-academics-content">
+<article class="nb-academics-card nb-grades-panel">
+    <div class="nb-academics-card-header">
+        <h2>Оценки</h2>
+        <span>Средно @Model.OverallAverage.ToString("0.00")</span>
     </div>
 
-    @{
-        gradeModalIndex = 0;
-        feedbackModalIndex = 0;
-        absenceModalIndex = 0;
-    }
-
-    @foreach (var subject in Model.AcademicSubjects)
+    @if (Model.AcademicSubjects.Any())
     {
-        foreach (var grade in subject.Grades)
-        {
-            gradeModalIndex++;
-            var modalId = $"grade-popup-{gradeModalIndex}";
-            var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
+        <div class="nb-subject-list">
+            @foreach (var subject in Model.AcademicSubjects)
+            {
+                <div class="nb-subject-row">
+                    <span class="nb-subject-dot" aria-hidden="true"></span>
+                    <span class="nb-subject-name" title="@subject.SubjectName">@subject.SubjectName</span>
+                    <span class="nb-grade-chip-list" aria-label="Оценки по @subject.SubjectName">
+                        @if (subject.Grades.Any())
+                        {
+                            @foreach (var grade in subject.Grades)
+                            {
+                                gradeModalIndex++;
+                                var modalId = $"grade-popup-{gradeModalIndex}";
+                                var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
+                                var gradeValue = grade.Value.ToString("0.##");
 
-            <div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
-                <section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
-                    <header class="nb-popup-header">
-                        <div>
-                            <h3 id="@($"{modalId}-title")">@grade.SubjectName</h3>
-                            <p>@grade.Type</p>
-                        </div>
-                        <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </header>
-                    <div class="nb-popup-body">
-                        <span class="nb-popup-grade @gradeTone">@grade.Value.ToString("0.##")</span>
-                        <div class="nb-popup-meta">
-                            <span>@grade.TeacherName</span>
-                            <span>@grade.Date.ToString("dd.MM.yyyy HH:mm")</span>
-                        </div>
-                        <p class="nb-popup-comment">@grade.Comment</p>
-                    </div>
-                </section>
+                                <button class="nb-grade-chip @gradeTone" type="button" data-nb-popup-open="@modalId" aria-label="Отвори детайли за оценка @gradeValue по @subject.SubjectName">
+                                    @gradeValue
+                                </button>
+                            }
+                        }
+                        else
+                        {
+                            <span class="nb-grade-placeholder">0</span>
+                        }
+                    </span>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="nb-empty-state">Все още няма добавени предмети.</div>
+    }
+</article>
+
+<div class="nb-academics-side">
+    <article class="nb-academics-card nb-side-card">
+        <div class="nb-academics-card-header">
+            <h2>Отзиви</h2>
+            <span>@Model.FeedbackSummary.Count</span>
+        </div>
+
+        @if (Model.Feedbacks.Any())
+        {
+            <div class="nb-side-list">
+                @foreach (var feedback in Model.Feedbacks.Take(4))
+                {
+                    feedbackModalIndex++;
+                    var modalId = $"feedback-popup-{feedbackModalIndex}";
+                    var feedbackClass = feedback.Type == "Похвала" ? "is-praise" : "is-remark";
+
+                    <button class="nb-list-button @feedbackClass" type="button" data-nb-popup-open="@modalId">
+                        <span class="nb-list-pill">@feedback.Type</span>
+                        <span class="nb-list-lines" aria-hidden="true">
+                            <span class="nb-list-line"></span>
+                            <span class="nb-list-line"></span>
+                        </span>
+                        <span class="nb-list-date">@feedback.Date.ToString("dd.MM")</span>
+                    </button>
+                }
             </div>
         }
-    }
+        else
+        {
+            <div class="nb-empty-state">Все още няма отзиви.</div>
+        }
+    </article>
 
-    @foreach (var feedback in Model.Feedbacks.Take(4))
-    {
-        feedbackModalIndex++;
-        var modalId = $"feedback-popup-{feedbackModalIndex}";
-        var feedbackTone = feedback.Type == "Похвала" ? "is-good" : "is-low";
-
-        <div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
-            <section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
-                <header class="nb-popup-header">
-                    <div>
-                        <h3 id="@($"{modalId}-title")">@feedback.SubjectName</h3>
-                        <p>@feedback.Type</p>
-                    </div>
-                    <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </header>
-                <div class="nb-popup-body">
-                    <div class="nb-popup-meta">
-                        <span class="nb-status @feedbackTone">@feedback.Type</span>
-                        <span>@feedback.TeacherName</span>
-                        <span>@feedback.Date.ToString("dd.MM.yyyy")</span>
-                    </div>
-                    <p class="nb-popup-comment">@feedback.Comment</p>
-                </div>
-            </section>
+    <article class="nb-academics-card nb-side-card">
+        <div class="nb-academics-card-header">
+            <h2>Отсъствия</h2>
+            <span>@Model.AbsenceSummary.Count</span>
         </div>
-    }
 
-    @foreach (var absence in Model.Absences.Take(4))
-    {
-        absenceModalIndex++;
-        var modalId = $"absence-popup-{absenceModalIndex}";
-        var absenceTone = absence.Status == "Уважено" ? "is-good" : "is-low";
+        @if (Model.Absences.Any())
+        {
+            <div class="nb-side-list">
+                @foreach (var absence in Model.Absences.Take(4))
+                {
+                    absenceModalIndex++;
+                    var modalId = $"absence-popup-{absenceModalIndex}";
+                    var absenceClass = absence.Status == "Уважено" ? "is-excused" : "is-unexcused";
 
-        <div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
-            <section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
-                <header class="nb-popup-header">
-                    <div>
-                        <h3 id="@($"{modalId}-title")">@absence.SubjectName</h3>
-                        <p>@absence.Type</p>
-                    </div>
-                    <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
-                        <i class="bi bi-x-lg"></i>
+                    <button class="nb-list-button @absenceClass" type="button" data-nb-popup-open="@modalId">
+                        <span class="nb-list-lines" aria-hidden="true">
+                            <span class="nb-list-line"></span>
+                            <span class="nb-list-line"></span>
+                        </span>
+                        <span class="nb-list-date">@absence.Date.ToString("dd.MM")</span>
+                        <span class="nb-list-pill">@absence.Status</span>
                     </button>
-                </header>
-                <div class="nb-popup-body">
-                    <div class="nb-popup-meta">
-                        <span class="nb-status @absenceTone">@absence.Status</span>
-                        <span>@absence.TeacherName</span>
-                        <span>@absence.Date.ToString("dd.MM.yyyy")</span>
-                        <span>Час @absence.LessonNumber</span>
-                        <span>@absence.ExcuseReason</span>
-                    </div>
-                    <p class="nb-popup-comment">@absence.Comment</p>
-                </div>
-            </section>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="nb-empty-state">Все още няма отсъствия.</div>
+        }
+    </article>
+</div>
+</section>
+
+@{
+gradeModalIndex = 0;
+feedbackModalIndex = 0;
+absenceModalIndex = 0;
+}
+
+@foreach (var subject in Model.AcademicSubjects)
+{
+foreach (var grade in subject.Grades)
+{
+gradeModalIndex++;
+var modalId = $"grade-popup-{gradeModalIndex}";
+var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
+
+<div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
+<section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
+    <header class="nb-popup-header">
+        <div>
+            <h3 id="@($"{modalId}-title")">@grade.SubjectName</h3>
+            <p>@grade.Type</p>
         </div>
+        <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </header>
+    <div class="nb-popup-body">
+        <span class="nb-popup-grade @gradeTone">@grade.Value.ToString("0.##")</span>
+        <div class="nb-popup-meta">
+            <span>@grade.TeacherName</span>
+            <span>@grade.Date.ToString("dd.MM.yyyy HH:mm")</span>
+        </div>
+        <p class="nb-popup-comment">@grade.Comment</p>
+    </div>
+</section>
+</div>
+}
+}
+
+@foreach (var feedback in Model.Feedbacks.Take(4))
+{
+feedbackModalIndex++;
+var modalId = $"feedback-popup-{feedbackModalIndex}";
+var feedbackTone = feedback.Type == "Похвала" ? "is-good" : "is-low";
+
+<div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
+<section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
+<header class="nb-popup-header">
+    <div>
+        <h3 id="@($"{modalId}-title")">@feedback.SubjectName</h3>
+        <p>@feedback.Type</p>
+    </div>
+    <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
+        <i class="bi bi-x-lg"></i>
+    </button>
+</header>
+<div class="nb-popup-body">
+    <div class="nb-popup-meta">
+        <span class="nb-status @feedbackTone">@feedback.Type</span>
+        <span>@feedback.TeacherName</span>
+        <span>@feedback.Date.ToString("dd.MM.yyyy")</span>
+    </div>
+    <p class="nb-popup-comment">@feedback.Comment</p>
+</div>
+</section>
+</div>
+}
+
+@foreach (var absence in Model.Absences.Take(4))
+{
+absenceModalIndex++;
+var modalId = $"absence-popup-{absenceModalIndex}";
+var absenceTone = absence.Status == "Уважено" ? "is-good" : "is-low";
+
+<div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
+<section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
+<header class="nb-popup-header">
+    <div>
+        <h3 id="@($"{modalId}-title")">@absence.SubjectName</h3>
+        <p>@absence.Type</p>
+    </div>
+    <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
+        <i class="bi bi-x-lg"></i>
+    </button>
+</header>
+<div class="nb-popup-body">
+    <div class="nb-popup-meta">
+        <span class="nb-status @absenceTone">@absence.Status</span>
+        <span>@absence.TeacherName</span>
+        <span>@absence.Date.ToString("dd.MM.yyyy")</span>
+        <span>Час @absence.LessonNumber</span>
+        <span>@absence.ExcuseReason</span>
+    </div>
+    <p class="nb-popup-comment">@absence.Comment</p>
+</div>
+</section>
+</div>
+}
+
+@section Scripts {
+<script>
+(() => {
+const triggers = document.querySelectorAll("[data-nb-popup-open]");
+const popups = document.querySelectorAll("[data-nb-popup]");
+let activeTrigger = null;
+
+const closePopup = (popup) => {
+if (!popup) {
+    return;
+}
+
+popup.hidden = true;
+document.body.classList.remove("nb-popup-open");
+
+if (activeTrigger) {
+    activeTrigger.focus();
+    activeTrigger = null;
+}
+};
+
+const openPopup = (id, trigger) => {
+const popup = document.querySelector(`[data-nb-popup="${id}"]`);
+if (!popup) {
+    return;
+}
+
+activeTrigger = trigger;
+popup.hidden = false;
+document.body.classList.add("nb-popup-open");
+popup.querySelector(".nb-popup")?.focus();
+};
+
+triggers.forEach((trigger) => {
+trigger.addEventListener("click", () => {
+    openPopup(trigger.dataset.nbPopupOpen, trigger);
+});
+});
+
+popups.forEach((popup) => {
+popup.addEventListener("click", (event) => {
+    if (event.target === popup || event.target.closest("[data-nb-popup-close]")) {
+        closePopup(popup);
     }
+});
+});
 
-    <script>
-        (() => {
-            const triggers = document.querySelectorAll("[data-nb-popup-open]");
-            const popups = document.querySelectorAll("[data-nb-popup]");
-            let activeTrigger = null;
-
-            const closePopup = (popup) => {
-                if (!popup) {
-                    return;
-                }
-
-                popup.hidden = true;
-                document.body.classList.remove("nb-popup-open");
-
-                if (activeTrigger) {
-                    activeTrigger.focus();
-                    activeTrigger = null;
-                }
-            };
-
-            const openPopup = (id, trigger) => {
-                const popup = document.querySelector(`[data-nb-popup="${id}"]`);
-                if (!popup) {
-                    return;
-                }
-
-                activeTrigger = trigger;
-                popup.hidden = false;
-                document.body.classList.add("nb-popup-open");
-                popup.querySelector(".nb-popup")?.focus();
-            };
-
-            triggers.forEach((trigger) => {
-                trigger.addEventListener("click", () => {
-                    openPopup(trigger.dataset.nbPopupOpen, trigger);
-                });
-            });
-
-            popups.forEach((popup) => {
-                popup.addEventListener("click", (event) => {
-                    if (event.target === popup || event.target.closest("[data-nb-popup-close]")) {
-                        closePopup(popup);
-                    }
-                });
-            });
-
-            document.addEventListener("keydown", (event) => {
-                if (event.key === "Escape") {
-                    closePopup(document.querySelector("[data-nb-popup]:not([hidden])"));
-                }
-            });
-        })();
-    </script>
-    <script src="~/js/pwa.js" asp-append-version="true"></script>
-</body>
-</html>
+document.addEventListener("keydown", (event) => {
+if (event.key === "Escape") {
+    closePopup(document.querySelector("[data-nb-popup]:not([hidden])"));
+}
+});
+})();
+</script>
+}

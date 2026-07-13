@@ -1,21 +1,32 @@
 @model Web.ViewModels.Chat.ChatIndexViewModel
 
 @{
-    Layout = null;
+    Layout = "_AppShell";
     ViewData["Title"] = "Чатове";
+    ViewData["ActiveNav"] = "Chats";
+    ViewData["ShellClass"] = "nb-chat-shell";
+    ViewData["MainClass"] = "nb-chat-main";
+    ViewData["ShellCurrentUserId"] = Model.CurrentUserId;
+    ViewData["ShellCurrentUserName"] = Model.CurrentUserName;
+    ViewData["ShellPendingTargetUserId"] = Model.PendingTargetUserId;
+    ViewData["ShellUserName"] = Model.CurrentUserName;
+    ViewData["ShellUserMeta"] = Model.CurrentUserRole;
+    ViewData["ShellUserInitials"] = Model.CurrentUserInitials;
 }
 
-<!DOCTYPE html>
-<html lang="bg">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f97316" />
-    <title>@ViewData["Title"] - NemeBook</title>
-    <link rel="manifest" href="~/manifest.webmanifest" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <style>
+@section TopbarActions {
+    <button class="nb-notification-button" type="button" data-notification-bell aria-label="Нотификации" title="Нотификации">
+        <i class="bi bi-bell-fill"></i>
+        <span class="nb-notification-dot"></span>
+    </button>
+    <div class="nb-chat-status">
+        <span id="chatConnectionDot" class="nb-chat-connection-dot"></span>
+        <span id="chatConnectionText">Свързване</span>
+    </div>
+}
+
+@section Styles {
+<style>
         .nb-chat-shell { background: #fbf3ec; }
         .nb-chat-main { min-height: 100vh; }
         .nb-chat-status {
@@ -439,127 +450,80 @@
             .nb-chat-bubble { max-width: 90%; }
         }
     </style>
-</head>
-<body class="nb-student-body">
-    <div class="nb-student-shell nb-chat-shell">
-        <aside class="nb-student-sidebar" aria-label="Навигация">
-            <a class="nb-student-brand" asp-controller="Home" asp-action="Index">
-                <span class="nb-student-brand-mark">N</span>
-                <span>
-                    <strong>NemeBook</strong>
-                    <small>@Model.CurrentUserRole</small>
-                </span>
-            </a>
+}
 
-            <nav class="nb-student-nav">
-                <a asp-controller="Student" asp-action="Index"><i class="bi bi-house-fill"></i><span>Начало</span></a>
-                <a asp-controller="Student" asp-action="MyGrades"><i class="bi bi-journal-bookmark"></i><span>Оценки</span></a>
-                <a class="is-active" asp-controller="Chat" asp-action="Index"><i class="bi bi-chat-dots-fill"></i><span>Чатове</span></a>
-                <a href="#" aria-disabled="true"><i class="bi bi-calendar3"></i><span>Календар</span></a>
-                <a asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i><span>Профил</span></a>
-            </nav>
-
-            <div class="nb-student-user">
-                <span class="nb-student-avatar">@Model.CurrentUserInitials</span>
-                <span>
-                    <strong>@Model.CurrentUserName</strong>
-                    <small>@Model.CurrentUserRole</small>
-                </span>
-            </div>
-        </aside>
-
-        <main class="nb-student-main nb-chat-main"
-              data-current-user-id="@Model.CurrentUserId"
-              data-current-user-name="@Model.CurrentUserName">
-            <header class="nb-student-topbar">
-                <h1>Чатове</h1>
-                <div class="nb-student-top-actions">
-                    <button class="nb-notification-button" type="button" data-notification-bell aria-label="Нотификации" title="Нотификации">
-                        <i class="bi bi-bell-fill"></i>
-                        <span class="nb-notification-dot"></span>
-                    </button>
-                    <div class="nb-chat-status">
-                        <span id="chatConnectionDot" class="nb-chat-connection-dot"></span>
-                        <span id="chatConnectionText">Свързване</span>
-                    </div>
-                </div>
-            </header>
-
-            <section class="nb-chat-page">
-                <aside class="nb-chat-list-panel">
-                    <div class="nb-chat-list-heading">
-                        <div>
-                            <span>Скорошни</span>
-                            <strong>Разговори</strong>
-                        </div>
-                        <button id="chatNewButton" class="nb-chat-new-button" type="button" aria-expanded="false" aria-controls="chatSearchPanel">
-                            <i class="bi bi-plus-lg"></i>
-                            <span>Нов чат</span>
-                        </button>
-                    </div>
-
-                    <div id="chatSearchPanel" class="nb-chat-search-panel" hidden>
-                        <div class="nb-chat-search-row">
-                            <div class="nb-chat-search">
-                                <i class="bi bi-search"></i>
-                                <input id="chatContactSearch" type="search" placeholder="Търсене на ученик или учител" autocomplete="off" />
-                            </div>
-                            <button id="chatSearchClose" class="nb-chat-icon-button" type="button" aria-label="Затвори търсенето">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </div>
-
-                        <div id="chatContacts" class="nb-chat-contacts" aria-live="polite">
-                            <div class="nb-chat-contact-empty">Потърсете ученик или учител, за да започнете чат.</div>
-                        </div>
-                    </div>
-
-                    <div class="nb-chat-section-title">Скорошни чатове</div>
-
-                    <div id="chatList" class="nb-chat-list">
-                        @foreach (var chat in Model.Chats)
-                        {
-                            <button class="nb-chat-list-item" type="button" data-chat-id="@chat.Id">
-                                <span class="nb-chat-avatar">@chat.Initials</span>
-                                <span class="nb-chat-list-copy">
-                                    <strong>@chat.Title</strong>
-                                    <small>@(chat.LastMessage ?? chat.Subtitle)</small>
-                                </span>
-                                <em>@chat.LastMessageTime</em>
-                            </button>
-                        }
-                    </div>
-
-                    <div id="chatEmptyState" class="nb-chat-empty @(Model.Chats.Any() ? string.Empty : "is-visible")">
-                        Няма активни разговори.
-                    </div>
-                </aside>
-
-                <section id="chatRoomPanel" class="nb-chat-room-panel is-idle">
-                    <div class="nb-chat-room-header">
-                        <span id="activeChatAvatar" class="nb-chat-avatar is-large"></span>
-                        <div>
-                            <h2 id="activeChatTitle"></h2>
-                            <p id="activeChatSubtitle"></p>
-                        </div>
-                    </div>
-
-                    <div id="chatMessages" class="nb-chat-messages">
-                    </div>
-
-                    <form id="chatMessageForm" class="nb-chat-composer">
-                        <input id="chatMessageInput" type="text" maxlength="4000" placeholder="Напишете съобщение..." autocomplete="off" disabled />
-                        <button id="chatSendButton" type="submit" disabled aria-label="Изпрати">
-                            <i class="bi bi-send-fill"></i>
-                        </button>
-                    </form>
-                </section>
-            </section>
-        </main>
+<section class="nb-chat-page">
+<aside class="nb-chat-list-panel">
+    <div class="nb-chat-list-heading">
+        <div>
+            <span>Скорошни</span>
+            <strong>Разговори</strong>
+        </div>
+        <button id="chatNewButton" class="nb-chat-new-button" type="button" aria-expanded="false" aria-controls="chatSearchPanel">
+            <i class="bi bi-plus-lg"></i>
+            <span>Нов чат</span>
+        </button>
     </div>
 
-    <script src="~/microsoft-signalr/signalr.min.js" asp-append-version="true"></script>
-    <script src="~/js/nemebook-chat.js" asp-append-version="true"></script>
-    <script src="~/js/pwa.js" asp-append-version="true"></script>
-</body>
-</html>
+    <div id="chatSearchPanel" class="nb-chat-search-panel" hidden>
+        <div class="nb-chat-search-row">
+            <div class="nb-chat-search">
+                <i class="bi bi-search"></i>
+                <input id="chatContactSearch" type="search" placeholder="Търсене на ученик или учител" autocomplete="off" />
+            </div>
+            <button id="chatSearchClose" class="nb-chat-icon-button" type="button" aria-label="Затвори търсенето">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div id="chatContacts" class="nb-chat-contacts" aria-live="polite">
+            <div class="nb-chat-contact-empty">Потърсете ученик или учител, за да започнете чат.</div>
+        </div>
+    </div>
+
+    <div class="nb-chat-section-title">Скорошни чатове</div>
+
+    <div id="chatList" class="nb-chat-list">
+        @foreach (var chat in Model.Chats)
+        {
+            <button class="nb-chat-list-item" type="button" data-chat-id="@chat.Id">
+                <span class="nb-chat-avatar">@chat.Initials</span>
+                <span class="nb-chat-list-copy">
+                    <strong>@chat.Title</strong>
+                    <small>@(chat.LastMessage ?? chat.Subtitle)</small>
+                </span>
+                <em>@chat.LastMessageTime</em>
+            </button>
+        }
+    </div>
+
+    <div id="chatEmptyState" class="nb-chat-empty @(Model.Chats.Any() ? string.Empty : "is-visible")">
+        Няма активни разговори.
+    </div>
+</aside>
+
+<section id="chatRoomPanel" class="nb-chat-room-panel is-idle">
+    <div class="nb-chat-room-header">
+        <span id="activeChatAvatar" class="nb-chat-avatar is-large"></span>
+        <div>
+            <h2 id="activeChatTitle"></h2>
+            <p id="activeChatSubtitle"></p>
+        </div>
+    </div>
+
+    <div id="chatMessages" class="nb-chat-messages">
+    </div>
+
+    <form id="chatMessageForm" class="nb-chat-composer">
+        <input id="chatMessageInput" type="text" maxlength="4000" placeholder="Напишете съобщение..." autocomplete="off" disabled />
+        <button id="chatSendButton" type="submit" disabled aria-label="Изпрати">
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </form>
+</section>
+</section>
+
+@section Scripts {
+<script src="~/microsoft-signalr/signalr.min.js" asp-append-version="true"></script>
+<script src="~/js/nemebook-chat.js" asp-append-version="true"></script>
+}

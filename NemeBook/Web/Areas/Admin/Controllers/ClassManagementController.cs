@@ -35,13 +35,14 @@ public class ClassManagementController : Controller
 
         var studentRows = await dbContext.Students
             .AsNoTracking()
-            .Where(student => student.ClassId == classId && student.User.IsDeleted == false)
+            .Where(student => student.ClassId == classId && student.User.IsActive)
             .OrderBy(student => student.User.FirstName)
             .ThenBy(student => student.User.MiddleName)
             .ThenBy(student => student.User.LastName)
             .Select(student => new
             {
                 student.Id,
+                student.UserId,
                 student.User.FirstName,
                 student.User.MiddleName,
                 student.User.LastName,
@@ -58,6 +59,7 @@ public class ClassManagementController : Controller
             .Select((student, index) => new PrincipalClassStudentViewModel
             {
                 StudentId = student.Id,
+                UserId = student.UserId,
                 ClassNumber = index + 1,
                 FullName = FormatFullName(student.FirstName, student.MiddleName, student.LastName),
                 AverageGrade = student.AverageGrade.HasValue
@@ -84,7 +86,7 @@ public class ClassManagementController : Controller
 
         var studentsQuery = dbContext.Students
             .AsNoTracking()
-            .Where(student => student.User.IsDeleted == false);
+            .Where(student => student.User.IsActive);
 
         foreach (var searchTerm in searchTerms)
         {
@@ -133,7 +135,7 @@ public class ClassManagementController : Controller
 
         var teachersQuery = dbContext.Teachers
             .AsNoTracking()
-            .Where(teacher => teacher.User.IsDeleted == false);
+            .Where(teacher => teacher.User.IsActive);
 
         foreach (var searchTerm in searchTerms)
         {
@@ -178,7 +180,7 @@ public class ClassManagementController : Controller
         var teachersQuery = dbContext.Teachers
             .AsNoTracking()
             .Where(teacher =>
-                teacher.User.IsDeleted == false &&
+                teacher.User.IsActive &&
                 !dbContext.Classes.Any(schoolClass =>
                     schoolClass.Id != classId &&
                     schoolClass.MainTeacherId == teacher.Id));
@@ -227,7 +229,7 @@ public class ClassManagementController : Controller
         var teachersQuery = dbContext.Teachers
             .AsNoTracking()
             .Where(teacher =>
-                teacher.User.IsDeleted == false &&
+                teacher.User.IsActive &&
                 (includeAllTeachers || teacher.TeacherSubjects.Any(teacherSubject => teacherSubject.SubjectId == subjectId)));
 
         foreach (var searchTerm in searchTerms)
@@ -283,7 +285,7 @@ public class ClassManagementController : Controller
                 .AnyAsync(
                     teacher =>
                         teacher.Id == teacherId.Value &&
-                        teacher.User.IsDeleted == false &&
+                        teacher.User.IsActive &&
                         !dbContext.Classes.Any(currentClass =>
                             currentClass.Id != classId &&
                             currentClass.MainTeacherId == teacher.Id),
@@ -429,7 +431,7 @@ public class ClassManagementController : Controller
             .AnyAsync(
                 teacher =>
                     teacher.Id == teacherId &&
-                    teacher.User.IsDeleted == false,
+                    teacher.User.IsActive,
                 cancellationToken);
 
         if (!subjectExists || !teacherExists)
@@ -484,7 +486,7 @@ public class ClassManagementController : Controller
             .AnyAsync(
                 teacher =>
                     teacher.Id == teacherId &&
-                    teacher.User.IsDeleted == false,
+                    teacher.User.IsActive,
                 cancellationToken);
 
         if (teacherExists)
@@ -567,6 +569,7 @@ public class ClassManagementController : Controller
                 currentClass.GradeNumber,
                 currentClass.Letter,
                 currentClass.MainTeacherId,
+                MainTeacherIsActive = currentClass.MainTeacher != null && currentClass.MainTeacher.User.IsActive,
                 MainTeacherFirstName = currentClass.MainTeacher == null ? null : currentClass.MainTeacher.User.FirstName,
                 MainTeacherMiddleName = currentClass.MainTeacher == null ? null : currentClass.MainTeacher.User.MiddleName,
                 MainTeacherLastName = currentClass.MainTeacher == null ? null : currentClass.MainTeacher.User.LastName,
@@ -584,8 +587,8 @@ public class ClassManagementController : Controller
             ClassName = $"{schoolClass.GradeNumber}{schoolClass.Letter}",
             ActiveTab = activeTab,
             SectionTitle = sectionTitle,
-            MainTeacherId = schoolClass.MainTeacherId,
-            MainTeacherName = schoolClass.MainTeacherId.HasValue
+            MainTeacherId = schoolClass.MainTeacherIsActive ? schoolClass.MainTeacherId : null,
+            MainTeacherName = schoolClass.MainTeacherIsActive && schoolClass.MainTeacherId.HasValue
                 ? FormatFullName(
                     schoolClass.MainTeacherFirstName ?? string.Empty,
                     schoolClass.MainTeacherMiddleName,

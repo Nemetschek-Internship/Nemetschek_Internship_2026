@@ -1,116 +1,35 @@
-@using System.ComponentModel.DataAnnotations
-@using Entities.Enums
 @model Web.ViewModels.PrincipalClassManagementViewModel
 
 @{
-    Layout = null;
+    Layout = "_AppShell";
     ViewData["Title"] = $"Клас {Model.ClassName} - {Model.SectionTitle}";
-
-    var principalDisplayName = typeof(UserRole)
-        .GetMember(nameof(UserRole.Principal))[0]
-        .GetCustomAttributes(typeof(DisplayAttribute), false)
-        .Cast<DisplayAttribute>()
-        .FirstOrDefault()
-        ?.GetName() ?? nameof(UserRole.Principal);
+    ViewData["ActiveNav"] = "Classes";
 }
 
-<!DOCTYPE html>
-<html lang="bg">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Клас @Model.ClassName - NemeBook</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-</head>
-<body class="nb-principal-body">
-    <div class="nb-principal-shell">
-        <aside class="nb-principal-sidebar" aria-label="Главна навигация">
-            <a class="nb-principal-logo" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                <span class="nb-principal-logo-mark">
-                    <i class="bi bi-book-half" aria-hidden="true"></i>
-                </span>
-                <span>
-                    <strong>NemeBook</strong>
-                    <small>@principalDisplayName</small>
-                </span>
-            </a>
+<section class="nb-principal-content nb-class-management-content" aria-label="Управление на клас">
+<div class="nb-class-management-tabs-row">
+    <nav class="nb-class-management-tabs" aria-label="Секции на класа">
+        <a class="@GetTabClass("Class")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Students" asp-route-classId="@Model.ClassId">Клас</a>
+        <a class="@GetTabClass("Subjects")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Subjects" asp-route-classId="@Model.ClassId">Предмети</a>
+        <a class="@GetTabClass("Schedule")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Schedule" asp-route-classId="@Model.ClassId">Програма</a>
+        <a class="@GetTabClass("Events")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Events" asp-route-classId="@Model.ClassId">Събития</a>
+    </nav>
+    <a class="nb-principal-action-btn nb-class-back-btn" asp-area="Admin" asp-controller="Classes" asp-action="AllClasses" asp-route-grade="@GetGradeNumber(Model.ClassName)">
+        <span>Всички класове</span>
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+    </a>
+</div>
 
-            <nav class="nb-principal-nav">
-                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                    <i class="bi bi-house-fill" aria-hidden="true"></i>
-                    <span>Начало</span>
-                </a>
-                <a href="#">
-                    <i class="bi bi-newspaper" aria-hidden="true"></i>
-                    <span>Новини</span>
-                </a>
-                <a class="is-active" asp-area="Admin" asp-controller="Classes" asp-action="AllClasses">
-                    <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
-                    <span>Класове</span>
-                </a>
-                <a asp-area="" asp-controller="Chat" asp-action="Index">
-                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
-                    <span>Учителски чатове</span>
-                </a>
-                <a asp-area="Admin" asp-controller="ProfileImport" asp-action="Index">
-                    <i class="bi bi-upload" aria-hidden="true"></i>
-                    <span>Импорт на профили</span>
-                </a>
-            </nav>
-
-            <a class="nb-principal-user-card" asp-area="" asp-controller="Account" asp-action="Profile">
-                <span class="nb-principal-user-avatar"></span>
-                <span>
-                    <strong>@(User.FindFirst("FullName")?.Value ?? "Директор")</strong>
-                    <small>Директорски профил</small>
-                </span>
-            </a>
-        </aside>
-
-        <main class="nb-principal-main">
-            <header class="nb-principal-topbar">
-                <h1>Клас @Model.ClassName</h1>
-                <partial name="_PrincipalStudentSearch" />
-                <div class="nb-principal-top-actions">
-                    <form asp-action="Logout" asp-area="" asp-controller="Account" method="post">
-                        @Html.AntiForgeryToken()
-                        <button class="nb-principal-action-btn is-logout" type="submit">
-                            <span>Изход</span>
-                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                        </button>
-                    </form>
-                </div>
-            </header>
-
-            <section class="nb-principal-content nb-class-management-content" aria-label="Управление на клас">
-                <div class="nb-class-management-tabs-row">
-                    <nav class="nb-class-management-tabs" aria-label="Секции на класа">
-                        <a class="@GetTabClass("Class")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Students" asp-route-classId="@Model.ClassId">Клас</a>
-                        <a class="@GetTabClass("Subjects")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Subjects" asp-route-classId="@Model.ClassId">Предмети</a>
-                        <a class="@GetTabClass("Schedule")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Schedule" asp-route-classId="@Model.ClassId">Програма</a>
-                        <a class="@GetTabClass("Events")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Events" asp-route-classId="@Model.ClassId">Събития</a>
-                    </nav>
-                    <a class="nb-principal-action-btn nb-class-back-btn" asp-area="Admin" asp-controller="Classes" asp-action="AllClasses" asp-route-grade="@GetGradeNumber(Model.ClassName)">
-                        <span>Всички класове</span>
-                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
-                    </a>
-                </div>
-
-                <section class="nb-class-students-panel nb-class-placeholder-panel" aria-labelledby="class-section-title">
-                    <div class="nb-class-section-header">
-                        <h2 id="class-section-title">@Model.SectionTitle</h2>
-                    </div>
-                    <div class="nb-class-placeholder">
-                        <i class="bi bi-tools" aria-hidden="true"></i>
-                        <span>@Model.EmptyMessage</span>
-                    </div>
-                </section>
-            </section>
-        </main>
+<section class="nb-class-students-panel nb-class-placeholder-panel" aria-labelledby="class-section-title">
+    <div class="nb-class-section-header">
+        <h2 id="class-section-title">@Model.SectionTitle</h2>
     </div>
-</body>
-</html>
+    <div class="nb-class-placeholder">
+        <i class="bi bi-tools" aria-hidden="true"></i>
+        <span>@Model.EmptyMessage</span>
+    </div>
+</section>
+</section>
 
 @functions {
     private string GetTabClass(string tab)
@@ -124,4 +43,3 @@
         return int.TryParse(digits, out var gradeNumber) ? gradeNumber : 1;
     }
 }
-

@@ -1,21 +1,16 @@
 @model Entities.ViewModels.Students.StudentHomeViewModel
 
 @{
-    Layout = null;
+    Layout = "_AppShell";
     ViewData["Title"] = "Начало";
+    ViewData["ActiveNav"] = "Home";
+    ViewData["ShellUserName"] = Model.StudentName;
+    ViewData["ShellUserMeta"] = Model.ClassName;
+    ViewData["ShellUserInitials"] = Model.StudentInitials;
 }
 
-<!DOCTYPE html>
-<html lang="bg">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f97316" />
-    <title>@ViewData["Title"] - NemeBook</title>
-    <link rel="manifest" href="~/manifest.webmanifest" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <style>
+@section Styles {
+<style>
         .nb-student-content {
             min-width: 0;
             padding: 28px 34px 44px;
@@ -805,331 +800,288 @@
             }
         }
     </style>
-</head>
-<body class="nb-student-body">
-    <div class="nb-student-shell">
-        <aside class="nb-student-sidebar" aria-label="Навигация за ученик">
-            <a class="nb-student-brand" asp-controller="Student" asp-action="Index">
-                <span class="nb-student-brand-mark">N</span>
-                <span>
-                    <strong>NemeBook</strong>
-                    <small>Ученик</small>
-                </span>
-            </a>
+}
 
-            <nav class="nb-student-nav">
-                <a class="is-active" asp-controller="Student" asp-action="Index"><i class="bi bi-house-fill"></i><span>Начало</span></a>
-                <a asp-controller="Student" asp-action="MyGrades"><i class="bi bi-journal-bookmark"></i><span>Оценки</span></a>
-                <a asp-controller="Chat" asp-action="Index"><i class="bi bi-chat-dots"></i><span>Чатове</span></a>
-                <a href="#" aria-disabled="true"><i class="bi bi-calendar3"></i><span>Календар</span></a>
-                <a asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i><span>Профил</span></a>
-            </nav>
+<section class="nb-student-content">
+<div class="nb-student-greeting">
+    <span></span>
+    <span></span>
+</div>
 
-            <a class="nb-student-user" asp-controller="Account" asp-action="Profile" aria-label="Отвори профила">
-                <span class="nb-student-avatar">@Model.StudentInitials</span>
-                <span>
-                    <strong>@Model.StudentName</strong>
-                    <small>@Model.ClassName</small>
-                </span>
-            </a>
-        </aside>
+<section class="nb-student-hero" aria-label="Обобщение за ученик">
+    <div class="nb-student-id-card">
+        <div class="nb-id-content">
+            <span class="nb-id-line"></span>
+            <span class="nb-id-caption">Общ успех</span>
+            <span class="nb-id-meta">@Model.GradeCount оценки общо</span>
+        </div>
+        <div class="nb-id-average">
+            <span>@Model.OverallAverage.ToString("0.00")</span>
+            <small>СР.</small>
+        </div>
+    </div>
 
-        <main class="nb-student-main">
-            <header class="nb-student-topbar">
-                <h1>Начало</h1>
-                <div class="nb-student-top-actions">
-                    <form asp-controller="Account" asp-action="Logout" method="post">
-                        <button class="nb-notification-button" type="submit" aria-label="Изход от профила" title="Изход">
-                            <i class="bi bi-box-arrow-right"></i>
-                        </button>
-                    </form>
-                    <span class="nb-student-avatar" aria-hidden="true">@Model.StudentInitials</span>
+    <div class="nb-student-progress-card">
+        <span class="nb-progress-title-line"></span>
+        @if (Model.SubjectProgress.Any())
+        {
+            @foreach (var subject in Model.SubjectProgress)
+            {
+                <div class="nb-progress-row">
+                    <span class="nb-progress-icon @subject.AccentClass"></span>
+                    <strong title="@subject.SubjectName">@subject.SubjectName</strong>
+                    <span class="nb-progress-track">
+                        <span class="@subject.AccentClass" style="width: @subject.ProgressPercent%"></span>
+                    </span>
+                    <em>@subject.Average.ToString("0.00")</em>
                 </div>
-            </header>
+            }
+        }
+        else
+        {
+            <div class="nb-empty-line">Все още няма данни по предмети</div>
+        }
+    </div>
 
-            <section class="nb-student-content">
-                <div class="nb-student-greeting">
-                    <span></span>
-                    <span></span>
-                </div>
+    <div class="nb-student-side-stack">
+        <button class="nb-mini-card" type="button" data-nb-modal-open="student-feedback-modal">
+            <div>
+                <h3>Отзиви</h3>
+                <strong>@Model.FeedbackSummary.Count</strong>
+                <p>@Model.FeedbackSummary.Detail</p>
+            </div>
+            <i class="bi bi-chat-square-text-fill"></i>
+        </button>
 
-                <section class="nb-student-hero" aria-label="Обобщение за ученик">
-                    <div class="nb-student-id-card">
-                        <div class="nb-id-content">
-                            <span class="nb-id-line"></span>
-                            <span class="nb-id-caption">Общ успех</span>
-                            <span class="nb-id-meta">@Model.GradeCount оценки общо</span>
+        <button class="nb-mini-card" type="button" data-nb-modal-open="student-absences-modal">
+            <div>
+                <h3>Отсъствия</h3>
+                <strong>@Model.AbsenceSummary.Count</strong>
+                <p>@Model.AbsenceSummary.Detail</p>
+            </div>
+            <i class="bi bi-exclamation-circle-fill"></i>
+        </button>
+    </div>
+</section>
+
+<section class="nb-student-lower">
+    <article class="nb-timeline-card nb-grades-overview-card">
+        <div class="nb-card-heading">
+            <h2>Оценки</h2>
+            <a class="nb-card-action" asp-controller="Student" asp-action="MyGrades">
+                <span>Детайли</span>
+                <i class="bi bi-arrow-right-short"></i>
+            </a>
+        </div>
+
+        @if (Model.AcademicSubjects.Any())
+        {
+            <div class="nb-subject-grade-list">
+                @foreach (var subject in Model.AcademicSubjects)
+                {
+                    var latestGrades = subject.Grades.Take(3).ToList();
+
+                    <a class="nb-subject-grade-row" asp-controller="Student" asp-action="MyGrades">
+                        <span class="nb-subject-dot" aria-hidden="true"></span>
+                        <div class="nb-subject-grade-name">
+                            <strong>@subject.SubjectName</strong>
+                            <small>@subject.GradeCount оценки</small>
                         </div>
-                        <div class="nb-id-average">
-                            <span>@Model.OverallAverage.ToString("0.00")</span>
-                            <small>СР.</small>
-                        </div>
-                    </div>
-
-                    <div class="nb-student-progress-card">
-                        <span class="nb-progress-title-line"></span>
-                        @if (Model.SubjectProgress.Any())
-                        {
-                            @foreach (var subject in Model.SubjectProgress)
+                        <div class="nb-subject-grade-chips" aria-label="Последни оценки">
+                            @if (latestGrades.Any())
                             {
-                                <div class="nb-progress-row">
-                                    <span class="nb-progress-icon @subject.AccentClass"></span>
-                                    <strong title="@subject.SubjectName">@subject.SubjectName</strong>
-                                    <span class="nb-progress-track">
-                                        <span class="@subject.AccentClass" style="width: @subject.ProgressPercent%"></span>
-                                    </span>
-                                    <em>@subject.Average.ToString("0.00")</em>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="nb-empty-line">Все още няма данни по предмети</div>
-                        }
-                    </div>
-
-                    <div class="nb-student-side-stack">
-                        <button class="nb-mini-card" type="button" data-nb-modal-open="student-feedback-modal">
-                            <div>
-                                <h3>Отзиви</h3>
-                                <strong>@Model.FeedbackSummary.Count</strong>
-                                <p>@Model.FeedbackSummary.Detail</p>
-                            </div>
-                            <i class="bi bi-chat-square-text-fill"></i>
-                        </button>
-
-                        <button class="nb-mini-card" type="button" data-nb-modal-open="student-absences-modal">
-                            <div>
-                                <h3>Отсъствия</h3>
-                                <strong>@Model.AbsenceSummary.Count</strong>
-                                <p>@Model.AbsenceSummary.Detail</p>
-                            </div>
-                            <i class="bi bi-exclamation-circle-fill"></i>
-                        </button>
-                    </div>
-                </section>
-
-                <section class="nb-student-lower">
-                    <article class="nb-timeline-card nb-grades-overview-card">
-                        <div class="nb-card-heading">
-                            <h2>Оценки</h2>
-                            <a class="nb-card-action" asp-controller="Student" asp-action="MyGrades">
-                                <span>Детайли</span>
-                                <i class="bi bi-arrow-right-short"></i>
-                            </a>
-                        </div>
-
-                        @if (Model.AcademicSubjects.Any())
-                        {
-                            <div class="nb-subject-grade-list">
-                                @foreach (var subject in Model.AcademicSubjects)
+                                @foreach (var grade in latestGrades)
                                 {
-                                    var latestGrades = subject.Grades.Take(3).ToList();
-
-                                    <a class="nb-subject-grade-row" asp-controller="Student" asp-action="MyGrades">
-                                        <span class="nb-subject-dot" aria-hidden="true"></span>
-                                        <div class="nb-subject-grade-name">
-                                            <strong>@subject.SubjectName</strong>
-                                            <small>@subject.GradeCount оценки</small>
-                                        </div>
-                                        <div class="nb-subject-grade-chips" aria-label="Последни оценки">
-                                            @if (latestGrades.Any())
-                                            {
-                                                @foreach (var grade in latestGrades)
-                                                {
-                                                    var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
-                                                    <span class="@gradeTone">@grade.Value.ToString("0.##")</span>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                <span>0</span>
-                                            }
-                                        </div>
-                                        <em>@subject.Average.ToString("0.00")</em>
-                                    </a>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <a class="nb-empty-panel nb-empty-button" asp-controller="Student" asp-action="MyGrades">
-                                Няма добавени предмети. Средният успех е 0.00.
-                            </a>
-                        }
-                    </article>
-
-                    <article class="nb-schedule-card">
-                        <div class="nb-card-heading">
-                            <h2>Днес</h2>
-                            <span>Програма <i class="bi bi-arrow-right-short"></i></span>
-                        </div>
-
-                        <div class="nb-schedule-list">
-                            @if (Model.TodaysSchedule.Any())
-                            {
-                                @foreach (var item in Model.TodaysSchedule)
-                                {
-                                    <div class="nb-schedule-item">
-                                        <span>@item.PeriodNumber</span>
-                                        <strong>@item.SubjectName</strong>
-                                        <em>@item.TimeRange</em>
-                                    </div>
+                                    var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
+                                    <span class="@gradeTone">@grade.Value.ToString("0.##")</span>
                                 }
                             }
                             else
                             {
-                                <div class="nb-empty-panel">Няма програма за днес.</div>
+                                <span>0</span>
                             }
                         </div>
-                    </article>
-                </section>
-            </section>
-        </main>
-    </div>
-
-    <div class="nb-modal-backdrop" data-nb-modal="student-feedback-modal" hidden>
-        <section class="nb-modal" role="dialog" aria-modal="true" aria-labelledby="student-feedback-title" tabindex="-1">
-            <header class="nb-modal-header">
-                <div>
-                    <h2 id="student-feedback-title">Отзиви</h2>
-                    <p>@Model.FeedbackSummary.Count @Model.FeedbackSummary.Label</p>
-                </div>
-                <button class="nb-modal-close" type="button" data-nb-modal-close aria-label="Затвори">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </header>
-            <div class="nb-modal-body">
-                @if (Model.Feedbacks.Any())
-                {
-                    <div class="nb-modal-list">
-                        @foreach (var feedback in Model.Feedbacks)
-                        {
-                            var feedbackTone = feedback.Type == "Похвала" ? "nb-modal-status-good" : "nb-modal-status-low";
-
-                            <article class="nb-modal-row">
-                                <span class="nb-modal-grade @feedbackTone"><i class="bi bi-chat-square-text-fill"></i></span>
-                                <div class="nb-modal-row-main">
-                                    <strong>@feedback.SubjectName</strong>
-                                    <div class="nb-modal-meta">
-                                        <span class="@feedbackTone">@feedback.Type</span>
-                                        <span>@feedback.TeacherName</span>
-                                        <span>@feedback.Date.ToString("dd.MM.yyyy")</span>
-                                    </div>
-                                    <p>@feedback.Comment</p>
-                                </div>
-                            </article>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="nb-modal-empty">Няма въведени отзиви.</div>
+                        <em>@subject.Average.ToString("0.00")</em>
+                    </a>
                 }
             </div>
-        </section>
-    </div>
+        }
+        else
+        {
+            <a class="nb-empty-panel nb-empty-button" asp-controller="Student" asp-action="MyGrades">
+                Няма добавени предмети. Средният успех е 0.00.
+            </a>
+        }
+    </article>
 
-    <div class="nb-modal-backdrop" data-nb-modal="student-absences-modal" hidden>
-        <section class="nb-modal" role="dialog" aria-modal="true" aria-labelledby="student-absences-title" tabindex="-1">
-            <header class="nb-modal-header">
-                <div>
-                    <h2 id="student-absences-title">Отсъствия</h2>
-                    <p>@Model.AbsenceSummary.Count @Model.AbsenceSummary.Label</p>
-                </div>
-                <button class="nb-modal-close" type="button" data-nb-modal-close aria-label="Затвори">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </header>
-            <div class="nb-modal-body">
-                @if (Model.Absences.Any())
+    <article class="nb-schedule-card">
+        <div class="nb-card-heading">
+            <h2>Днес</h2>
+            <span>Програма <i class="bi bi-arrow-right-short"></i></span>
+        </div>
+
+        <div class="nb-schedule-list">
+            @if (Model.TodaysSchedule.Any())
+            {
+                @foreach (var item in Model.TodaysSchedule)
                 {
-                    <div class="nb-modal-list">
-                        @foreach (var absence in Model.Absences)
-                        {
-                            var absenceTone = absence.Status == "Уважено" ? "nb-modal-status-good" : "nb-modal-status-low";
-
-                            <article class="nb-modal-row">
-                                <span class="nb-modal-grade @absenceTone">@absence.LessonNumber</span>
-                                <div class="nb-modal-row-main">
-                                    <strong>@absence.SubjectName</strong>
-                                    <div class="nb-modal-meta">
-                                        <span>@absence.Type</span>
-                                        <span class="@absenceTone">@absence.Status</span>
-                                        <span>@absence.TeacherName</span>
-                                        <span>@absence.Date.ToString("dd.MM.yyyy")</span>
-                                        <span>@absence.ExcuseReason</span>
-                                    </div>
-                                    <p>@absence.Comment</p>
-                                </div>
-                            </article>
-                        }
+                    <div class="nb-schedule-item">
+                        <span>@item.PeriodNumber</span>
+                        <strong>@item.SubjectName</strong>
+                        <em>@item.TimeRange</em>
                     </div>
                 }
-                else
-                {
-                    <div class="nb-modal-empty">Няма въведени отсъствия.</div>
-                }
-            </div>
-        </section>
+            }
+            else
+            {
+                <div class="nb-empty-panel">Няма програма за днес.</div>
+            }
+        </div>
+    </article>
+</section>
+</section>
+
+<div class="nb-modal-backdrop" data-nb-modal="student-feedback-modal" hidden>
+<section class="nb-modal" role="dialog" aria-modal="true" aria-labelledby="student-feedback-title" tabindex="-1">
+<header class="nb-modal-header">
+<div>
+    <h2 id="student-feedback-title">Отзиви</h2>
+    <p>@Model.FeedbackSummary.Count @Model.FeedbackSummary.Label</p>
+</div>
+<button class="nb-modal-close" type="button" data-nb-modal-close aria-label="Затвори">
+    <i class="bi bi-x-lg"></i>
+</button>
+</header>
+<div class="nb-modal-body">
+@if (Model.Feedbacks.Any())
+{
+    <div class="nb-modal-list">
+        @foreach (var feedback in Model.Feedbacks)
+        {
+            var feedbackTone = feedback.Type == "Похвала" ? "nb-modal-status-good" : "nb-modal-status-low";
+
+            <article class="nb-modal-row">
+                <span class="nb-modal-grade @feedbackTone"><i class="bi bi-chat-square-text-fill"></i></span>
+                <div class="nb-modal-row-main">
+                    <strong>@feedback.SubjectName</strong>
+                    <div class="nb-modal-meta">
+                        <span class="@feedbackTone">@feedback.Type</span>
+                        <span>@feedback.TeacherName</span>
+                        <span>@feedback.Date.ToString("dd.MM.yyyy")</span>
+                    </div>
+                    <p>@feedback.Comment</p>
+                </div>
+            </article>
+        }
     </div>
+}
+else
+{
+    <div class="nb-modal-empty">Няма въведени отзиви.</div>
+}
+</div>
+</section>
+</div>
 
-    <script>
-        (() => {
-            const openButtons = document.querySelectorAll("[data-nb-modal-open]");
-            const modals = document.querySelectorAll("[data-nb-modal]");
-            let activeTrigger = null;
+<div class="nb-modal-backdrop" data-nb-modal="student-absences-modal" hidden>
+<section class="nb-modal" role="dialog" aria-modal="true" aria-labelledby="student-absences-title" tabindex="-1">
+<header class="nb-modal-header">
+<div>
+    <h2 id="student-absences-title">Отсъствия</h2>
+    <p>@Model.AbsenceSummary.Count @Model.AbsenceSummary.Label</p>
+</div>
+<button class="nb-modal-close" type="button" data-nb-modal-close aria-label="Затвори">
+    <i class="bi bi-x-lg"></i>
+</button>
+</header>
+<div class="nb-modal-body">
+@if (Model.Absences.Any())
+{
+    <div class="nb-modal-list">
+        @foreach (var absence in Model.Absences)
+        {
+            var absenceTone = absence.Status == "Уважено" ? "nb-modal-status-good" : "nb-modal-status-low";
 
-            const closeModal = (modal) => {
-                if (!modal) {
-                    return;
-                }
+            <article class="nb-modal-row">
+                <span class="nb-modal-grade @absenceTone">@absence.LessonNumber</span>
+                <div class="nb-modal-row-main">
+                    <strong>@absence.SubjectName</strong>
+                    <div class="nb-modal-meta">
+                        <span>@absence.Type</span>
+                        <span class="@absenceTone">@absence.Status</span>
+                        <span>@absence.TeacherName</span>
+                        <span>@absence.Date.ToString("dd.MM.yyyy")</span>
+                        <span>@absence.ExcuseReason</span>
+                    </div>
+                    <p>@absence.Comment</p>
+                </div>
+            </article>
+        }
+    </div>
+}
+else
+{
+    <div class="nb-modal-empty">Няма въведени отсъствия.</div>
+}
+</div>
+</section>
+</div>
 
-                modal.hidden = true;
-                document.body.classList.remove("nb-modal-open");
+@section Scripts {
+<script>
+(() => {
+const openButtons = document.querySelectorAll("[data-nb-modal-open]");
+const modals = document.querySelectorAll("[data-nb-modal]");
+let activeTrigger = null;
 
-                if (activeTrigger) {
-                    activeTrigger.focus();
-                    activeTrigger = null;
-                }
-            };
+const closeModal = (modal) => {
+if (!modal) {
+    return;
+}
 
-            const openModal = (id, trigger) => {
-                const modal = document.querySelector(`[data-nb-modal="${id}"]`);
-                if (!modal) {
-                    return;
-                }
+modal.hidden = true;
+document.body.classList.remove("nb-modal-open");
 
-                activeTrigger = trigger;
-                modal.hidden = false;
-                document.body.classList.add("nb-modal-open");
-                modal.querySelector(".nb-modal")?.focus();
-            };
+if (activeTrigger) {
+    activeTrigger.focus();
+    activeTrigger = null;
+}
+};
 
-            openButtons.forEach((button) => {
-                button.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    openModal(button.dataset.nbModalOpen, button);
-                });
-            });
+const openModal = (id, trigger) => {
+const modal = document.querySelector(`[data-nb-modal="${id}"]`);
+if (!modal) {
+    return;
+}
 
-            modals.forEach((modal) => {
-                modal.addEventListener("click", (event) => {
-                    if (event.target === modal || event.target.closest("[data-nb-modal-close]")) {
-                        closeModal(modal);
-                    }
-                });
-            });
+activeTrigger = trigger;
+modal.hidden = false;
+document.body.classList.add("nb-modal-open");
+modal.querySelector(".nb-modal")?.focus();
+};
 
-            document.addEventListener("keydown", (event) => {
-                if (event.key !== "Escape") {
-                    return;
-                }
+openButtons.forEach((button) => {
+button.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal(button.dataset.nbModalOpen, button);
+});
+});
 
-                closeModal(document.querySelector("[data-nb-modal]:not([hidden])"));
-            });
-        })();
-    </script>
-    <script src="~/js/pwa.js" asp-append-version="true"></script>
-</body>
-</html>
+modals.forEach((modal) => {
+modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.closest("[data-nb-modal-close]")) {
+        closeModal(modal);
+    }
+});
+});
+
+document.addEventListener("keydown", (event) => {
+if (event.key !== "Escape") {
+    return;
+}
+
+closeModal(document.querySelector("[data-nb-modal]:not([hidden])"));
+});
+})();
+</script>
+}

@@ -12,6 +12,8 @@ public class ChatIndexViewModel
 
     public string CurrentUserRole { get; set; } = string.Empty;
 
+    public Guid? PendingTargetUserId { get; set; }
+
     public IReadOnlyList<ChatListItemViewModel> Chats { get; set; } = Array.Empty<ChatListItemViewModel>();
 
     public IReadOnlyList<ChatContactViewModel> Contacts { get; set; } = Array.Empty<ChatContactViewModel>();

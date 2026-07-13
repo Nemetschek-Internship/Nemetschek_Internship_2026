@@ -1,311 +1,238 @@
-@using System.ComponentModel.DataAnnotations
-@using Entities.Enums
 @model Web.ViewModels.PrincipalClassManagementViewModel
 
 @{
-    Layout = null;
+    Layout = "_AppShell";
     ViewData["Title"] = $"Клас {Model.ClassName}";
-
-    var principalDisplayName = typeof(UserRole)
-        .GetMember(nameof(UserRole.Principal))[0]
-        .GetCustomAttributes(typeof(DisplayAttribute), false)
-        .Cast<DisplayAttribute>()
-        .FirstOrDefault()
-        ?.GetName() ?? nameof(UserRole.Principal);
+    ViewData["ActiveNav"] = "Classes";
 }
 
-<!DOCTYPE html>
-<html lang="bg">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Клас @Model.ClassName - NemeBook</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-</head>
-<body class="nb-principal-body">
-    <div class="nb-principal-shell">
-        <aside class="nb-principal-sidebar" aria-label="Главна навигация">
-            <a class="nb-principal-logo" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                <span class="nb-principal-logo-mark">
-                    <i class="bi bi-book-half" aria-hidden="true"></i>
-                </span>
-                <span>
-                    <strong>NemeBook</strong>
-                    <small>@principalDisplayName</small>
-                </span>
-            </a>
+<section class="nb-principal-content nb-class-management-content" aria-label="Управление на клас">
+<div class="nb-class-management-tabs-row">
+    <nav class="nb-class-management-tabs" aria-label="Секции на класа">
+        <a class="@GetTabClass("Class")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Students" asp-route-classId="@Model.ClassId">Клас</a>
+        <a class="@GetTabClass("Subjects")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Subjects" asp-route-classId="@Model.ClassId">Предмети</a>
+        <a class="@GetTabClass("Schedule")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Schedule" asp-route-classId="@Model.ClassId">Програма</a>
+        <a class="@GetTabClass("Events")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Events" asp-route-classId="@Model.ClassId">Събития</a>
+    </nav>
+    <a class="nb-principal-action-btn nb-class-back-btn" asp-area="Admin" asp-controller="Classes" asp-action="AllClasses" asp-route-grade="@GetGradeNumber(Model.ClassName)">
+        <span>Всички класове</span>
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+    </a>
+</div>
 
-            <nav class="nb-principal-nav">
-                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                    <i class="bi bi-house-fill" aria-hidden="true"></i>
-                    <span>Начало</span>
-                </a>
-                <a href="#">
-                    <i class="bi bi-newspaper" aria-hidden="true"></i>
-                    <span>Новини</span>
-                </a>
-                <a class="is-active" asp-area="Admin" asp-controller="Classes" asp-action="AllClasses">
-                    <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
-                    <span>Класове</span>
-                </a>
-                <a asp-area="" asp-controller="Chat" asp-action="Index">
-                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
-                    <span>Учителски чатове</span>
-                </a>
-                <a asp-area="Admin" asp-controller="ProfileImport" asp-action="Index">
-                    <i class="bi bi-upload" aria-hidden="true"></i>
-                    <span>Импорт на профили</span>
-                </a>
-            </nav>
-
-            <a class="nb-principal-user-card" asp-area="" asp-controller="Account" asp-action="Profile">
-                <span class="nb-principal-user-avatar"></span>
-                <span>
-                    <strong>@(User.FindFirst("FullName")?.Value ?? "Директор")</strong>
-                    <small>Директорски профил</small>
-                </span>
-            </a>
-        </aside>
-
-        <main class="nb-principal-main">
-            <header class="nb-principal-topbar">
-                <h1>Клас @Model.ClassName</h1>
-                <partial name="_PrincipalStudentSearch" />
-                <div class="nb-principal-top-actions">
-                    <form asp-action="Logout" asp-area="" asp-controller="Account" method="post">
-                        @Html.AntiForgeryToken()
-                        <button class="nb-principal-action-btn is-logout" type="submit">
-                            <span>Изход</span>
-                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                        </button>
-                    </form>
-                </div>
-            </header>
-
-            <section class="nb-principal-content nb-class-management-content" aria-label="Управление на клас">
-                <div class="nb-class-management-tabs-row">
-                    <nav class="nb-class-management-tabs" aria-label="Секции на класа">
-                        <a class="@GetTabClass("Class")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Students" asp-route-classId="@Model.ClassId">Клас</a>
-                        <a class="@GetTabClass("Subjects")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Subjects" asp-route-classId="@Model.ClassId">Предмети</a>
-                        <a class="@GetTabClass("Schedule")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Schedule" asp-route-classId="@Model.ClassId">Програма</a>
-                        <a class="@GetTabClass("Events")" asp-area="Admin" asp-controller="ClassManagement" asp-action="Events" asp-route-classId="@Model.ClassId">Събития</a>
-                    </nav>
-                    <a class="nb-principal-action-btn nb-class-back-btn" asp-area="Admin" asp-controller="Classes" asp-action="AllClasses" asp-route-grade="@GetGradeNumber(Model.ClassName)">
-                        <span>Всички класове</span>
-                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
-                    </a>
-                </div>
-
-                <section class="nb-class-students-panel" aria-labelledby="class-students-title">
-                    <div class="nb-class-section-header">
-                        <h2 id="class-students-title">Клас</h2>
-                    </div>
-
-                    <section class="nb-class-main-teacher" aria-label="Класен ръководител">
-                        <div class="nb-class-main-teacher-info">
-                            <span>Класен ръководител</span>
-                            <strong>@(Model.MainTeacherName ?? "Няма избран")</strong>
-                        </div>
-
-                        @if (Model.MainTeacherId.HasValue)
-                        {
-                            <form asp-area="Admin" asp-controller="ClassManagement"
-                                  asp-action="AssignMainTeacher"
-                                  method="post"
-                                  onsubmit="return confirm('Сигурни ли сте, че искате да премахнете класния ръководител?');">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="classId" value="@Model.ClassId" />
-                                <button class="is-danger" type="submit">Премахни</button>
-                            </form>
-                        }
-                        else
-                        {
-                            <form class="nb-class-main-teacher-form"
-                                  asp-area="Admin" asp-controller="ClassManagement"
-                                  asp-action="AssignMainTeacher"
-                                  method="post"
-                                  data-teacher-search-url="@Url.Action("SearchAvailableMainTeacherMatches", "ClassManagement", new { area = "Admin" })">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="classId" value="@Model.ClassId" />
-                                <input type="hidden" name="teacherId" class="nb-main-teacher-id" />
-
-                                <div class="nb-main-teacher-search">
-                                    <i class="bi bi-search" aria-hidden="true"></i>
-                                    <input class="nb-main-teacher-input"
-                                           type="search"
-                                           placeholder="Търси учител"
-                                           aria-label="Търси учител по име"
-                                           autocomplete="off" />
-                                    <div class="nb-main-teacher-dropdown" role="listbox" hidden></div>
-                                </div>
-
-                                <button class="nb-main-teacher-submit" type="submit" disabled>Назначи</button>
-                            </form>
-                        }
-                    </section>
-
-                    <div class="nb-class-section-header nb-class-students-heading">
-                        <h2>Ученици</h2>
-                        <span>@Model.Students.Count ученици</span>
-                    </div>
-
-                    <div class="nb-student-list">
-                        @foreach (var student in Model.Students)
-                        {
-                            <article class="nb-student-card">
-                                <div class="nb-student-main">
-                                    <span class="nb-student-number">@student.ClassNumber</span>
-                                    <strong>@student.FullName</strong>
-                                </div>
-
-                                <div class="nb-student-stats" aria-label="Статистика">
-                                    <span>
-                                        <small>Среден успех</small>
-                                        <strong>@FormatAverage(student.AverageGrade)</strong>
-                                    </span>
-                                    <span>
-                                        <small>Похвали</small>
-                                        <strong>@student.PraiseCount</strong>
-                                    </span>
-                                    <span>
-                                        <small>Забележки</small>
-                                        <strong>@student.RemarkCount</strong>
-                                    </span>
-                                    <span>
-                                        <small>Отсъствия и закъснения</small>
-                                        <strong>@student.AbsenceAndLatenessCount</strong>
-                                    </span>
-                                </div>
-
-                                <button class="nb-student-chat-btn" type="button" aria-label="Чат с @student.FullName">
-                                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
-                                </button>
-                            </article>
-                        }
-                    </div>
-                </section>
-            </section>
-        </main>
+<section class="nb-class-students-panel" aria-labelledby="class-students-title">
+    <div class="nb-class-section-header">
+        <h2 id="class-students-title">Клас</h2>
     </div>
-    <script>
-        (function () {
-            const form = document.querySelector('.nb-class-main-teacher-form');
 
-            if (!form) {
-                return;
-            }
+    <section class="nb-class-main-teacher" aria-label="Класен ръководител">
+        <div class="nb-class-main-teacher-info">
+            <span>Класен ръководител</span>
+            <strong>@(Model.MainTeacherName ?? "Няма избран")</strong>
+        </div>
 
-            const searchUrl = form.dataset.teacherSearchUrl;
-            const input = form.querySelector('.nb-main-teacher-input');
-            const teacherId = form.querySelector('.nb-main-teacher-id');
-            const dropdown = form.querySelector('.nb-main-teacher-dropdown');
-            const submit = form.querySelector('.nb-main-teacher-submit');
-            let abortController = null;
+        @if (Model.MainTeacherId.HasValue)
+        {
+            <form asp-area="Admin" asp-controller="ClassManagement"
+                  asp-action="AssignMainTeacher"
+                  method="post"
+                  onsubmit="return confirm('Сигурни ли сте, че искате да премахнете класния ръководител?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="classId" value="@Model.ClassId" />
+                <button class="is-danger" type="submit">Премахни</button>
+            </form>
+        }
+        else
+        {
+            <form class="nb-class-main-teacher-form"
+                  asp-area="Admin" asp-controller="ClassManagement"
+                  asp-action="AssignMainTeacher"
+                  method="post"
+                  data-teacher-search-url="@Url.Action("SearchAvailableMainTeacherMatches", "ClassManagement", new { area = "Admin" })">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="classId" value="@Model.ClassId" />
+                <input type="hidden" name="teacherId" class="nb-main-teacher-id" />
 
-            function closeDropdown() {
-                dropdown.hidden = true;
-                dropdown.innerHTML = '';
-            }
+                <div class="nb-main-teacher-search">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input class="nb-main-teacher-input"
+                           type="search"
+                           placeholder="Търси учител"
+                           aria-label="Търси учител по име"
+                           autocomplete="off" />
+                    <div class="nb-main-teacher-dropdown" role="listbox" hidden></div>
+                </div>
 
-            function clearSelection() {
-                teacherId.value = '';
-                submit.disabled = true;
-            }
+                <button class="nb-main-teacher-submit" type="submit" disabled>Назначи</button>
+            </form>
+        }
+    </section>
 
-            function searchTeachers(clearSelectedTeacher) {
-                const query = input.value.trim();
+    <div class="nb-class-section-header nb-class-students-heading">
+        <h2>Ученици</h2>
+        <span>@Model.Students.Count ученици</span>
+    </div>
 
-                if (clearSelectedTeacher !== false) {
-                    clearSelection();
-                }
+    <div class="nb-student-list">
+        @foreach (var student in Model.Students)
+        {
+            <article class="nb-student-card">
+                <div class="nb-student-main">
+                    <span class="nb-student-number">@student.ClassNumber</span>
+                    <strong>@student.FullName</strong>
+                </div>
 
-                if (abortController) {
-                    abortController.abort();
-                }
+                <div class="nb-student-stats" aria-label="Статистика">
+                    <span>
+                        <small>Среден успех</small>
+                        <strong>@FormatAverage(student.AverageGrade)</strong>
+                    </span>
+                    <span>
+                        <small>Похвали</small>
+                        <strong>@student.PraiseCount</strong>
+                    </span>
+                    <span>
+                        <small>Забележки</small>
+                        <strong>@student.RemarkCount</strong>
+                    </span>
+                    <span>
+                        <small>Отсъствия и закъснения</small>
+                        <strong>@student.AbsenceAndLatenessCount</strong>
+                    </span>
+                </div>
 
-                abortController = new AbortController();
+                <a class="nb-student-chat-btn"
+                   asp-area=""
+                   asp-controller="Chat"
+                   asp-action="Index"
+                   asp-route-targetUserId="@student.UserId"
+                   aria-label="Чат с @student.FullName">
+                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                </a>
+            </article>
+        }
+    </div>
+</section>
+</section>
 
-                fetch(
-                    searchUrl
-                    + '?classId=' + encodeURIComponent('@Model.ClassId')
-                    + '&query=' + encodeURIComponent(query),
-                    {
-                        headers: { 'Accept': 'application/json' },
-                        signal: abortController.signal
-                    })
-                    .then(function (response) {
-                        return response.ok ? response.json() : [];
-                    })
-                    .then(renderResults)
-                    .catch(function (error) {
-                        if (error.name !== 'AbortError') {
-                            closeDropdown();
-                        }
-                    });
-            }
+@section Scripts {
+<script>
+(function () {
+const form = document.querySelector('.nb-class-main-teacher-form');
 
-            function renderResults(results) {
-                dropdown.innerHTML = '';
+if (!form) {
+return;
+}
 
-                if (results.length === 0) {
-                    const empty = document.createElement('span');
-                    empty.className = 'nb-main-teacher-empty';
-                    empty.textContent = 'Няма намерени учители';
-                    dropdown.appendChild(empty);
-                    dropdown.hidden = false;
-                    return;
-                }
+const searchUrl = form.dataset.teacherSearchUrl;
+const input = form.querySelector('.nb-main-teacher-input');
+const teacherId = form.querySelector('.nb-main-teacher-id');
+const dropdown = form.querySelector('.nb-main-teacher-dropdown');
+const submit = form.querySelector('.nb-main-teacher-submit');
+let abortController = null;
 
-                results.forEach(function (teacher) {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.setAttribute('role', 'option');
-                    button.textContent = teacher.fullName;
+function closeDropdown() {
+dropdown.hidden = true;
+dropdown.innerHTML = '';
+}
 
-                    button.addEventListener('click', function () {
-                        input.value = teacher.fullName;
-                        teacherId.value = teacher.id;
-                        submit.disabled = false;
-                        closeDropdown();
-                    });
+function clearSelection() {
+teacherId.value = '';
+submit.disabled = true;
+}
 
-                    dropdown.appendChild(button);
-                });
+function searchTeachers(clearSelectedTeacher) {
+const query = input.value.trim();
 
-                dropdown.hidden = false;
-            }
+if (clearSelectedTeacher !== false) {
+    clearSelection();
+}
 
-            input.addEventListener('input', function () {
-                searchTeachers(true);
-            });
+if (abortController) {
+    abortController.abort();
+}
 
-            input.addEventListener('focus', function () {
-                searchTeachers(false);
-            });
+abortController = new AbortController();
 
-            input.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape') {
-                    closeDropdown();
-                    input.blur();
-                }
-            });
+fetch(
+    searchUrl
+    + '?classId=' + encodeURIComponent('@Model.ClassId')
+    + '&query=' + encodeURIComponent(query),
+    {
+        headers: { 'Accept': 'application/json' },
+        signal: abortController.signal
+    })
+    .then(function (response) {
+        return response.ok ? response.json() : [];
+    })
+    .then(renderResults)
+    .catch(function (error) {
+        if (error.name !== 'AbortError') {
+            closeDropdown();
+        }
+    });
+}
 
-            form.addEventListener('submit', function (event) {
-                if (!teacherId.value) {
-                    event.preventDefault();
-                }
-            });
+function renderResults(results) {
+dropdown.innerHTML = '';
 
-            document.addEventListener('click', function (event) {
-                if (!form.contains(event.target)) {
-                    closeDropdown();
-                }
-            });
-        }());
-    </script>
-</body>
-</html>
+if (results.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'nb-main-teacher-empty';
+    empty.textContent = 'Няма намерени учители';
+    dropdown.appendChild(empty);
+    dropdown.hidden = false;
+    return;
+}
+
+results.forEach(function (teacher) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.setAttribute('role', 'option');
+    button.textContent = teacher.fullName;
+
+    button.addEventListener('click', function () {
+        input.value = teacher.fullName;
+        teacherId.value = teacher.id;
+        submit.disabled = false;
+        closeDropdown();
+    });
+
+    dropdown.appendChild(button);
+});
+
+dropdown.hidden = false;
+}
+
+input.addEventListener('input', function () {
+searchTeachers(true);
+});
+
+input.addEventListener('focus', function () {
+searchTeachers(false);
+});
+
+input.addEventListener('keydown', function (event) {
+if (event.key === 'Escape') {
+    closeDropdown();
+    input.blur();
+}
+});
+
+form.addEventListener('submit', function (event) {
+if (!teacherId.value) {
+    event.preventDefault();
+}
+});
+
+document.addEventListener('click', function (event) {
+if (!form.contains(event.target)) {
+    closeDropdown();
+}
+});
+}());
+</script>
+}
 
 @functions {
     private string GetTabClass(string tab)
@@ -324,4 +251,3 @@
         return int.TryParse(digits, out var gradeNumber) ? gradeNumber : 1;
     }
 }
-

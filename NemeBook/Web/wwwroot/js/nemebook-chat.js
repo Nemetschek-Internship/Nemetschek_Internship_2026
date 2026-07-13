@@ -5,6 +5,7 @@
     }
 
     const currentUserId = (main.dataset.currentUserId || "").toLowerCase();
+    let pendingTargetUserId = (main.dataset.pendingTargetUserId || "").toLowerCase();
     const roomPanel = document.getElementById("chatRoomPanel");
     const chatList = document.getElementById("chatList");
     const contactsContainer = document.getElementById("chatContacts");
@@ -198,7 +199,21 @@
         emptyState.classList.toggle("is-visible", chatList.children.length === 0);
     }
 
+    function clearPendingTargetRoute() {
+        if (!window.history || !window.location.search.includes("targetUserId")) {
+            return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete("targetUserId");
+        window.history.replaceState({}, "", url);
+    }
+
     async function startDirectChat(contactId) {
+        if (!contactId) {
+            return;
+        }
+
         try {
             const response = await fetch("/Chat/Direct", {
                 method: "POST",
@@ -341,6 +356,12 @@
         try {
             await connection.start();
             setConnectionState("Свързано", "is-online");
+            if (pendingTargetUserId) {
+                const targetUserId = pendingTargetUserId;
+                pendingTargetUserId = "";
+                await startDirectChat(targetUserId);
+                clearPendingTargetRoute();
+            }
         } catch {
             setConnectionState("Изключено", "is-offline");
             window.setTimeout(start, 1500);

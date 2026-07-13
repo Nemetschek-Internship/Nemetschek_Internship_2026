@@ -61,6 +61,7 @@ public class NemeBookDbContext : DbContext
             entity.Property(user => user.Email).HasMaxLength(256);
             entity.Property(user => user.Password).HasMaxLength(512);
             entity.Property(user => user.PhoneNumber).HasMaxLength(30);
+            entity.Property(user => user.IsActive).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<Student>()
@@ -82,7 +83,7 @@ public class NemeBookDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Teacher>()
-            .HasQueryFilter(teacher => !teacher.User.IsDeleted);
+            .HasQueryFilter(teacher => !teacher.User.IsDeleted && teacher.User.IsActive);
 
         modelBuilder.Entity<Teacher>()
             .HasOne(teacher => teacher.User)
@@ -125,7 +126,7 @@ public class NemeBookDbContext : DbContext
 
         modelBuilder.Entity<TeacherSubject>(entity =>
         {
-            entity.HasQueryFilter(teacherSubject => !teacherSubject.Teacher.User.IsDeleted);
+            entity.HasQueryFilter(teacherSubject => !teacherSubject.Teacher.User.IsDeleted && teacherSubject.Teacher.User.IsActive);
 
             entity.HasIndex(teacherSubject => new { teacherSubject.TeacherId, teacherSubject.SubjectId })
                 .IsUnique();

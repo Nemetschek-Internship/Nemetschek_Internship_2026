@@ -246,6 +246,7 @@ public class RegistrationService : IRegistrationService
             ?? throw new InvalidOperationException("User was not found.");
 
         user.Password = passwordHasher.HashPassword(request.Password);
+        user.IsActive = true;
         await accountsRepository.UpdateAsync(user, cancellationToken);
 
         invitation.UsedAtUtc = DateTime.UtcNow;
@@ -284,6 +285,7 @@ public class RegistrationService : IRegistrationService
                 Email = invitation.Email,
                 PhoneNumber = NormalizeOptional(request.PhoneNumber),
                 Password = passwordHasher.HashPassword(request.Password),
+                IsActive = true,
                 Role = UserRole.Parent
             };
 
@@ -300,6 +302,7 @@ public class RegistrationService : IRegistrationService
             user.LastName = NormalizeRequired(request.LastName);
             user.PhoneNumber = NormalizeOptional(request.PhoneNumber);
             user.Password = passwordHasher.HashPassword(request.Password);
+            user.IsActive = true;
             await accountsRepository.UpdateAsync(user, cancellationToken);
         }
 
@@ -346,6 +349,12 @@ public class RegistrationService : IRegistrationService
                 throw new InvalidOperationException($"A non-{role.ToString().ToLowerInvariant()} account already uses this email.");
             }
 
+            if (!existingUser.IsActive)
+            {
+                existingUser.IsActive = true;
+                await accountsRepository.UpdateAsync(existingUser, cancellationToken);
+            }
+
             return new PrincipalSeedResult
             {
                 UserId = existingUser.Id,
@@ -362,6 +371,7 @@ public class RegistrationService : IRegistrationService
             Email = email,
             PhoneNumber = NormalizeOptional(request.PhoneNumber),
             Password = passwordHasher.HashPassword(request.Password),
+            IsActive = true,
             Role = role
         };
 
@@ -567,6 +577,7 @@ public class RegistrationService : IRegistrationService
             Email = email,
             PhoneNumber = phoneNumber,
             Password = string.Empty,
+            IsActive = false,
             Role = role
         };
     }
