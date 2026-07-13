@@ -167,6 +167,54 @@ public class ClassManagementController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> SearchAvailableMainTeacherMatches(
+        Guid classId,
+        string? query,
+        CancellationToken cancellationToken = default)
+    {
+        var searchTerms = GetSearchTerms(query);
+
+        var teachersQuery = dbContext.Teachers
+            .AsNoTracking()
+            .Where(teacher =>
+                teacher.User.IsActive &&
+                !dbContext.Classes.Any(schoolClass =>
+                    schoolClass.Id != classId &&
+                    schoolClass.MainTeacherId == teacher.Id));
+
+        foreach (var searchTerm in searchTerms)
+        {
+            var currentTerm = searchTerm;
+            teachersQuery = teachersQuery.Where(teacher =>
+                teacher.User.FirstName.Contains(currentTerm) ||
+                (teacher.User.MiddleName != null && teacher.User.MiddleName.Contains(currentTerm)) ||
+                teacher.User.LastName.Contains(currentTerm));
+        }
+
+        var teacherRows = await teachersQuery
+            .OrderBy(teacher => teacher.User.FirstName)
+            .ThenBy(teacher => teacher.User.MiddleName)
+            .ThenBy(teacher => teacher.User.LastName)
+            .Select(teacher => new
+            {
+                teacher.Id,
+                teacher.User.FirstName,
+                teacher.User.MiddleName,
+                teacher.User.LastName,
+            })
+            .Take(20)
+            .ToListAsync(cancellationToken);
+
+        var results = teacherRows.Select(teacher => new
+        {
+            id = teacher.Id,
+            fullName = FormatFullName(teacher.FirstName, teacher.MiddleName, teacher.LastName),
+        });
+
+        return Json(results);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> SearchClassSubjectTeacherMatches(
         Guid subjectId,
         string? query,
@@ -234,23 +282,15 @@ public class ClassManagementController : Controller
                 .AnyAsync(
                     teacher =>
                         teacher.Id == teacherId.Value &&
-                        teacher.User.IsActive,
+                        teacher.User.IsActive &&
+                        !dbContext.Classes.Any(currentClass =>
+                            currentClass.Id != classId &&
+                            currentClass.MainTeacherId == teacher.Id),
                     cancellationToken);
 
             if (!teacherExists)
             {
                 return RedirectToAction(nameof(Students), new { classId });
-            }
-
-            var otherAssignedClasses = await dbContext.Classes
-                .Where(currentClass =>
-                    currentClass.Id != classId &&
-                    currentClass.MainTeacherId == teacherId.Value)
-                .ToListAsync(cancellationToken);
-
-            foreach (var assignedClass in otherAssignedClasses)
-            {
-                assignedClass.MainTeacherId = null;
             }
         }
 
