@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Entities.Enums;
 using Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -13,17 +14,19 @@ public class ChatHub : Hub
 {
     private readonly IAuthService authService;
     private readonly IChatService chatService;
+    private readonly INotificationService notificationService;
 
-    public ChatHub(IAuthService authService, IChatService chatService)
+    public ChatHub(IAuthService authService, IChatService chatService, INotificationService notificationService)
     {
         this.authService = authService;
         this.chatService = chatService;
+        this.notificationService = notificationService;
     }
 
     public async Task JoinChat(Guid chatId)
     {
         var userId = GetCurrentUserId();
-        var messages = await chatService.GetMessagesAsync(userId, chatId);
+        var messages = await chatService.GetMessagesAsync(userId, chatId, Context.ConnectionAborted);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GetGroupName(chatId));
         await Clients.Caller.SendAsync("ChatReady", chatId, messages.Select(message => MapMessage(message)));
@@ -32,11 +35,32 @@ public class ChatHub : Hub
     public async Task SendMessage(Guid chatId, string text)
     {
         var userId = GetCurrentUserId();
-        var user = await authService.GetUserByIdAsync(userId)
+        var user = await authService.GetUserByIdAsync(userId, Context.ConnectionAborted)
             ?? throw new HubException("Потребителят не е намерен.");
 
-        var message = await chatService.SendMessageAsync(userId, chatId, text);
+        var message = await chatService.SendMessageAsync(userId, chatId, text, Context.ConnectionAborted);
         await Clients.Group(GetGroupName(chatId)).SendAsync("ReceiveMessage", MapMessage(message, user));
+
+        var chat = await chatService.GetChatByIdAsync(userId, chatId, Context.ConnectionAborted);
+        var senderName = FormatFullName(user);
+        var notificationText = $"{senderName} ви изпрати ново съобщение.";
+
+        var recipients = chat.Users
+            .Where(chatUser => chatUser.Id != userId)
+            .Select(chatUser => chatUser.Id)
+            .Distinct()
+            .ToList();
+
+        foreach (var recipientId in recipients)
+        {
+            await notificationService.CreateNotificationAsync(
+                recipientId,
+                NotificationType.Message,
+                notificationText,
+                chatId: chatId,
+                messageId: message.Id,
+                cancellationToken: Context.ConnectionAborted);
+        }
     }
 
     private Guid GetCurrentUserId()

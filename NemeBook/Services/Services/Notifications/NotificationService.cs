@@ -39,6 +39,8 @@ public class NotificationService : INotificationService
         Guid? gradeId = null,
         Guid? absenceId = null,
         Guid? feedbackId = null,
+        Guid? chatId = null,
+        Guid? messageId = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -53,7 +55,9 @@ public class NotificationService : INotificationService
                 EventId = eventId,
                 GradeId = gradeId,
                 AbsenceId = absenceId,
-                FeedbackId = feedbackId
+                FeedbackId = feedbackId,
+                ChatId = chatId,
+                MessageId = messageId
             };
 
             await _notificationRepository.CreateAsync(notification, cancellationToken);
@@ -282,7 +286,9 @@ public class NotificationService : INotificationService
             EventId = notification.EventId,
             GradeId = notification.GradeId,
             AbsenceId = notification.AbsenceId,
-            FeedbackId = notification.FeedbackId
+            FeedbackId = notification.FeedbackId,
+            ChatId = notification.ChatId,
+            MessageId = notification.MessageId
         };
     }
 }

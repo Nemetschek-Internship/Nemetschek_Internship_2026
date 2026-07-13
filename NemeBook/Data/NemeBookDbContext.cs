@@ -342,6 +342,16 @@ public class NemeBookDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(notification => notification.FeedbackId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(notification => notification.Chat)
+                .WithMany()
+                .HasForeignKey(notification => notification.ChatId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(notification => notification.Message)
+                .WithMany()
+                .HasForeignKey(notification => notification.MessageId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 

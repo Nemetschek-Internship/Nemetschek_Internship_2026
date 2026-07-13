@@ -7,7 +7,17 @@ public interface INotificationService
     /// <summary>
     /// Creates and sends a notification to a user
     /// </summary>
-    Task<Guid> CreateNotificationAsync(Guid userId, NotificationType type, string text, Guid? eventId = null, Guid? gradeId = null, Guid? absenceId = null, Guid? feedbackId = null, CancellationToken cancellationToken = default);
+    Task<Guid> CreateNotificationAsync(
+        Guid userId,
+        NotificationType type,
+        string text,
+        Guid? eventId = null,
+        Guid? gradeId = null,
+        Guid? absenceId = null,
+        Guid? feedbackId = null,
+        Guid? chatId = null,
+        Guid? messageId = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all notifications for a user
@@ -58,4 +68,6 @@ public class NotificationDto
     public Guid? GradeId { get; set; }
     public Guid? AbsenceId { get; set; }
     public Guid? FeedbackId { get; set; }
+    public Guid? ChatId { get; set; }
+    public Guid? MessageId { get; set; }
 }

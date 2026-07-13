@@ -43,6 +43,14 @@
         }
     }
 
+    function getNotificationUrl(notification) {
+        if (notification.chatId) {
+            return `/Chat?chatId=${encodeURIComponent(notification.chatId)}`;
+        }
+
+        return null;
+    }
+
     function renderNotifications() {
         if (!notifications.length) {
             notificationsContainer.innerHTML = '<li><span class="dropdown-item-text text-muted small">Няма известия</span></li>';
@@ -54,6 +62,17 @@
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             .map(notification => {
                 const unreadClass = notification.isRead ? "" : "notification-item-unread";
+                const url = getNotificationUrl(notification);
+
+                if (url) {
+                    return `
+                        <li><a class="dropdown-item notification-item ${unreadClass}" data-notification-id="${notification.id}" href="${url}">
+                            <div>${escapeHtml(notification.text || "")}</div>
+                            <div class="notification-item-time">${escapeHtml(formatDate(notification.createdAt))}</div>
+                        </a></li>
+                    `;
+                }
+
                 return `
                     <li><button type="button" class="dropdown-item notification-item ${unreadClass}" data-notification-id="${notification.id}">
                         <div>${escapeHtml(notification.text || "")}</div>
@@ -87,7 +106,7 @@
 
     async function loadNotifications() {
         try {
-            const recent = await fetchJson("/notifications/recent?take=20", { credentials: "same-origin" });
+            const recent = await fetchJson("/api/notifications/recent?take=20", { credentials: "same-origin" });
             notifications = Array.isArray(recent) ? recent : [];
             renderNotifications();
         } catch {
@@ -97,7 +116,7 @@
 
     async function markAsRead(notificationId) {
         try {
-            await fetchJson(`/notifications/${notificationId}/read`, {
+            await fetchJson(`/api/notifications/${notificationId}/read`, {
                 method: "POST",
                 credentials: "same-origin",
                 headers: antiForgeryToken
@@ -121,7 +140,7 @@
 
     async function markAllAsRead() {
         try {
-            await fetchJson("/notifications/read-all", {
+            await fetchJson("/api/notifications/read-all", {
                 method: "POST",
                 credentials: "same-origin",
                 headers: antiForgeryToken

@@ -5,9 +5,10 @@ using Services.Interfaces;
 
 namespace Web.Controllers;
 
+[ApiController]
 [Authorize]
-[Route("notifications")]
-public class NotificationController : Controller
+[Route("api/notifications")]
+public class NotificationController : ControllerBase
 {
     private readonly INotificationService _notificationService;
 
@@ -28,7 +29,7 @@ public class NotificationController : Controller
         var normalizedTake = Math.Clamp(take, 1, 50);
         var notifications = await _notificationService.GetUserNotificationsAsync(userId.Value, cancellationToken);
 
-        return Json(notifications.Take(normalizedTake));
+        return Ok(notifications.Take(normalizedTake));
     }
 
     [HttpGet("unread-count")]
@@ -41,7 +42,7 @@ public class NotificationController : Controller
         }
 
         var unreadNotifications = await _notificationService.GetUnreadNotificationsAsync(userId.Value, cancellationToken);
-        return Json(new { count = unreadNotifications.Count });
+        return Ok(new { count = unreadNotifications.Count });
     }
 
     [HttpPost("{id:guid}/read")]
