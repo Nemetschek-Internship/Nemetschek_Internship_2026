@@ -26,7 +26,7 @@
 <body class="nb-principal-body">
     <div class="nb-principal-shell">
         <aside class="nb-principal-sidebar" aria-label="Главна навигация">
-            <a class="nb-principal-logo" asp-controller="Home" asp-action="Index">
+            <a class="nb-principal-logo" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
                 <span class="nb-principal-logo-mark">
                     <i class="bi bi-book-half" aria-hidden="true"></i>
                 </span>
@@ -37,7 +37,7 @@
             </a>
 
             <nav class="nb-principal-nav">
-                <a asp-controller="Home" asp-action="Index">
+                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
                     <i class="bi bi-house-fill" aria-hidden="true"></i>
                     <span>Начало</span>
                 </a>
@@ -45,21 +45,21 @@
                     <i class="bi bi-newspaper" aria-hidden="true"></i>
                     <span>Новини</span>
                 </a>
-                <a class="is-active" asp-controller="Grade" asp-action="AllClasses">
+                <a class="is-active" asp-area="Admin" asp-controller="Classes" asp-action="AllClasses">
                     <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
                     <span>Класове</span>
                 </a>
-                <a asp-controller="Chat" asp-action="Index">
+                <a asp-area="" asp-controller="Chat" asp-action="Index">
                     <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
                     <span>Учителски чатове</span>
                 </a>
-                <a asp-controller="ProfileImport" asp-action="Index">
+                <a asp-area="Admin" asp-controller="ProfileImport" asp-action="Index">
                     <i class="bi bi-upload" aria-hidden="true"></i>
                     <span>Импорт на профили</span>
                 </a>
             </nav>
 
-            <a class="nb-principal-user-card" asp-controller="Account" asp-action="Profile">
+            <a class="nb-principal-user-card" asp-area="" asp-controller="Account" asp-action="Profile">
                 <span class="nb-principal-user-avatar"></span>
                 <span>
                     <strong>@(User.FindFirst("FullName")?.Value ?? "Директор")</strong>
@@ -73,7 +73,7 @@
                 <h1>Класове</h1>
                 <partial name="_PrincipalStudentSearch" />
                 <div class="nb-principal-top-actions">
-                    <form asp-action="Logout" asp-controller="Account" method="post">
+                    <form asp-action="Logout" asp-area="" asp-controller="Account" method="post">
                         @Html.AntiForgeryToken()
                         <button class="nb-principal-action-btn is-logout" type="submit">
                             <span>Изход</span>
@@ -89,7 +89,8 @@
                     @foreach (var gradeNumber in Model.GradeNumbers)
                     {
                         <a class="@(gradeNumber == Model.SelectedGrade ? "is-active" : null)"
-                           asp-controller="Grade"
+                           asp-area="Admin"
+                           asp-controller="Classes"
                            asp-action="AllClasses"
                            asp-route-grade="@gradeNumber">
                             @gradeNumber
@@ -102,7 +103,7 @@
                         @foreach (var schoolClass in Model.Classes)
                         {
                             <a class="nb-class-card"
-                               asp-controller="ClassManagement"
+                               asp-area="Admin" asp-controller="ClassManagement"
                                asp-action="Students"
                                asp-route-classId="@schoolClass.Id">
                                 <strong>@schoolClass.Name</strong>
@@ -143,3 +144,4 @@
         return "is-low";
     }
 }
+

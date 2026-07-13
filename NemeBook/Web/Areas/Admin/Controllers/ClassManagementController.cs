@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Web.ViewModels;
 
-namespace Web.Controllers;
+namespace Web.Areas.Admin.Controllers;
 
+[Area("Admin")]
 [Authorize(Roles = "Principal")]
 public class ClassManagementController : Controller
 {
