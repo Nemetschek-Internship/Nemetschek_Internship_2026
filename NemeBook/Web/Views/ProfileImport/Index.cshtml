@@ -1,94 +1,175 @@
+@using System.ComponentModel.DataAnnotations
+@using Entities.Enums
 @model Web.ViewModels.ProfileImportUploadViewModel
 
 @{
+    Layout = null;
     ViewData["Title"] = "Импорт на профили";
+
+    var principalDisplayName = typeof(UserRole)
+        .GetMember(nameof(UserRole.Principal))[0]
+        .GetCustomAttributes(typeof(DisplayAttribute), false)
+        .Cast<DisplayAttribute>()
+        .FirstOrDefault()
+        ?.GetName() ?? nameof(UserRole.Principal);
 }
 
-<div class="nb-form-shell nb-import-shell">
-    <section class="nb-form-card nb-import-card" aria-labelledby="profile-import-title">
-        <div class="nb-auth-brand">
-            <div class="nb-auth-logo">N</div>
-            <div class="nb-auth-name"><span>Neme</span>Book</div>
-        </div>
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Импорт на профили - NemeBook</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="nb-principal-body">
+    <div class="nb-principal-shell">
+        <aside class="nb-principal-sidebar" aria-label="Главна навигация">
+            <a class="nb-principal-logo" asp-controller="Home" asp-action="Index">
+                <span class="nb-principal-logo-mark">
+                    <i class="bi bi-book-half" aria-hidden="true"></i>
+                </span>
+                <span>
+                    <strong>NemeBook</strong>
+                    <small>@principalDisplayName</small>
+                </span>
+            </a>
 
-        <h1 id="profile-import-title">Импорт на профили</h1>
-        <p class="nb-form-subtitle">Качете Excel таблиците за ученици, учители и родители.</p>
+            <nav class="nb-principal-nav">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-house-fill" aria-hidden="true"></i>
+                    <span>Начало</span>
+                </a>
+                <a href="#">
+                    <i class="bi bi-newspaper" aria-hidden="true"></i>
+                    <span>Новини</span>
+                </a>
+                <a asp-controller="Grade" asp-action="AllClasses">
+                    <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
+                    <span>Класове</span>
+                </a>
+                <a asp-controller="Chat" asp-action="Index">
+                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                    <span>Учителски чатове</span>
+                </a>
+                <a class="is-active" asp-controller="ProfileImport" asp-action="Index">
+                    <i class="bi bi-upload" aria-hidden="true"></i>
+                    <span>Импорт на профили</span>
+                </a>
+            </nav>
 
-        @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
-        {
-            <div class="nb-flash-message is-success">
-                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
-                <span>@Model.SuccessMessage</span>
-            </div>
-        }
+            <a class="nb-principal-user-card" asp-controller="Account" asp-action="Profile">
+                <span class="nb-principal-user-avatar"></span>
+                <span>
+                    <strong>@(User.FindFirst("FullName")?.Value ?? "Директор")</strong>
+                    <small>Директорски профил</small>
+                </span>
+            </a>
+        </aside>
 
-        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-        {
-            <div class="nb-flash-message is-error">
-                <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
-                <span>@Model.ErrorMessage</span>
-            </div>
-        }
-
-        <form asp-action="Import" method="post" enctype="multipart/form-data" id="profileImportForm" novalidate>
-            <div asp-validation-summary="ModelOnly" class="nb-form-summary"></div>
-
-            <div class="nb-upload-grid">
-                <div class="nb-upload-box">
-                    <label asp-for="StudentsFile" class="nb-upload-title">
-                        <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
-                        <span>Ученици</span>
-                    </label>
-                    <label class="nb-file-picker">
-                        <input asp-for="StudentsFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
-                        <span class="nb-file-button">Избери файл</span>
-                        <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
-                    </label>
+        <main class="nb-principal-main">
+            <header class="nb-principal-topbar">
+                <h1>Импорт на профили</h1>
+                <partial name="_PrincipalStudentSearch" />
+                <div class="nb-principal-top-actions">
+                    <form asp-action="Logout" asp-controller="Account" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="nb-principal-action-btn is-logout" type="submit">
+                            <span>Изход</span>
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </form>
                 </div>
+            </header>
 
-                <div class="nb-upload-box">
-                    <label asp-for="TeachersFile" class="nb-upload-title">
-                        <i class="bi bi-person-workspace" aria-hidden="true"></i>
-                        <span>Учители</span>
-                    </label>
-                    <label class="nb-file-picker">
-                        <input asp-for="TeachersFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
-                        <span class="nb-file-button">Избери файл</span>
-                        <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
-                    </label>
-                </div>
+            <section class="nb-principal-content nb-import-admin-content" aria-label="Импорт на профили">
+                <section class="nb-principal-card nb-import-admin-card" aria-labelledby="profile-import-title">
+                    <div class="nb-import-admin-header">
+                        <span class="nb-import-admin-icon">
+                            <i class="bi bi-upload" aria-hidden="true"></i>
+                        </span>
+                        <div>
+                            <h2 id="profile-import-title">Импорт на профили</h2>
+                            <p>Качете Excel таблиците за ученици, учители и родители.</p>
+                        </div>
+                    </div>
 
-                <div class="nb-upload-box">
-                    <label asp-for="ParentsFile" class="nb-upload-title">
-                        <i class="bi bi-people-fill" aria-hidden="true"></i>
-                        <span>Родители</span>
-                    </label>
-                    <label class="nb-file-picker">
-                        <input asp-for="ParentsFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
-                        <span class="nb-file-button">Избери файл</span>
-                        <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
-                    </label>
-                </div>
-            </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+                    {
+                        <div class="nb-flash-message is-success">
+                            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                            <span>@Model.SuccessMessage</span>
+                        </div>
+                    }
 
-            <button type="submit" class="nb-primary-action" id="profileImportSubmit">
-                <i class="bi bi-upload" aria-hidden="true"></i>
-                Импортирай профили
-            </button>
-        </form>
+                    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                    {
+                        <div class="nb-flash-message is-error">
+                            <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+                            <span>@Model.ErrorMessage</span>
+                        </div>
+                    }
 
-    </section>
-</div>
+                    <form asp-action="Import" method="post" enctype="multipart/form-data" id="profileImportForm" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="nb-form-summary"></div>
 
-<div class="nb-loading-overlay" id="profileImportLoading" role="status" aria-live="polite" aria-hidden="true">
-    <div class="nb-loading-panel">
-        <span class="nb-loading-spinner" aria-hidden="true"></span>
-        <strong>Импортът се обработва</strong>
-        <span>Моля, изчакайте. Профилите се добавят и имейлите се изпращат.</span>
+                        <div class="nb-upload-grid">
+                            <div class="nb-upload-box">
+                                <label asp-for="StudentsFile" class="nb-upload-title">
+                                    <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+                                    <span>Ученици</span>
+                                </label>
+                                <label class="nb-file-picker">
+                                    <input asp-for="StudentsFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
+                                    <span class="nb-file-button">Избери файл</span>
+                                    <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
+                                </label>
+                            </div>
+
+                            <div class="nb-upload-box">
+                                <label asp-for="TeachersFile" class="nb-upload-title">
+                                    <i class="bi bi-person-workspace" aria-hidden="true"></i>
+                                    <span>Учители</span>
+                                </label>
+                                <label class="nb-file-picker">
+                                    <input asp-for="TeachersFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
+                                    <span class="nb-file-button">Избери файл</span>
+                                    <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
+                                </label>
+                            </div>
+
+                            <div class="nb-upload-box">
+                                <label asp-for="ParentsFile" class="nb-upload-title">
+                                    <i class="bi bi-people-fill" aria-hidden="true"></i>
+                                    <span>Родители</span>
+                                </label>
+                                <label class="nb-file-picker">
+                                    <input asp-for="ParentsFile" class="nb-file-input" type="file" accept=".xlsx,.xls" />
+                                    <span class="nb-file-button">Избери файл</span>
+                                    <span class="nb-file-name-display" data-empty-text="Няма избран файл">Няма избран файл</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="nb-primary-action nb-import-submit" id="profileImportSubmit">
+                            <i class="bi bi-upload" aria-hidden="true"></i>
+                            Импортирай профили
+                        </button>
+                    </form>
+                </section>
+            </section>
+        </main>
     </div>
-</div>
 
-@section Scripts {
+    <div class="nb-loading-overlay" id="profileImportLoading" role="status" aria-live="polite" aria-hidden="true">
+        <div class="nb-loading-panel">
+            <span class="nb-loading-spinner" aria-hidden="true"></span>
+            <strong>Импортът се обработва</strong>
+            <span>Моля, изчакайте. Профилите се добавят и имейлите се изпращат.</span>
+        </div>
+    </div>
+
     <partial name="_ValidationScriptsPartial" />
     <script>
         document.querySelectorAll('.nb-file-picker').forEach(function (picker) {
@@ -113,4 +194,5 @@
             importSubmit.innerHTML = '<span class="nb-button-spinner" aria-hidden="true"></span> Обработва се...';
         });
     </script>
-}
+</body>
+</html>
