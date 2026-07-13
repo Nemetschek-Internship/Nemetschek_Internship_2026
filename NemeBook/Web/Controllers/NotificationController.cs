@@ -45,7 +45,7 @@ public class NotificationController : Controller
     }
 
     [HttpPost("{id:guid}/read")]
-    public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken = default)
+    [ValidateAntiForgeryToken]
     {
         var userId = GetCurrentUserId();
         if (!userId.HasValue)
