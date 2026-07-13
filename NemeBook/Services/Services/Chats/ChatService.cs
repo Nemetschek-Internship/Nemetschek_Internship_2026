@@ -51,6 +51,14 @@ public class ChatService : IChatService
             .ToList();
     }
 
+    public async Task<Chat> GetChatByIdAsync(Guid requesterUserId, Guid chatId, CancellationToken cancellationToken = default)
+    {
+        await EnsureUserCanAccessChatAsync(requesterUserId, chatId, cancellationToken);
+
+        return await chatRepository.GetByIdAsync(chatId, cancellationToken)
+            ?? throw new InvalidOperationException("Chat was not found.");
+    }
+
     public async Task<IReadOnlyList<Message>> GetMessagesAsync(Guid requesterUserId, Guid chatId, CancellationToken cancellationToken = default)
     {
         await EnsureUserCanAccessChatAsync(requesterUserId, chatId, cancellationToken);
@@ -251,14 +259,6 @@ public class ChatService : IChatService
         return message;
     }
 
-    public async Task<Chat> GetChatByIdAsync(Guid requesterUserId, Guid chatId, CancellationToken cancellationToken = default)
-    {
-        await EnsureUserCanAccessChatAsync(requesterUserId, chatId, cancellationToken);
-
-        return await chatRepository.GetByIdAsync(chatId, cancellationToken)
-            ?? throw new InvalidOperationException("Chat was not found.");
-    }
-
     private async Task<User> GetUserOrThrowAsync(Guid userId, CancellationToken cancellationToken)
     {
         if (userId == Guid.Empty)
@@ -282,129 +282,6 @@ public class ChatService : IChatService
         }
 
         if (IsCustomGroupChat(chat))
-        {
-            throw new UnauthorizedAccessException("Custom group chats are disabled.");
-        }
-
-        if (!CanUserSeeChat(requester, chat))
-        {
-            throw new UnauthorizedAccessException("User is not allowed to access this chat.");
-        }
-    }
-
-    private static bool IsCustomGroupChat(Chat chat)
-    {
-        return chat.Name?.StartsWith("GROUP:", StringComparison.OrdinalIgnoreCase) == true;
-    }
-
-    private static bool CanUserSeeChat(User requester, Chat chat)
-    {
-        return requester.Role != UserRole.Student || chat.Users.All(user => user.Role != UserRole.Principal);
-    }
-
-    private async Task<HashSet<Guid>> GetAllowedDirectContactIdsAsync(Guid requesterUserId, CancellationToken cancellationToken)
-    {
-        var users = await userRepository.GetAllAsync(cancellationToken);
-        return users
-            .Where(user => user.Id != requesterUserId)
-            .Where(user => !user.IsDeleted)
-            .Where(user => user.IsActive)
-            .Where(user => user.Role is UserRole.Student or UserRole.Teacher)
-            .Select(user => user.Id)
-            .ToHashSet();
-    }
-
-    private static HashSet<Guid> GetAllowedForStudent(
-        Guid requesterUserId,
-        IReadOnlyList<Student> students,
-        IReadOnlyList<ClassSubject> classSubjects,
-        IReadOnlyList<Class> classes,
-        IReadOnlyDictionary<Guid, Guid> teacherUserByTeacherId)
-    {
-        var student = students.FirstOrDefault(currentStudent => currentStudent.UserId == requesterUserId)
-            ?? throw new InvalidOperationException("Student profile was not found.");
-
-        var classTeacherIds = classSubjects
-            .Where(classSubject => classSubject.ClassId == student.ClassId)
-            .Where(classSubject => classSubject.TeacherId.HasValue)
-            .Select(classSubject => classSubject.TeacherId!.Value)
-            .ToHashSet();
-
-        if (chat.Users.All(user => user.Id != userId))
-        {
-            throw new UnauthorizedAccessException("User is not part of this chat.");
-        }
-
-        return classTeacherIds
-            .Where(teacherUserByTeacherId.ContainsKey)
-            .Select(teacherId => teacherUserByTeacherId[teacherId])
-            .ToHashSet();
-    }
-
-    private static HashSet<Guid> GetAllowedForParent(
-        Guid requesterUserId,
-        IReadOnlyList<Parent> parents,
-        IReadOnlyList<ClassSubject> classSubjects,
-        IReadOnlyList<Class> classes,
-        IReadOnlyDictionary<Guid, Guid> teacherUserByTeacherId,
-        IReadOnlySet<Guid> principalIds)
-    {
-        var parent = parents.FirstOrDefault(currentParent => currentParent.UserId == requesterUserId)
-            ?? throw new InvalidOperationException("Parent profile was not found.");
-
-        var childClassIds = parent.Students
-            .Select(student => student.ClassId)
-            .ToHashSet();
-
-        var teacherIds = classSubjects
-            .Where(classSubject => childClassIds.Contains(classSubject.ClassId))
-            .Where(classSubject => classSubject.TeacherId.HasValue)
-            .Select(classSubject => classSubject.TeacherId!.Value)
-            .ToHashSet();
-
-        foreach (var mainTeacherId in classes
-                     .Where(currentClass => childClassIds.Contains(currentClass.Id))
-                     .Select(currentClass => currentClass.MainTeacherId))
-        {
-            if (mainTeacherId.HasValue)
-            {
-                teacherIds.Add(mainTeacherId.Value);
-            }
-        }
-
-        var allowed = teacherIds
-            .Where(teacherUserByTeacherId.ContainsKey)
-            .Select(teacherId => teacherUserByTeacherId[teacherId])
-            .ToHashSet();
-
-        foreach (var principalId in principalIds)
-        {
-            allowed.Add(principalId);
-        }
-
-        return allowed;
-    }
-
-    private static HashSet<Guid> GetAllowedForTeacher(
-        Guid requesterUserId,
-        IReadOnlyList<Teacher> teachers,
-        IReadOnlyList<Student> students,
-        IReadOnlyList<Parent> parents,
-        IReadOnlyList<Class> classes,
-        IReadOnlyList<ClassSubject> classSubjects,
-        IReadOnlySet<Guid> principalIds)
-    {
-        var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == requesterUserId)
-            ?? throw new InvalidOperationException("Teacher profile was not found.");
-
-        var classIds = classSubjects
-            .Where(classSubject => classSubject.TeacherId == teacher.Id)
-            .Select(classSubject => classSubject.ClassId)
-            .ToHashSet();
-
-        foreach (var classId in classes
-                     .Where(currentClass => currentClass.MainTeacherId == teacher.Id)
-                     .Select(currentClass => currentClass.Id))
         {
             throw new UnauthorizedAccessException("Custom group chats are disabled.");
         }
