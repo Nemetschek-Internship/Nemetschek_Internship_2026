@@ -97,6 +97,27 @@
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <li class="nav-item dropdown me-2">
+                                <a class="nav-link text-dark position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell-fill"></i>
+                                    <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                                        0
+                                    </span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationsDropdown">
+                                    <li class="dropdown-header d-flex justify-content-between align-items-center">
+                                        <span>Известия</span>
+                                        <button type="button" id="markAllNotificationsRead" class="btn btn-sm btn-link p-0">Прочети всички</button>
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <ul id="notificationsContainer" class="list-unstyled mb-0">
+                                            <li><span class="dropdown-item-text text-muted small">Няма известия</span></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <li class="nav-item d-flex align-items-center">
                                 <button class="nb-notification-button" type="button" data-notification-bell aria-label="Нотификации" title="Нотификации">
                                     <i class="bi bi-bell-fill"></i>
@@ -158,6 +179,7 @@
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@9.0.7/dist/browser/signalr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/pwa.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
