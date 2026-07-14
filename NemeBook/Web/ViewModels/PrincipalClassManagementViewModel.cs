@@ -106,6 +106,8 @@ public class PrincipalScheduleEntryViewModel
 
     public Guid ClassSubjectId { get; set; }
 
+    public Guid? TeacherId { get; set; }
+
     public Guid? SubstituteTeacherId { get; set; }
 
     public DayOfWeek DayOfWeek { get; set; }

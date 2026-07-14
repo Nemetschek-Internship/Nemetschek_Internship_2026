@@ -63,6 +63,9 @@ public interface IPrincipalClassManagementService
         DayOfWeek dayOfWeek,
         int periodNumber,
         Guid? scheduleEntryId,
+        Guid? classSubjectId,
+        bool includeAllTeachers,
+        Guid? excludedTeacherId,
         string? query,
         CancellationToken cancellationToken = default);
 

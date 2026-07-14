@@ -15,6 +15,8 @@ public class PrincipalReportItemViewModel
 {
     public string Label { get; set; } = string.Empty;
 
+    public string ReportType { get; set; } = string.Empty;
+
     public string? Value { get; set; }
 
     public string CssClass { get; set; } = string.Empty;

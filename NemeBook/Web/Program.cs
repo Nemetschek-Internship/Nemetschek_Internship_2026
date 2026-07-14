@@ -128,6 +128,7 @@ builder.Services.AddScoped<ITeacherHomeService, TeacherHomeService>();
 builder.Services.AddScoped<IPrincipalDashboardService, PrincipalDashboardService>();
 builder.Services.AddScoped<IPrincipalClassesService, PrincipalClassesService>();
 builder.Services.AddScoped<IPrincipalClassManagementService, PrincipalClassManagementService>();
+builder.Services.AddScoped<IPrincipalReportsService, PrincipalReportsService>();
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));

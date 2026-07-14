@@ -1,0 +1,296 @@
+@model Web.ViewModels.PrincipalReportsViewModel
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Справки";
+    var linePoints = string.Join(" ", Model.LinePoints.Select(point => $"{point.X},{point.Y}"));
+}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Справки - NemeBook</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="nb-principal-body">
+    <div class="nb-principal-shell">
+        <partial name="~/Views/Admin/Shared/_PrincipalSideNav.cshtml" model='@("Reports")' />
+
+        <main class="nb-principal-main">
+            <header class="nb-principal-topbar">
+                <h1>Справки</h1>
+                <partial name="_PrincipalStudentSearch" />
+                <div class="nb-principal-top-actions">
+                    <form asp-action="Logout" asp-area="" asp-controller="Account" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="nb-principal-action-btn is-logout" type="submit">
+                            <span>Изход</span>
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <section class="nb-principal-content nb-reports-content" aria-label="Справки">
+                <section class="nb-report-template">
+                    <div class="nb-report-template-header">
+                        <div>
+                            <span>Справки</span>
+                            <h2>@Model.ReportTitle</h2>
+                            <p>@Model.ReportDescription</p>
+                        </div>
+
+                        <a class="nb-principal-action-btn nb-report-export-btn"
+                           asp-controller="Reports"
+                           asp-action="Export"
+                           asp-route-reportType="@Model.ReportType"
+                           asp-route-fromDate="@FormatDateRoute(Model.FromDate)"
+                           asp-route-toDate="@FormatDateRoute(Model.ToDate)"
+                           asp-route-classId="@Model.ClassId"
+                           asp-route-studentId="@Model.StudentId">
+                            <span>Експорт</span>
+                            <i class="bi bi-download" aria-hidden="true"></i>
+                        </a>
+                    </div>
+
+                    <form class="nb-report-filters" asp-controller="Reports" asp-action="Index" method="get">
+                        <label>
+                            <span>Тип справка</span>
+                            <select name="reportType">
+                                @foreach (var reportTypeOption in Model.ReportTypeOptions)
+                                {
+                                    <option value="@reportTypeOption.Value" selected="@(Model.ReportType == reportTypeOption.Value)">
+                                        @reportTypeOption.Label
+                                    </option>
+                                }
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>От дата</span>
+                            <input type="date" name="fromDate" value="@FormatDateInput(Model.FromDate)" />
+                        </label>
+
+                        <label>
+                            <span>До дата</span>
+                            <input type="date" name="toDate" value="@FormatDateInput(Model.ToDate)" />
+                        </label>
+
+                        <label>
+                            <span>Клас</span>
+                            <select name="classId">
+                                <option value="">Всички класове</option>
+                                @foreach (var classOption in Model.ClassOptions)
+                                {
+                                    <option value="@classOption.Id" selected="@(Model.ClassId == classOption.Id)">
+                                        @classOption.Name
+                                    </option>
+                                }
+                            </select>
+                        </label>
+
+                        <label class="nb-report-student-filter">
+                            <span>Ученик</span>
+                            <input type="hidden" name="studentId" id="reportStudentId" value="@Model.StudentId" />
+                            <div class="nb-report-student-search">
+                                <i class="bi bi-search" aria-hidden="true"></i>
+                                <input id="reportStudentSearch"
+                                       type="search"
+                                       value="@Model.SelectedStudentName"
+                                       placeholder="Търси ученик"
+                                       autocomplete="off" />
+                                <div class="nb-report-student-dropdown" role="listbox" hidden></div>
+                            </div>
+                        </label>
+
+                        <button class="nb-principal-action-btn" type="submit">
+                            <span>Покажи</span>
+                            <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
+                        </button>
+
+                        <a class="nb-report-clear-btn" asp-controller="Reports" asp-action="Index">
+                            <span>Изчисти</span>
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </a>
+                    </form>
+
+                    <div class="nb-report-meta-grid">
+                        <article>
+                            <span>Период</span>
+                            <strong>@Model.PeriodLabel</strong>
+                        </article>
+                        <article>
+                            <span>Клас</span>
+                            <strong>@Model.SelectedClassName</strong>
+                        </article>
+                        <article>
+                            <span>Ученик</span>
+                            <strong>@(Model.SelectedStudentName ?? "Всички ученици")</strong>
+                        </article>
+                        <article>
+                            <span>@Model.TotalLabel</span>
+                            <strong>@Model.TotalRecords</strong>
+                        </article>
+                        <article>
+                            <span>@Model.MetricLabel</span>
+                            <strong>@(Model.AverageValue?.ToString("0.00") ?? string.Empty)</strong>
+                        </article>
+                    </div>
+
+                    <section class="nb-report-chart-panel" aria-label="Диаграма">
+                        @if (!Model.HasData)
+                        {
+                            <div class="nb-report-empty">
+                                Няма данни за избраните филтри.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="nb-report-line-chart">
+                                <div class="nb-report-line-y-axis" aria-hidden="true">
+                                    @foreach (var label in Model.YAxisLabels)
+                                    {
+                                        <span>@label</span>
+                                    }
+                                </div>
+                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="@Model.MetricLabel по дати">
+                                    <line x1="0" y1="0" x2="100" y2="0" class="nb-report-grid-line" />
+                                    <line x1="0" y1="25" x2="100" y2="25" class="nb-report-grid-line" />
+                                    <line x1="0" y1="50" x2="100" y2="50" class="nb-report-grid-line" />
+                                    <line x1="0" y1="75" x2="100" y2="75" class="nb-report-grid-line" />
+                                    <line x1="0" y1="100" x2="100" y2="100" class="nb-report-grid-line" />
+                                    <polyline points="@linePoints" class="nb-report-line" />
+                                    @foreach (var point in Model.LinePoints)
+                                    {
+                                        <circle cx="@point.X" cy="@point.Y" r="2.1" class="nb-report-line-point">
+                                            <title>@point.Label - @point.Value.ToString("0.00") (@point.Count записи)</title>
+                                        </circle>
+                                    }
+                                </svg>
+                                <div class="nb-report-line-x-axis">
+                                    @foreach (var point in Model.LinePoints)
+                                    {
+                                        <span>@point.Label</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </section>
+                </section>
+            </section>
+        </main>
+    </div>
+    <script>
+        (function () {
+            const studentId = document.getElementById('reportStudentId');
+            const studentSearch = document.getElementById('reportStudentSearch');
+            const studentDropdown = document.querySelector('.nb-report-student-dropdown');
+            const classSelect = document.querySelector('.nb-report-filters select[name="classId"]');
+            const searchUrl = '@Url.Content("~/Admin/Reports/SearchStudentMatches")';
+            let abortController = null;
+
+            function closeStudentDropdown() {
+                studentDropdown.hidden = true;
+                studentDropdown.innerHTML = '';
+            }
+
+            function searchStudents(clearSelection) {
+                const query = studentSearch.value.trim();
+                if (clearSelection) {
+                    studentId.value = '';
+                }
+
+                if (abortController) {
+                    abortController.abort();
+                }
+
+                abortController = new AbortController();
+
+                fetch(
+                    searchUrl
+                    + '?query=' + encodeURIComponent(query)
+                    + '&classId=' + encodeURIComponent(classSelect.value),
+                    {
+                        headers: { 'Accept': 'application/json' },
+                        signal: abortController.signal
+                    })
+                    .then(function (response) {
+                        return response.ok ? response.json() : [];
+                    })
+                    .then(renderStudentResults)
+                    .catch(function (error) {
+                        if (error.name !== 'AbortError') {
+                            closeStudentDropdown();
+                        }
+                    });
+            }
+
+            function renderStudentResults(results) {
+                studentDropdown.innerHTML = '';
+
+                if (results.length === 0) {
+                    const empty = document.createElement('span');
+                    empty.className = 'nb-report-student-empty';
+                    empty.textContent = 'Няма намерени ученици';
+                    studentDropdown.appendChild(empty);
+                    studentDropdown.hidden = false;
+                    return;
+                }
+
+                results.forEach(function (student) {
+                    const button = document.createElement('button');
+                    const name = document.createElement('strong');
+                    const className = document.createElement('span');
+
+                    button.type = 'button';
+                    name.textContent = student.fullName;
+                    className.textContent = student.className;
+                    button.appendChild(name);
+                    button.appendChild(className);
+                    button.addEventListener('click', function () {
+                        studentId.value = student.studentId;
+                        studentSearch.value = student.fullName;
+                        closeStudentDropdown();
+                    });
+                    studentDropdown.appendChild(button);
+                });
+
+                studentDropdown.hidden = false;
+            }
+
+            studentSearch.addEventListener('input', function () {
+                searchStudents(true);
+            });
+            studentSearch.addEventListener('focus', function () {
+                searchStudents(false);
+            });
+            classSelect.addEventListener('change', function () {
+                studentId.value = '';
+                studentSearch.value = '';
+                closeStudentDropdown();
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('.nb-report-student-filter')) {
+                    closeStudentDropdown();
+                }
+            });
+        }());
+    </script>
+</body>
+</html>
+
+@functions {
+    private static string? FormatDateInput(DateTime? date)
+    {
+        return date?.ToString("yyyy-MM-dd");
+    }
+
+    private static string? FormatDateRoute(DateTime? date)
+    {
+        return date?.ToString("yyyy-MM-dd");
+    }
+}

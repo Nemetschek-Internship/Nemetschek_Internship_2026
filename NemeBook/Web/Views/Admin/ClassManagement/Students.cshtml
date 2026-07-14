@@ -75,7 +75,7 @@
                                   asp-controller="ClassManagement"
                                   asp-action="AssignMainTeacher"
                                   method="post"
-                                  data-teacher-search-url="@Url.Action("SearchAvailableMainTeacherMatches", "ClassManagement")">
+                                  data-teacher-search-url="@Url.Content("~/Admin/ClassManagement/SearchAvailableMainTeacherMatches")">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="classId" value="@Model.ClassId" />
                                 <input type="hidden" name="teacherId" class="nb-main-teacher-id" />

@@ -219,6 +219,9 @@ public class ClassManagementController : Controller
         DayOfWeek dayOfWeek,
         int periodNumber,
         Guid? scheduleEntryId,
+        Guid? classSubjectId,
+        bool includeAllTeachers,
+        Guid? excludedTeacherId,
         string? query,
         CancellationToken cancellationToken = default)
     {
@@ -226,6 +229,9 @@ public class ClassManagementController : Controller
             dayOfWeek,
             periodNumber,
             scheduleEntryId,
+            classSubjectId,
+            includeAllTeachers,
+            excludedTeacherId,
             query,
             cancellationToken);
 

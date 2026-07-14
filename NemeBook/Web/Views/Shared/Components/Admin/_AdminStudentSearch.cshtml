@@ -1,4 +1,4 @@
-<div class="nb-principal-search" data-search-url="@Url.Action("SearchStudentMatches", "ClassManagement", new { area = "Admin" })">
+<div class="nb-principal-search" data-search-url="@Url.Content("~/Admin/ClassManagement/SearchStudentMatches")">
     <i class="bi bi-search" aria-hidden="true"></i>
     <input type="search" placeholder="Търси ученик" aria-label="Търси ученик по име" autocomplete="off" />
     <div class="nb-principal-search-dropdown" role="listbox" hidden></div>
@@ -50,14 +50,14 @@
                 dropdown.hidden = false;
             }
 
-            input.addEventListener('input', function () {
+            function searchStudents() {
                 const query = input.value.trim();
 
                 if (abortController) {
                     abortController.abort();
                 }
 
-                if (query.length < 2) {
+                if (!query) {
                     closeDropdown();
                     return;
                 }
@@ -77,6 +77,14 @@
                             closeDropdown();
                         }
                     });
+            }
+
+            input.addEventListener('input', function () {
+                searchStudents();
+            });
+
+            input.addEventListener('focus', function () {
+                searchStudents();
             });
 
             input.addEventListener('keydown', function (event) {

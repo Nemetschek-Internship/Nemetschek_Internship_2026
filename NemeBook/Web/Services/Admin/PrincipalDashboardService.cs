@@ -74,6 +74,7 @@ public class PrincipalDashboardService : IPrincipalDashboardService
                     ClassName = $"{group.Key.GradeNumber}{group.Key.Letter}",
                     AverageGrade = Math.Round(group.Average(grade => grade.Value), 2),
                 })
+                .Where(schoolClass => schoolClass.AverageGrade < 4.00m)
                 .OrderBy(schoolClass => schoolClass.AverageGrade)
                 .ThenBy(schoolClass => schoolClass.ClassName)
                 .Take(3)
@@ -112,21 +113,25 @@ public class PrincipalDashboardService : IPrincipalDashboardService
             new PrincipalReportItemViewModel
             {
                 Label = "Академично представяне",
+                ReportType = PrincipalReportTypes.Academic,
                 CssClass = "is-purple",
             },
             new PrincipalReportItemViewModel
             {
                 Label = "Посещаемост",
+                ReportType = PrincipalReportTypes.Absences,
                 CssClass = "is-blue",
             },
             new PrincipalReportItemViewModel
             {
                 Label = "Дисциплина",
+                ReportType = PrincipalReportTypes.UnexcusedAbsences,
                 CssClass = "is-green",
             },
             new PrincipalReportItemViewModel
             {
                 Label = "Участие",
+                ReportType = PrincipalReportTypes.Feedback,
                 CssClass = "is-orange",
             },
         };

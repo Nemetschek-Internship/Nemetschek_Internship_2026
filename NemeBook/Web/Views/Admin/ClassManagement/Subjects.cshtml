@@ -198,7 +198,7 @@
             const addClassSubjectUrl = '@Url.Action("AddClassSubject", "ClassManagement")';
             const updateClassSubjectTeacherUrl = '@Url.Action("UpdateClassSubjectTeacher", "ClassManagement")';
             const createSubjectUrl = '@Url.Action("CreateSubject", "ClassManagement")';
-            const teacherSearchUrl = '@Url.Action("SearchClassSubjectTeacherMatches", "ClassManagement")';
+            const teacherSearchUrl = '@Url.Content("~/Admin/ClassManagement/SearchClassSubjectTeacherMatches")';
             const subjectOptions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
                 Model.SubjectOptions.Select(subject => new { id = subject.Id, name = subject.Name })));
             let includeAllTeachers = false;

@@ -53,7 +53,10 @@
                             <h2>Справки</h2>
                             @foreach (var report in Model.Reports)
                             {
-                                <a class="nb-principal-insight-row @report.CssClass" href="#">
+                                <a class="nb-principal-insight-row @report.CssClass"
+                                   asp-controller="Reports"
+                                   asp-action="Index"
+                                   asp-route-reportType="@report.ReportType">
                                     <span class="nb-principal-row-icon"></span>
                                     <span>@report.Label</span>
                                     <em>@report.Value</em>
