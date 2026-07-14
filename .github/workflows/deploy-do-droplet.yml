@@ -9,7 +9,7 @@ on:
       - ".github/workflows/deploy-do-droplet.yml"
 
 env:
-  DOCR_REGISTRY: registry.digitalocean.com
+  DOCR_REGISTRY: registry.digitalocean.com/nemebookdocr
   DOCR_NAMESPACE: myapp
   WEB_IMAGE_NAME: nemebook-web
   MSSQL_IMAGE_NAME: nemebook-mssql
