@@ -25,11 +25,11 @@
     </button>
     <form asp-controller="Account" asp-action="Logout" method="post">
         @Html.AntiForgeryToken()
-        <button class="nb-notification-button" type="submit" aria-label="Изход от профила" title="Изход">
-            <i class="bi bi-box-arrow-right"></i>
+        <button class="nb-principal-action-btn is-logout" type="submit">
+            <span>Изход</span>
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
         </button>
     </form>
-    <span class="nb-student-avatar" aria-hidden="true">@Model.StudentInitials</span>
 }
 
 @section Styles {

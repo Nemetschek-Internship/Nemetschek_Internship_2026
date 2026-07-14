@@ -33,7 +33,10 @@
         .build();
 
     function setConnectionState(text, stateClass) {
-        connectionText.textContent = text;
+        if (connectionText) {
+            connectionText.textContent = text;
+        }
+
         connectionDot.className = `nb-chat-connection-dot ${stateClass || ""}`.trim();
     }
 

@@ -26,7 +26,6 @@
     }
     <div class="nb-chat-status">
         <span id="chatConnectionDot" class="nb-chat-connection-dot"></span>
-        <span id="chatConnectionText">Свързване</span>
     </div>
     @if (Model.CurrentUserRoleValue == UserRole.Principal)
     {
@@ -43,18 +42,17 @@
 @section Styles {
 <style>
         .nb-chat-shell { background: #fbf3ec; }
-        .nb-chat-main { min-height: 100vh; }
+        .nb-chat-main { min-height: 0; }
         .nb-chat-status {
-            display: inline-flex;
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
             align-items: center;
-            gap: 8px;
-            padding: 7px 10px;
             border: 1px solid #efe4d8;
-            border-radius: 999px;
+            border-radius: 50%;
             background: #ffffff;
             color: #6b7280;
-            font-size: 12px;
-            font-weight: 800;
         }
         .nb-chat-connection-dot {
             width: 9px;
@@ -72,11 +70,13 @@
             box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
         }
         .nb-chat-page {
+            height: calc(100dvh - 58px);
             min-height: 0;
             display: grid;
             grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
             gap: 22px;
             padding: 28px 34px 34px;
+            overflow: hidden;
         }
         .nb-chat-list-panel,
         .nb-chat-room-panel {
@@ -289,7 +289,7 @@
             font-weight: 800;
         }
         .nb-chat-room-panel {
-            min-height: 620px;
+            min-height: 0;
             display: grid;
             grid-template-rows: auto minmax(0, 1fr) auto;
             overflow: hidden;
@@ -448,7 +448,10 @@
         @@media (max-width: 920px) {
             .nb-chat-page {
                 grid-template-columns: 1fr;
+                height: auto;
+                min-height: calc(100dvh - 58px);
                 padding: 18px;
+                overflow: visible;
             }
             .nb-chat-room-panel { min-height: 560px; }
         }

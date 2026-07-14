@@ -10,42 +10,29 @@ namespace Web.Controllers;
 public class HomeController : Controller
 {
     private readonly IAuthService authService;
-    private readonly ILogger<HomeController> logger;
 
-    public HomeController(IAuthService authService, ILogger<HomeController> logger)
+    public HomeController(IAuthService authService)
     {
         this.authService = authService;
-        this.logger = logger;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
-        if (userId.HasValue)
+        if (!userId.HasValue)
         {
-            var currentUser = await authService.GetUserByIdAsync(userId.Value, cancellationToken);
-            if (currentUser?.Role == UserRole.Student)
-            {
-                return RedirectToAction("Index", "Student");
-            }
-
-            if (currentUser?.Role == UserRole.Teacher)
-            {
-                return RedirectToAction("Index", "Teacher");
-            }
+            return RedirectToAction("Login", "Account");
         }
 
-        if (User.IsInRole("Principal"))
+        var currentUser = await authService.GetUserByIdAsync(userId.Value, cancellationToken);
+        return currentUser?.Role switch
         {
-            return RedirectToAction("Index", "Dashboard");
-        }
-
-        return View();
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
+            UserRole.Student => RedirectToAction("Index", "Student"),
+            UserRole.Teacher => RedirectToAction("Index", "Teacher"),
+            UserRole.Parent => RedirectToAction("Parent", "Chat"),
+            UserRole.Principal => RedirectToAction("Index", "Dashboard"),
+            _ => RedirectToAction("Login", "Account")
+        };
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

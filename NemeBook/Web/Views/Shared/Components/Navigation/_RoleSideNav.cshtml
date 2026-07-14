@@ -1,0 +1,182 @@
+@{
+    var activeNav = ViewData["PrincipalActiveSection"]?.ToString()
+        ?? ViewData["ActiveNav"]?.ToString()
+        ?? string.Empty;
+    var initials = ViewData["ShellUserInitials"]?.ToString() ?? User.FindFirst("Initials")?.Value ?? "N";
+    var fullName = ViewData["ShellUserName"]?.ToString()
+        ?? User.FindFirst("FullName")?.Value
+        ?? "Профил";
+    var roleName = GetRoleName();
+    var homeController = GetHomeController();
+    var homeAction = GetHomeAction();
+
+    string GetActiveClass(string section)
+    {
+        return string.Equals(activeNav, section, StringComparison.OrdinalIgnoreCase)
+            ? "is-active"
+            : string.Empty;
+    }
+}
+
+<aside class="nb-principal-sidebar" aria-label="Главна навигация">
+    <a class="nb-principal-logo" asp-area="" asp-controller="@homeController" asp-action="@homeAction">
+        <span class="nb-principal-logo-mark">
+            <i class="bi bi-book-half" aria-hidden="true"></i>
+        </span>
+        <span>
+            <strong>NemeBook</strong>
+            <small>@roleName</small>
+        </span>
+    </a>
+
+    <nav class="nb-principal-nav">
+        @if (User.IsInRole("Principal"))
+        {
+            <a class="@GetActiveClass("Dashboard")" asp-area="" asp-controller="Dashboard" asp-action="Index">
+                <i class="bi bi-house-fill" aria-hidden="true"></i>
+                <span>Начало</span>
+            </a>
+            <a class="@GetActiveClass("News")" asp-area="" asp-controller="News" asp-action="Index">
+                <i class="bi bi-newspaper" aria-hidden="true"></i>
+                <span>Новини</span>
+            </a>
+            <a class="@GetActiveClass("Classes")" asp-area="" asp-controller="Classes" asp-action="AllClasses">
+                <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
+                <span>Класове</span>
+            </a>
+            <a class="@GetActiveClass("Chat")" asp-area="" asp-controller="Chat" asp-action="Principal">
+                <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                <span>Чатове</span>
+            </a>
+            <a class="@GetActiveClass("ProfileImport")" asp-area="" asp-controller="ProfileImport" asp-action="Index">
+                <i class="bi bi-upload" aria-hidden="true"></i>
+                <span>Импорт на профили</span>
+            </a>
+        }
+        else if (User.IsInRole("Teacher"))
+        {
+            <a class="@GetActiveClass("Home")" asp-area="" asp-controller="Teacher" asp-action="Index">
+                <i class="bi bi-house-fill" aria-hidden="true"></i>
+                <span>Начало</span>
+            </a>
+            <a class="@GetActiveClass("MyClass")" asp-area="" asp-controller="Teacher" asp-action="MyClass">
+                <i class="bi bi-people-fill" aria-hidden="true"></i>
+                <span>Моите класове</span>
+            </a>
+            <a class="@GetActiveClass("Chats")" asp-area="" asp-controller="Chat" asp-action="Teacher">
+                <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                <span>Чатове</span>
+            </a>
+            <a class="@GetActiveClass("Schedule")" asp-area="" asp-controller="Teacher" asp-action="Schedule">
+                <i class="bi bi-calendar-week" aria-hidden="true"></i>
+                <span>Програма</span>
+            </a>
+            <a class="@GetActiveClass("Calendar")" asp-area="" asp-controller="Teacher" asp-action="Calendar">
+                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                <span>Календар</span>
+            </a>
+            <a class="@GetActiveClass("Profile")" asp-area="" asp-controller="Account" asp-action="Profile">
+                <i class="bi bi-person-fill" aria-hidden="true"></i>
+                <span>Профил</span>
+            </a>
+        }
+        else if (User.IsInRole("Parent"))
+        {
+            <a class="@GetActiveClass("News")" asp-area="" asp-controller="News" asp-action="Index">
+                <i class="bi bi-newspaper" aria-hidden="true"></i>
+                <span>Новини</span>
+            </a>
+            <a class="@GetActiveClass("Chats")" asp-area="" asp-controller="Chat" asp-action="Parent">
+                <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                <span>Чатове</span>
+            </a>
+            <a class="@GetActiveClass("Profile")" asp-area="" asp-controller="Account" asp-action="Profile">
+                <i class="bi bi-person-fill" aria-hidden="true"></i>
+                <span>Профил</span>
+            </a>
+        }
+        else
+        {
+            <a class="@GetActiveClass("Home")" asp-area="" asp-controller="Student" asp-action="Index">
+                <i class="bi bi-house-fill" aria-hidden="true"></i>
+                <span>Начало</span>
+            </a>
+            <a class="@GetActiveClass("Grades")" asp-area="" asp-controller="Student" asp-action="MyGrades">
+                <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>
+                <span>Оценки</span>
+            </a>
+            <a class="@GetActiveClass("Chats")" asp-area="" asp-controller="Chat" asp-action="Student">
+                <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                <span>Чатове</span>
+            </a>
+            <a class="@GetActiveClass("Calendar")" href="#" aria-disabled="true">
+                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                <span>Календар</span>
+            </a>
+            <a class="@GetActiveClass("Profile")" asp-area="" asp-controller="Account" asp-action="Profile">
+                <i class="bi bi-person-fill" aria-hidden="true"></i>
+                <span>Профил</span>
+            </a>
+        }
+    </nav>
+
+    <a class="nb-principal-user-card" asp-area="" asp-controller="Account" asp-action="Profile">
+        <span class="nb-principal-user-avatar">@initials</span>
+        <span>
+            <strong>@fullName</strong>
+            <small>@roleName</small>
+        </span>
+    </a>
+</aside>
+
+@functions {
+    private string GetRoleName()
+    {
+        if (User.IsInRole("Principal"))
+        {
+            return "Директор";
+        }
+
+        if (User.IsInRole("Teacher"))
+        {
+            return "Учител";
+        }
+
+        if (User.IsInRole("Parent"))
+        {
+            return "Родител";
+        }
+
+        return "Ученик";
+    }
+
+    private string GetHomeController()
+    {
+        if (User.IsInRole("Principal"))
+        {
+            return "Dashboard";
+        }
+
+        if (User.IsInRole("Teacher"))
+        {
+            return "Teacher";
+        }
+
+        if (User.IsInRole("Parent"))
+        {
+            return "Chat";
+        }
+
+        return "Student";
+    }
+
+    private string GetHomeAction()
+    {
+        if (User.IsInRole("Parent"))
+        {
+            return "Parent";
+        }
+
+        return "Index";
+    }
+}

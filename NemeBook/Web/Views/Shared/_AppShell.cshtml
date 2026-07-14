@@ -1,13 +1,10 @@
 @{
     var isAdminShell = User.IsInRole("Principal");
-    var isTeacherShell = User.IsInRole("Teacher");
-    var shellPrefix = isAdminShell ? "nb-principal" : "nb-student";
-    var bodyClass = isAdminShell ? "nb-principal-body" : "nb-student-body";
-    var shellClass = $"{shellPrefix}-shell {ViewData["ShellClass"]}".Trim();
-    var mainClass = $"{shellPrefix}-main {ViewData["MainClass"]}".Trim();
-    var topbarClass = $"{shellPrefix}-topbar";
-    var topActionsClass = $"{shellPrefix}-top-actions";
-    var initials = ViewData["ShellUserInitials"]?.ToString() ?? User.FindFirst("Initials")?.Value ?? "N";
+    var bodyClass = "nb-principal-body";
+    var shellClass = $"nb-principal-shell {ViewData["ShellClass"]}".Trim();
+    var mainClass = $"nb-principal-main {ViewData["MainClass"]}".Trim();
+    var topbarClass = "nb-principal-topbar";
+    var topActionsClass = "nb-principal-top-actions";
 }
 
 <!DOCTYPE html>
@@ -24,18 +21,7 @@
 </head>
 <body class="@bodyClass">
     <div class="@shellClass">
-        @if (isAdminShell)
-        {
-            <partial name="~/Views/Admin/Shared/_PrincipalSideNav.cshtml" model='@(ViewData["PrincipalActiveSection"]?.ToString() ?? ViewData["ActiveNav"]?.ToString())' />
-        }
-        else if (isTeacherShell)
-        {
-            <partial name="~/Views/Teacher/Components/_TeacherNavigation.cshtml" />
-        }
-        else
-        {
-            <partial name="~/Views/Shared/Components/Student/_StudentNavigation.cshtml" />
-        }
+        <partial name="~/Views/Shared/Components/Navigation/_RoleSideNav.cshtml" />
 
         <main class="@mainClass"
               data-current-user-id="@ViewData["ShellCurrentUserId"]"
@@ -72,11 +58,11 @@
                     {
                         <form asp-controller="Account" asp-action="Logout" method="post">
                             @Html.AntiForgeryToken()
-                            <button class="nb-notification-button" type="submit" aria-label="Изход от профила" title="Изход">
-                                <i class="bi bi-box-arrow-right"></i>
+                            <button class="nb-principal-action-btn is-logout" type="submit">
+                                <span>Изход</span>
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                             </button>
                         </form>
-                        <span class="nb-student-avatar" aria-hidden="true">@initials</span>
                     }
                 </div>
             </header>

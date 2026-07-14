@@ -21,6 +21,12 @@ body {
   margin-bottom: 60px;
 }
 
+.nb-auth-body {
+  min-height: 100dvh;
+  margin: 0;
+  overflow: auto;
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
   text-align: end;
@@ -80,7 +86,7 @@ body {
 
 .nb-login-page {
   width: 100vw;
-  min-height: calc(100vh - 116px);
+  min-height: 100dvh;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   display: grid;
@@ -871,9 +877,14 @@ body {
 .nb-principal-user-avatar {
   width: 34px;
   height: 34px;
+  display: grid;
+  place-items: center;
   flex: 0 0 auto;
   border-radius: 50%;
   background: #ffe0bd;
+  color: var(--nb-orange-dark);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .nb-principal-user-card strong {
@@ -3960,7 +3971,7 @@ body {
 
 @media (max-width: 767.98px) {
   .nb-login-page {
-    min-height: calc(100vh - 106px);
+    min-height: 100dvh;
     grid-template-columns: 1fr;
     background: #f6eee7;
   }
