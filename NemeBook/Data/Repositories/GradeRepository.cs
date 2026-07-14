@@ -32,6 +32,12 @@ public class GradeRepository : IGradeRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task CreateRangeAsync(IEnumerable<Grade> grades, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.Grades.AddRangeAsync(grades, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task UpdateAsync(Grade grade, CancellationToken cancellationToken = default)
     {
         _dbContext.Grades.Update(grade);
