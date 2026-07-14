@@ -29,4 +29,9 @@ public interface IGradeService
         CreateGradeRequest request,
         Guid createdByUserId,
         CancellationToken cancellationToken = default);
+
+    Task<BulkCreateGradeResult> CreateGradesBulkAsync(
+        BulkCreateGradeRequest request,
+        Guid createdByUserId,
+        CancellationToken cancellationToken = default);
 }

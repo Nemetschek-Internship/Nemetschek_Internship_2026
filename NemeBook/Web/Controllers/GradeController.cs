@@ -189,6 +189,42 @@ public async Task<IActionResult> CreateGrade([FromBody] CreateGradeRequest reque
     }
 }
 
+[HttpPost]
+[Authorize(Roles = "Teacher,Principal")]
+// TODO: Replace [IgnoreAntiforgeryToken] with header-based CSRF
+// protection (X-CSRF-TOKEN) before merging this branch into dev.
+// Same tracked gap as CreateGrade — see team to-do list, point 2.
+[IgnoreAntiforgeryToken]
+public async Task<IActionResult> CreateGradesBulk([FromBody] BulkCreateGradeRequest request, CancellationToken cancellationToken)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+
+    var userId = GetCurrentUserId();
+    if (!userId.HasValue)
+        return Unauthorized();
+
+    try
+    {
+        var result = await _gradeService.CreateGradesBulkAsync(request, userId.Value, cancellationToken);
+
+        if (result.CreatedGrades.Count == 0)
+            return BadRequest(new { error = "Нито една от избраните оценки не можа да бъде записана.", errors = result.Errors });
+
+        return Ok(result);
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        _logger.LogWarning(ex, "User {UserId} was denied bulk-creating grades for class subject {ClassSubjectId}", userId, request.ClassSubjectId);
+        return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+    }
+    catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+    {
+        _logger.LogWarning(ex, "Bulk grade creation failed for class subject {ClassSubjectId}", request.ClassSubjectId);
+        return BadRequest(new { error = ex.Message });
+    }
+}
+
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
