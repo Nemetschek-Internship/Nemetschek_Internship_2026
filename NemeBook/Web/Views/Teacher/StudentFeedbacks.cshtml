@@ -1,0 +1,185 @@
+@model Entities.ViewModels.Teachers.TeacherStudentFeedbacksViewModel
+
+@{
+    Layout = "_AppShell";
+    ViewData["Title"] = $"Отзиви - {Model.StudentName}";
+    ViewData["ActiveNav"] = "MyClass";
+    ViewData["ShellUserName"] = Model.TeacherName;
+    ViewData["ShellUserMeta"] = Model.MainMeta;
+    ViewData["ShellUserInitials"] = Model.TeacherInitials;
+}
+
+@section Styles {
+<style>
+    .nb-feedbacks-page {
+        min-width: 0;
+        display: grid;
+        gap: 18px;
+        padding: 28px 34px 44px;
+    }
+    .nb-feedbacks-header,
+    .nb-feedbacks-list {
+        border: 1px solid #eee7df;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
+    }
+    .nb-feedbacks-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+    }
+    .nb-feedbacks-title {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+    }
+    .nb-feedbacks-avatar {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #ffe4c2;
+        color: #a95508;
+        font-size: 13px;
+        font-weight: 950;
+    }
+    .nb-feedbacks-title h1 {
+        margin: 0;
+        overflow: hidden;
+        color: #1f232b;
+        font-size: 21px;
+        font-weight: 950;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-feedbacks-title p {
+        margin: 4px 0 0;
+        color: #8f887f;
+        font-size: 12px;
+        font-weight: 850;
+    }
+    .nb-feedbacks-back {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 12px;
+        border-radius: 7px;
+        background: #fbf7f2;
+        color: #6f6962;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+    }
+    .nb-feedbacks-list {
+        overflow: hidden;
+    }
+    .nb-feedback-row {
+        display: grid;
+        gap: 5px;
+        padding: 14px 18px;
+        border-bottom: 1px solid #f5eee7;
+    }
+    .nb-feedback-row:last-child {
+        border-bottom: 0;
+    }
+    .nb-feedback-main {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+    }
+    .nb-feedback-main strong {
+        overflow: hidden;
+        color: #20232a;
+        font-size: 13px;
+        font-weight: 950;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-feedback-type {
+        min-height: 26px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: #eef4ff;
+        color: #2563eb;
+        font-size: 12px;
+        font-weight: 950;
+    }
+    .nb-feedback-meta {
+        color: #8f887f;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .nb-feedback-description {
+        margin: 2px 0 0;
+        color: #5f6673;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+    .nb-feedback-empty {
+        min-height: 140px;
+        display: grid;
+        place-items: center;
+        color: #8f887f;
+        font-size: 13px;
+        font-weight: 850;
+        text-align: center;
+    }
+    @@media (max-width: 760px) {
+        .nb-feedbacks-page {
+            padding: 18px;
+        }
+        .nb-feedbacks-header {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+}
+
+<section class="nb-feedbacks-page">
+    <header class="nb-feedbacks-header">
+        <div class="nb-feedbacks-title">
+            <span class="nb-feedbacks-avatar" aria-hidden="true">@Model.StudentInitials</span>
+            <div>
+                <h1>Отзиви за @Model.StudentName</h1>
+                <p>Клас @Model.ClassName · @Model.Feedbacks.Count записи</p>
+            </div>
+        </div>
+
+        <a class="nb-feedbacks-back" asp-controller="Teacher" asp-action="Student" asp-route-studentId="@Model.StudentId">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            <span>Назад</span>
+        </a>
+    </header>
+
+    <article class="nb-feedbacks-list">
+        @if (Model.Feedbacks.Count == 0)
+        {
+            <div class="nb-feedback-empty">Няма въведени отзиви.</div>
+        }
+        else
+        {
+            @foreach (var feedback in Model.Feedbacks)
+            {
+                <section class="nb-feedback-row">
+                    <div class="nb-feedback-main">
+                        <strong>@feedback.SubjectName</strong>
+                        <span class="nb-feedback-type">@feedback.TypeName</span>
+                    </div>
+                    <span class="nb-feedback-meta">@feedback.Date.ToString("dd.MM.yyyy")</span>
+                    <p class="nb-feedback-description">@feedback.Description</p>
+                </section>
+            }
+        }
+    </article>
+</section>

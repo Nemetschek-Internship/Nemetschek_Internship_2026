@@ -1,0 +1,92 @@
+@model IReadOnlyList<Entities.ViewModels.Grades.StudentGradeRowDto>
+
+@{
+    Layout = "_AppShell";
+    ViewData["Title"] = "Класация";
+}
+
+@section Styles {
+<style>
+    .nb-ranking-page { padding: 28px 34px 44px; }
+    .nb-ranking-page h1 { margin: 0 0 6px; color: #20232a; font-size: 24px; font-weight: 950; }
+    .nb-ranking-page p { margin: 0 0 18px; color: #80786f; font-size: 13px; font-weight: 800; }
+    .nb-ranking-table-wrap { border: 1px solid #eee7df; border-radius: 8px; background: #fff; overflow: hidden; box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05); }
+    .nb-ranking-table { width: 100%; border-collapse: collapse; }
+    .nb-ranking-table th, .nb-ranking-table td { padding: 13px 15px; border-bottom: 1px solid #f0e8df; text-align: left; }
+    .nb-ranking-table th { color: #6f6962; font-size: 11px; font-weight: 950; text-transform: uppercase; }
+    .nb-ranking-table td { color: #252933; font-size: 13px; font-weight: 800; }
+</style>
+}
+
+<section class="nb-ranking-page">
+    <h1>Класация</h1>
+    <p>Клас @ViewBag.ClassName - @ViewBag.SubjectName</p>
+
+    <div class="nb-ranking-table-wrap">
+        <table class="nb-ranking-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ученик</th>
+                    <th>Среден успех</th>
+                    <th>Брой оценки</th>
+                    <th>Последна</th>
+                </tr>
+            </thead>
+            <tbody>
+            @{
+                var index = 1;
+            }
+            @foreach (var student in Model)
+            {
+                <tr>
+                    <td>@index</td>
+                    <td>@student.StudentName</td>
+                    <td>@student.Average.ToString("0.00")</td>
+                    <td>@student.TotalGrades</td>
+                    <td>@(student.LatestGrade is null ? "-" : FormatDisplayGrade(student.LatestGrade.Value, ViewBag.ClassName as string))</td>
+                </tr>
+                index++;
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@functions {
+    private static string FormatDisplayGrade(decimal value, string? className)
+    {
+        if (IsEarlyGradeClass(className))
+        {
+            if (value < 3)
+            {
+                return ":(";
+            }
+
+            if (value < 4)
+            {
+                return ":|";
+            }
+
+            if (value < 5)
+            {
+                return ":)";
+            }
+
+            return value < 6 ? ":D" : ":-D";
+        }
+
+        if (value < 3)
+        {
+            return "2";
+        }
+
+        return (value % 1 >= 0.5m ? Math.Ceiling(value) : Math.Floor(value)).ToString("0");
+    }
+
+    private static bool IsEarlyGradeClass(string? className)
+    {
+        return !string.IsNullOrWhiteSpace(className)
+            && (className.StartsWith("1", StringComparison.Ordinal) || className.StartsWith("2", StringComparison.Ordinal));
+    }
+}

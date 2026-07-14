@@ -1,0 +1,126 @@
+@model Entities.ViewModels.Teachers.TeacherCalendarViewModel
+
+@{
+    Layout = "_AppShell";
+    ViewData["Title"] = "Календар";
+    ViewData["ActiveNav"] = "Calendar";
+    ViewData["ShellUserName"] = Model.TeacherName;
+    ViewData["ShellUserMeta"] = Model.MainMeta;
+    ViewData["ShellUserInitials"] = Model.TeacherInitials;
+
+    var selectedMonth = new DateTime(Model.Year, Model.Month, 1);
+    var previousMonth = selectedMonth.AddMonths(-1);
+    var nextMonth = selectedMonth.AddMonths(1);
+}
+
+<section class="nb-principal-content nb-class-management-content" aria-label="Календар">
+    <section class="nb-class-events-layout" aria-label="Събития">
+        <section class="nb-class-events-calendar" aria-labelledby="teacher-events-title">
+            <div class="nb-class-events-toolbar">
+                <div class="nb-class-events-month">
+                    <a asp-controller="Teacher"
+                       asp-action="Calendar"
+                       asp-route-year="@previousMonth.Year"
+                       asp-route-month="@previousMonth.Month"
+                       aria-label="Предишен месец">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                    </a>
+                    <h2 id="teacher-events-title">@Capitalize(Model.MonthName) @Model.Year</h2>
+                    <a asp-controller="Teacher"
+                       asp-action="Calendar"
+                       asp-route-year="@nextMonth.Year"
+                       asp-route-month="@nextMonth.Month"
+                       aria-label="Следващ месец">
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nb-class-events-legend" aria-label="Легенда">
+                <span><i class="is-purple" aria-hidden="true"></i> Тест</span>
+                <span><i class="is-blue" aria-hidden="true"></i> Домашна работа</span>
+                <span><i class="is-green" aria-hidden="true"></i> Екскурзия</span>
+            </div>
+
+            <div class="nb-calendar-weekdays" aria-hidden="true">
+                <span>Пон</span>
+                <span>Вто</span>
+                <span>Сря</span>
+                <span>Чет</span>
+                <span>Пет</span>
+                <span>Съб</span>
+                <span>Нед</span>
+            </div>
+
+            <div class="nb-calendar-grid">
+                @foreach (var day in Model.CalendarDays)
+                {
+                    <div class="nb-calendar-day @(day.IsCurrentMonth ? null : "is-muted") @(day.IsToday ? "is-today" : null)">
+                        <span class="nb-calendar-day-number">@day.DayNumber</span>
+
+                        <div class="nb-calendar-event-lines">
+                            @foreach (var schoolEvent in day.Events.Take(3))
+                            {
+                                <span class="nb-calendar-event-line @schoolEvent.EventTypeCssClass"
+                                      title="@schoolEvent.Title">
+                                    @schoolEvent.Title
+                                </span>
+                            }
+
+                            @if (day.Events.Count > 3)
+                            {
+                                <span class="nb-calendar-more">+@(day.Events.Count - 3)</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <aside class="nb-class-upcoming-events" aria-labelledby="teacher-upcoming-events-title">
+            <div class="nb-class-section-header">
+                <h2 id="teacher-upcoming-events-title">Предстоящи събития</h2>
+            </div>
+
+            @if (Model.UpcomingEvents.Count == 0)
+            {
+                <div class="nb-class-events-empty">Няма предстоящи събития.</div>
+            }
+            else
+            {
+                <div class="nb-upcoming-event-list">
+                    @foreach (var schoolEvent in Model.UpcomingEvents)
+                    {
+                        <article class="nb-upcoming-event-card">
+                            <span class="nb-upcoming-event-icon @schoolEvent.EventTypeCssClass"></span>
+                            <div class="nb-upcoming-event-info">
+                                <strong>@schoolEvent.Title</strong>
+                                <span>@schoolEvent.DayLabel, @schoolEvent.TimeLabel</span>
+                                <small>
+                                    @schoolEvent.EventTypeName
+                                    @if (!string.IsNullOrWhiteSpace(schoolEvent.ClassSubjectName))
+                                    {
+                                        <text> · @schoolEvent.ClassSubjectName</text>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(schoolEvent.ClassNames))
+                                    {
+                                        <text> · @schoolEvent.ClassNames</text>
+                                    }
+                                </small>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </aside>
+    </section>
+</section>
+
+@functions {
+    private static string Capitalize(string value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? value
+            : string.Concat(value[..1].ToUpperInvariant(), value.AsSpan(1));
+    }
+}
