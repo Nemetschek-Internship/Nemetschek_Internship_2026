@@ -19,26 +19,15 @@
     }
 
     .nb-teacher-greeting {
-        display: grid;
-        gap: 8px;
+        width: fit-content;
         margin-bottom: 18px;
-    }
-
-    .nb-teacher-greeting span {
-        display: block;
+        padding: 4px 12px;
         border-radius: 999px;
-        background: #e8e2da;
-    }
-
-    .nb-teacher-greeting span:first-child {
-        width: min(100%, 142px);
-        height: 9px;
-    }
-
-    .nb-teacher-greeting span:last-child {
-        width: min(100%, 92px);
-        height: 6px;
-        background: #eee8e1;
+        background: #ece7df;
+        color: #5b554f;
+        font-size: 13px;
+        font-weight: 950;
+        line-height: 1.25;
     }
 
     .nb-teacher-hero {
@@ -77,28 +66,14 @@
         align-content: center;
     }
 
-    .nb-teacher-line {
-        width: 82px;
-        height: 6px;
-        display: block;
-        margin-bottom: 12px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.86);
-    }
-
     .nb-teacher-name-pill {
         max-width: 100%;
-        min-height: 30px;
-        display: inline-flex;
-        align-items: center;
-        padding: 0 16px;
-        margin-bottom: 10px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.2);
+        display: block;
+        margin-bottom: 8px;
         overflow: hidden;
         color: #ffffff;
-        font-size: 12px;
-        font-weight: 900;
+        font-size: 15px;
+        font-weight: 950;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -138,16 +113,22 @@
     }
 
     .nb-teacher-overview-title {
-        width: 118px;
-        height: 7px;
+        width: fit-content;
+        min-height: 22px;
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 11px;
         border-radius: 999px;
-        background: #d9d5cf;
+        background: #ece7df;
+        color: #5b554f;
+        font-size: 12px;
+        font-weight: 950;
     }
 
     .nb-teacher-overview-row {
         min-width: 0;
         display: grid;
-        grid-template-columns: 24px minmax(90px, 140px) minmax(120px, 1fr) 34px;
+        grid-template-columns: 24px minmax(0, 1fr) auto;
         align-items: center;
         gap: 10px;
     }
@@ -200,25 +181,6 @@
         min-width: 28px;
         text-align: center;
     }
-
-    .nb-teacher-track {
-        height: 4px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: #e9e4dc;
-    }
-
-    .nb-teacher-track span {
-        width: 0%;
-        height: 100%;
-        display: block;
-        border-radius: inherit;
-        background: currentColor;
-    }
-
-    .nb-teacher-track.is-purple { color: #7447ff; }
-    .nb-teacher-track.is-blue { color: #3177ff; }
-    .nb-teacher-track.is-green { color: #20a95c; }
 
     .nb-teacher-side-stack {
         display: grid;
@@ -322,25 +284,15 @@
         white-space: nowrap;
     }
 
-    .nb-teacher-tabs {
-        display: flex;
-        gap: 12px;
+    .nb-teacher-section-note {
         width: fit-content;
         margin-bottom: 10px;
-        padding: 5px 9px;
+        padding: 3px 10px;
         border-radius: 999px;
         background: #f6f1ea;
-    }
-
-    .nb-teacher-tabs span {
-        width: 42px;
-        height: 7px;
-        border-radius: 999px;
-        background: #ded8cf;
-    }
-
-    .nb-teacher-tabs span:first-child {
-        background: #f45d0a;
+        color: #8d867c;
+        font-size: 11px;
+        font-weight: 850;
     }
 
     .nb-teacher-empty-row {
@@ -486,10 +438,6 @@
             grid-template-columns: 24px minmax(0, 1fr) 34px;
         }
 
-        .nb-teacher-track {
-            grid-column: 2 / -1;
-        }
-
         .nb-teacher-side-stack {
             grid-template-columns: 1fr;
         }
@@ -506,15 +454,11 @@
 }
 
 <section class="nb-teacher-dashboard" aria-label="Начало за учител">
-    <div class="nb-teacher-greeting" aria-hidden="true">
-        <span></span>
-        <span></span>
-    </div>
+    <div class="nb-teacher-greeting">Статистики</div>
 
     <section class="nb-teacher-hero" aria-label="Обобщение">
         <article class="nb-teacher-card nb-teacher-id-card">
             <div class="nb-teacher-id-content">
-                <span class="nb-teacher-line"></span>
                 <span class="nb-teacher-name-pill">@Model.TeacherName</span>
                 <span class="nb-teacher-meta-pill">Клас @className</span>
             </div>
@@ -522,26 +466,23 @@
         </article>
 
         <article class="nb-teacher-card nb-teacher-overview-card">
-            <span class="nb-teacher-overview-title" aria-hidden="true"></span>
+            <span class="nb-teacher-overview-title">Среден успех по предмети</span>
 
             <div class="nb-teacher-overview-row">
                 <span class="nb-teacher-dot"></span>
                 <strong>Моят клас</strong>
-                <span class="nb-teacher-track is-purple"><span></span></span>
                 <em>@className</em>
             </div>
 
             <div class="nb-teacher-overview-row">
                 <span class="nb-teacher-dot is-blue"></span>
                 <strong>Ученици</strong>
-                <span class="nb-teacher-track is-blue"><span></span></span>
                 <em>@Model.StudentCount</em>
             </div>
 
             <div class="nb-teacher-overview-row">
                 <span class="nb-teacher-dot is-green"></span>
                 <strong>Часове днес</strong>
-                <span class="nb-teacher-track is-green"><span></span></span>
                 <em>0</em>
             </div>
         </article>
@@ -577,11 +518,7 @@
                 </a>
             </div>
 
-            <div class="nb-teacher-tabs" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+            <div class="nb-teacher-section-note">Последни записи за класа</div>
 
             @if (Model.Students.Any())
             {

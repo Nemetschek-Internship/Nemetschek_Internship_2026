@@ -135,12 +135,19 @@
             overflow-y: auto;
         }
         .nb-progress-title-line {
-            width: 136px;
-            height: 9px;
-            display: block;
+            width: fit-content;
+            min-height: 22px;
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 11px;
             margin-bottom: 3px;
             border-radius: 999px;
-            background: #d9d5cf;
+            background: #ece7df;
+            color: #5b554f;
+            font-size: 12px;
+            font-weight: 950;
+            line-height: 1.2;
+            white-space: nowrap;
         }
         .nb-progress-row {
             min-width: 0;
@@ -804,14 +811,12 @@
 
 <section class="nb-student-content">
 <div class="nb-student-greeting">
-    <span></span>
-    <span></span>
+    <div>@Model.StudentName @Model.ClassName</div>
 </div>
 
 <section class="nb-student-hero" aria-label="Обобщение за ученик">
     <div class="nb-student-id-card">
         <div class="nb-id-content">
-            <span class="nb-id-line"></span>
             <span class="nb-id-caption">Общ успех</span>
             <span class="nb-id-meta">@Model.GradeCount оценки общо</span>
         </div>
@@ -822,7 +827,7 @@
     </div>
 
     <div class="nb-student-progress-card">
-        <span class="nb-progress-title-line"></span>
+        <div class="nb-progress-title-line">Среден успех по предмети</div>
         @if (Model.SubjectProgress.Any())
         {
             @foreach (var subject in Model.SubjectProgress)
