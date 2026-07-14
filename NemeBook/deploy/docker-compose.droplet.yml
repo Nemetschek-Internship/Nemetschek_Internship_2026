@@ -1,6 +1,6 @@
 services:
   mssql:
-    image: ${MSSQL_IMAGE:-registry.digitalocean.com/myapp/nemebook-mssql:latest}
+    image: ${MSSQL_IMAGE:-registry.digitalocean.com/nemebookdocr/myapp:mssql-latest}
     container_name: nemebook-mssql
     env_file:
       - .env
@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: ${WEB_IMAGE:-registry.digitalocean.com/myapp/nemebook-web:latest}
+    image: ${WEB_IMAGE:-registry.digitalocean.com/nemebookdocr/myapp:web-latest}
     container_name: nemebook-web
     depends_on:
       mssql:
