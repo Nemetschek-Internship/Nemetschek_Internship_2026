@@ -61,6 +61,39 @@ jobs:
           echo "DOCREDS_USER length: ${#DOCREDS_USER}"
           echo "DROP_HOST length: ${#DROP_HOST}"
 
+      - name: Normalize and validate SSH private key
+        id: ssh_key
+        shell: bash
+        env:
+          DROP_SSH_KEY: ${{ secrets.DROP_SSH_KEY }}
+        run: |
+          set -euo pipefail
+
+          KEY_FILE="$RUNNER_TEMP/drop_ssh_key"
+          printf '%s' "$DROP_SSH_KEY" > "$KEY_FILE"
+
+          # Some secret values are pasted with literal "\n" sequences.
+          if grep -q '\\n' "$KEY_FILE"; then
+            perl -0777 -pe 's/\\n/\n/g' "$KEY_FILE" > "${KEY_FILE}.normalized"
+            mv "${KEY_FILE}.normalized" "$KEY_FILE"
+          fi
+
+          chmod 600 "$KEY_FILE"
+
+          if ! ssh-keygen -y -f "$KEY_FILE" > /dev/null 2>&1; then
+            echo "DROP_SSH_KEY is not a valid private key for OpenSSH parsing."
+            echo "Make sure the secret includes BEGIN/END lines and real line breaks."
+            exit 1
+          fi
+
+          {
+            echo "private_key<<EOF"
+            cat "$KEY_FILE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "SSH private key parsed successfully."
+
       - name: Runner and Docker diagnostics
         run: |
           set -euo pipefail
@@ -103,7 +136,7 @@ jobs:
         with:
           host: ${{ secrets.DROP_HOST }}
           username: root
-          key: ${{ secrets.DROP_SSH_KEY }}
+          key: ${{ steps.ssh_key.outputs.private_key }}
           source: NemeBook/deploy/docker-compose.droplet.yml
           target: /home/root/nemebook
           strip_components: 2
@@ -113,7 +146,7 @@ jobs:
         with:
           host: ${{ secrets.DROP_HOST }}
           username: root
-          key: ${{ secrets.DROP_SSH_KEY }}
+          key: ${{ steps.ssh_key.outputs.private_key }}
           script: |
             set -euxo pipefail
             mkdir -p "${{ env.REMOTE_DEPLOY_DIR }}"
@@ -141,7 +174,7 @@ jobs:
         with:
           host: ${{ secrets.DROP_HOST }}
           username: root
-          key: ${{ secrets.DROP_SSH_KEY }}
+          key: ${{ steps.ssh_key.outputs.private_key }}
           script: |
             set +e
             cd "${{ env.REMOTE_DEPLOY_DIR }}" || true
