@@ -1,0 +1,49 @@
+@{
+    var activeNav = ViewData["ActiveNav"]?.ToString() ?? string.Empty;
+    var fullName = ViewData["ShellUserName"]?.ToString()
+        ?? User.FindFirst("FullName")?.Value
+        ?? "Директор";
+}
+
+<aside class="nb-principal-sidebar" aria-label="Навигация за директор">
+    <a class="nb-principal-logo" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+        <span class="nb-principal-logo-mark">
+            <i class="bi bi-book-half" aria-hidden="true"></i>
+        </span>
+        <span>
+            <strong>NemeBook</strong>
+            <small>Директор</small>
+        </span>
+    </a>
+
+    <nav class="nb-principal-nav">
+        <a class="@(activeNav == "Home" ? "is-active" : null)" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-house-fill" aria-hidden="true"></i>
+            <span>Начало</span>
+        </a>
+        <a class="@(activeNav == "News" ? "is-active" : null)" href="#" aria-disabled="true">
+            <i class="bi bi-newspaper" aria-hidden="true"></i>
+            <span>Новини</span>
+        </a>
+        <a class="@(activeNav == "Classes" ? "is-active" : null)" asp-area="Admin" asp-controller="Classes" asp-action="AllClasses">
+            <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
+            <span>Класове</span>
+        </a>
+        <a class="@(activeNav == "Chats" ? "is-active" : null)" asp-area="" asp-controller="Chat" asp-action="Index">
+            <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+            <span>Чатове</span>
+        </a>
+        <a class="@(activeNav == "Import" ? "is-active" : null)" asp-area="Admin" asp-controller="ProfileImport" asp-action="Index">
+            <i class="bi bi-upload" aria-hidden="true"></i>
+            <span>Импорт на профили</span>
+        </a>
+    </nav>
+
+    <a class="nb-principal-user-card" asp-area="" asp-controller="Account" asp-action="Profile">
+        <span class="nb-principal-user-avatar"></span>
+        <span>
+            <strong>@fullName</strong>
+            <small>Директорски профил</small>
+        </span>
+    </a>
+</aside>

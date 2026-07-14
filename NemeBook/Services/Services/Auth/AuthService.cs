@@ -43,7 +43,7 @@ public class AuthService : IAuthService
 
         if (!user.IsActive)
         {
-            _logger.LogWarning("Login failed - user is not active: {Email}", request.Email);
+            _logger.LogWarning("Login failed - user is inactive: {Email}", request.Email);
             return null;
         }
 

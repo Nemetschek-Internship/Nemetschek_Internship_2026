@@ -406,6 +406,9 @@ namespace Data.Migrations
                     b.Property<Guid?>("AbsenceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ChatId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -420,6 +423,9 @@ namespace Data.Migrations
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
+
+                    b.Property<Guid?>("MessageId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -436,11 +442,15 @@ namespace Data.Migrations
 
                     b.HasIndex("AbsenceId");
 
+                    b.HasIndex("ChatId");
+
                     b.HasIndex("EventId");
 
                     b.HasIndex("FeedbackId");
 
                     b.HasIndex("GradeId");
+
+                    b.HasIndex("MessageId");
 
                     b.HasIndex("UserId");
 
@@ -928,6 +938,11 @@ namespace Data.Migrations
                         .HasForeignKey("AbsenceId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Entities.Models.Chat", "Chat")
+                        .WithMany()
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Entities.Models.Event", "Event")
                         .WithMany()
                         .HasForeignKey("EventId")
@@ -943,6 +958,11 @@ namespace Data.Migrations
                         .HasForeignKey("GradeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Entities.Models.Message", "Message")
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Entities.Models.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
@@ -951,11 +971,15 @@ namespace Data.Migrations
 
                     b.Navigation("Absence");
 
+                    b.Navigation("Chat");
+
                     b.Navigation("Event");
 
                     b.Navigation("Feedback");
 
                     b.Navigation("Grade");
+
+                    b.Navigation("Message");
 
                     b.Navigation("User");
                 });

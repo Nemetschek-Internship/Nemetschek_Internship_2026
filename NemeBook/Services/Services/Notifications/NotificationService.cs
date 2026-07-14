@@ -12,6 +12,7 @@ public class NotificationService : INotificationService
     private readonly IUserRepository _userRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly IEmailService _emailService;
+    private readonly INotificationPushService? _notificationPushService;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
@@ -19,13 +20,15 @@ public class NotificationService : INotificationService
         IUserRepository userRepository,
         IStudentRepository studentRepository,
         IEmailService emailService,
-        ILogger<NotificationService> logger)
+        ILogger<NotificationService> logger,
+        INotificationPushService? notificationPushService = null)
     {
         _notificationRepository = notificationRepository;
         _userRepository = userRepository;
         _studentRepository = studentRepository;
         _emailService = emailService;
         _logger = logger;
+        _notificationPushService = notificationPushService;
     }
 
     public async Task<Guid> CreateNotificationAsync(
@@ -36,6 +39,8 @@ public class NotificationService : INotificationService
         Guid? gradeId = null,
         Guid? absenceId = null,
         Guid? feedbackId = null,
+        Guid? chatId = null,
+        Guid? messageId = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -50,11 +55,18 @@ public class NotificationService : INotificationService
                 EventId = eventId,
                 GradeId = gradeId,
                 AbsenceId = absenceId,
-                FeedbackId = feedbackId
+                FeedbackId = feedbackId,
+                ChatId = chatId,
+                MessageId = messageId
             };
 
             await _notificationRepository.CreateAsync(notification, cancellationToken);
             _logger.LogInformation("Notification created for user {UserId} with type {NotificationType}", userId, type);
+
+            if (_notificationPushService is not null)
+            {
+                await _notificationPushService.PushAsync(userId, MapToDto(notification), cancellationToken);
+            }
 
             return notification.Id;
         }
@@ -274,7 +286,9 @@ public class NotificationService : INotificationService
             EventId = notification.EventId,
             GradeId = notification.GradeId,
             AbsenceId = notification.AbsenceId,
-            FeedbackId = notification.FeedbackId
+            FeedbackId = notification.FeedbackId,
+            ChatId = notification.ChatId,
+            MessageId = notification.MessageId
         };
     }
 }

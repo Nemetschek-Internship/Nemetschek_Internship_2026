@@ -63,6 +63,8 @@ public class PrincipalClassStudentViewModel
 {
     public Guid StudentId { get; set; }
 
+    public Guid UserId { get; set; }
+
     public int ClassNumber { get; set; }
 
     public string FullName { get; set; } = string.Empty;

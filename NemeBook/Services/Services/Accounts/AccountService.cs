@@ -88,6 +88,7 @@ public class AccountService : IAccountService
         }
 
         passwordResetToken.User.Password = _passwordHasher.HashPassword(password);
+        passwordResetToken.User.IsActive = true;
 
         await _accountsRepository.UpdateAsync(passwordResetToken.User, cancellationToken);
         await _passwordResetRepository.DeleteAsync(passwordResetToken.Id, cancellationToken);

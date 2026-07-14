@@ -59,7 +59,7 @@ Console.WriteLine($"[TEST] Attempting send via: {smtpValues.Username}");
 try
 {
     await emailService.SendNotificationEmailAsync(
-        "boris.velkov.highschool@buditel.bg",
+        "georgi.georgiev.highschool@buditel.bg",
         "Jane Doe",
         "Final Integration Test",
         $"Success! Time: {DateTime.Now}"

@@ -6,6 +6,8 @@ public interface IChatService
 {
     Task<IReadOnlyList<Chat>> GetChatsForUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    Task<Chat> GetChatByIdAsync(Guid requesterUserId, Guid chatId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Message>> GetMessagesAsync(Guid requesterUserId, Guid chatId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<User>> SearchAvailableContactsAsync(Guid requesterUserId, string? searchTerm, CancellationToken cancellationToken = default);

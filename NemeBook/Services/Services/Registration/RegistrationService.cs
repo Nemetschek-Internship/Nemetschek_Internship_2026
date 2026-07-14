@@ -69,16 +69,6 @@ public class RegistrationService : IRegistrationService
             var existingUser = await accountsRepository.GetByEmailAsync(email, cancellationToken);
             if (existingUser is not null)
             {
-                if (await ResendInvitationForInactiveUserAsync(
-                    existingUser,
-                    UserRole.Student,
-                    RegistrationInvitationType.SetPassword,
-                    Array.Empty<Guid>(),
-                    cancellationToken))
-                {
-                    result.CreatedInvitations++;
-                }
-
                 continue;
             }
 
@@ -160,16 +150,6 @@ public class RegistrationService : IRegistrationService
             var existingUser = await accountsRepository.GetByEmailAsync(email, cancellationToken);
             if (existingUser is not null)
             {
-                if (await ResendInvitationForInactiveUserAsync(
-                    existingUser,
-                    UserRole.Teacher,
-                    RegistrationInvitationType.SetPassword,
-                    Array.Empty<Guid>(),
-                    cancellationToken))
-                {
-                    result.CreatedInvitations++;
-                }
-
                 continue;
             }
 
@@ -326,7 +306,7 @@ public class RegistrationService : IRegistrationService
             await accountsRepository.UpdateAsync(user, cancellationToken);
         }
 
-        await CreateOrUpdateParentProfileAsync(user.Id, invitation.Students.Select(student => student.Id).ToList(), cancellationToken);
+            await CreateOrUpdateParentProfileAsync(user.Id, invitation.Students.Select(student => student.Id).ToList(), cancellationToken);
 
         invitation.UserId = user.Id;
         invitation.UsedAtUtc = DateTime.UtcNow;
@@ -422,16 +402,6 @@ public class RegistrationService : IRegistrationService
             if (createdProfile)
             {
                 result.CreatedProfiles++;
-            }
-
-            if (await ResendInvitationForInactiveUserAsync(
-                existingUser,
-                UserRole.Parent,
-                RegistrationInvitationType.ParentSignUp,
-                studentIds,
-                cancellationToken))
-            {
-                result.CreatedInvitations++;
             }
 
             return;

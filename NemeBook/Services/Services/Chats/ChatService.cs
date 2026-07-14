@@ -41,12 +41,22 @@ public class ChatService : IChatService
 
     public async Task<IReadOnlyList<Chat>> GetChatsForUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        await GetUserOrThrowAsync(userId, cancellationToken);
+        var requester = await GetUserOrThrowAsync(userId, cancellationToken);
 
         var chats = await chatRepository.GetAllAsync(cancellationToken);
         return chats
             .Where(chat => chat.Users.Any(user => user.Id == userId))
+            .Where(chat => !IsCustomGroupChat(chat))
+            .Where(chat => CanUserSeeChat(requester, chat))
             .ToList();
+    }
+
+    public async Task<Chat> GetChatByIdAsync(Guid requesterUserId, Guid chatId, CancellationToken cancellationToken = default)
+    {
+        await EnsureUserCanAccessChatAsync(requesterUserId, chatId, cancellationToken);
+
+        return await chatRepository.GetByIdAsync(chatId, cancellationToken)
+            ?? throw new InvalidOperationException("Chat was not found.");
     }
 
     public async Task<IReadOnlyList<Message>> GetMessagesAsync(Guid requesterUserId, Guid chatId, CancellationToken cancellationToken = default)
@@ -65,7 +75,7 @@ public class ChatService : IChatService
         var allowedContactIds = await GetAllowedDirectContactIdsAsync(requesterUserId, cancellationToken);
         var users = await userRepository.GetAllAsync(cancellationToken);
 
-        var query = users.Where(user => allowedContactIds.Contains(user.Id));
+        var query = users.Where(user => allowedContactIds.Contains(user.Id) && !user.IsDeleted && user.IsActive);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -77,7 +87,11 @@ public class ChatService : IChatService
                 user.Email.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
-        return query.ToList();
+        return query
+            .OrderBy(user => user.FirstName)
+            .ThenBy(user => user.LastName)
+            .ThenBy(user => user.Email)
+            .ToList();
     }
 
     public async Task<Chat> GetOrCreateDirectChatAsync(Guid requesterUserId, Guid targetUserId, CancellationToken cancellationToken = default)
@@ -105,6 +119,7 @@ public class ChatService : IChatService
 
         var chats = await chatRepository.GetAllAsync(cancellationToken);
         var existingDirectChat = chats.FirstOrDefault(chat =>
+            string.IsNullOrWhiteSpace(chat.Name) &&
             chat.Users.Count == 2 &&
             chat.Users.Any(user => user.Id == requesterUserId) &&
             chat.Users.Any(user => user.Id == targetUserId));
@@ -169,7 +184,7 @@ public class ChatService : IChatService
 
         var users = await userRepository.GetAllAsync(cancellationToken);
         var participants = users
-            .Where(user => participantIds.Contains(user.Id))
+            .Where(user => participantIds.Contains(user.Id) && user.IsActive)
             .ToList();
 
         var chat = new Chat
@@ -201,7 +216,7 @@ public class ChatService : IChatService
 
         var users = await userRepository.GetAllAsync(cancellationToken);
         var participants = users
-            .Where(user => user.Role is UserRole.Teacher or UserRole.Principal)
+            .Where(user => user.IsActive && (user.Role is UserRole.Teacher or UserRole.Principal))
             .ToList();
 
         var chat = new Chat
@@ -257,6 +272,7 @@ public class ChatService : IChatService
 
     private async Task EnsureUserCanAccessChatAsync(Guid userId, Guid chatId, CancellationToken cancellationToken)
     {
+        var requester = await GetUserOrThrowAsync(userId, cancellationToken);
         var chat = await chatRepository.GetByIdAsync(chatId, cancellationToken)
             ?? throw new InvalidOperationException("Чатът не беше намерен.");
 
@@ -264,13 +280,33 @@ public class ChatService : IChatService
         {
             throw new UnauthorizedAccessException("User is not part of this chat.");
         }
+
+        if (IsCustomGroupChat(chat))
+        {
+            throw new UnauthorizedAccessException("Custom group chats are disabled.");
+        }
+
+        if (!CanUserSeeChat(requester, chat))
+        {
+            throw new UnauthorizedAccessException("User is not allowed to access this chat.");
+        }
+    }
+
+    private static bool IsCustomGroupChat(Chat chat)
+    {
+        return chat.Name?.StartsWith("GROUP:", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static bool CanUserSeeChat(User requester, Chat chat)
+    {
+        return requester.Role != UserRole.Student || chat.Users.All(user => user.Role != UserRole.Principal);
     }
 
     private async Task<HashSet<Guid>> GetAllowedDirectContactIdsAsync(Guid requesterUserId, CancellationToken cancellationToken)
     {
-        var requester = await GetUserOrThrowAsync(requesterUserId, cancellationToken);
-
         var users = await userRepository.GetAllAsync(cancellationToken);
+        var requester = users.FirstOrDefault(user => user.Id == requesterUserId)
+            ?? throw new InvalidOperationException("Потребителят не беше намерен.");
         var students = await studentRepository.GetAllAsync(cancellationToken);
         var parents = await parentRepository.GetAllAsync(cancellationToken);
         var teachers = await teacherRepository.GetAllAsync(cancellationToken);
@@ -421,7 +457,8 @@ public class ChatService : IChatService
     private static HashSet<Guid> GetAllowedForPrincipal(IReadOnlyList<User> users)
     {
         return users
-            .Where(user => user.Role is UserRole.Teacher or UserRole.Parent)
+            .Where(user => !user.IsDeleted)
+            .Where(user => user.IsActive)
             .Select(user => user.Id)
             .ToHashSet();
     }
