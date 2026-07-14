@@ -1,6 +1,6 @@
 services:
   mssql:
-    image: ${MSSQL_IMAGE:-registry.digitalocean.com/nemebookdocr/myapp:mssql-latest}
+    image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: nemebook-mssql
     env_file:
       - .env

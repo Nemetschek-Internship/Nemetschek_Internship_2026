@@ -13,7 +13,6 @@ env:
   DOCR_REGISTRY_NAME: nemebookdocr
   DOCR_REPOSITORY: myapp
   WEB_IMAGE_TAG: web-latest
-  MSSQL_IMAGE_TAG: mssql-latest
   REMOTE_DEPLOY_DIR: /home/root/nemebook
 
 concurrency:
@@ -39,13 +38,6 @@ jobs:
           docker build -t "$WEB_IMAGE" -f NemeBook/Web/Dockerfile NemeBook
           docker push "$WEB_IMAGE"
 
-      - name: Build and push MSSQL image
-        run: |
-          REPOSITORY="${{ env.DOCR_REGISTRY_HOST }}/${{ env.DOCR_REGISTRY_NAME }}/${{ env.DOCR_REPOSITORY }}"
-          MSSQL_IMAGE="$REPOSITORY:${{ env.MSSQL_IMAGE_TAG }}"
-          docker build -t "$MSSQL_IMAGE" -f NemeBook/Mssql/Dockerfile NemeBook/Mssql
-          docker push "$MSSQL_IMAGE"
-
       - name: Upload droplet compose file
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -70,7 +62,6 @@ jobs:
             echo "${{ secrets.DOCREDS }}" | docker login "${{ env.DOCR_REGISTRY_HOST }}" -u "${{ secrets.DOCREDS_USER }}" --password-stdin
 
             export WEB_IMAGE="${{ env.DOCR_REGISTRY_HOST }}/${{ env.DOCR_REGISTRY_NAME }}/${{ env.DOCR_REPOSITORY }}:${{ env.WEB_IMAGE_TAG }}"
-            export MSSQL_IMAGE="${{ env.DOCR_REGISTRY_HOST }}/${{ env.DOCR_REGISTRY_NAME }}/${{ env.DOCR_REPOSITORY }}:${{ env.MSSQL_IMAGE_TAG }}"
 
             docker compose -f docker-compose.droplet.yml pull
             docker compose -f docker-compose.droplet.yml up -d --renew-anon-volumes --remove-orphans
