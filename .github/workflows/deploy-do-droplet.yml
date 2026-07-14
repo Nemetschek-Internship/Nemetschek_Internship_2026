@@ -27,16 +27,76 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Preflight debug info
+        run: |
+          set -euo pipefail
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "DOCR host: ${{ env.DOCR_REGISTRY_HOST }}"
+          echo "DOCR registry: ${{ env.DOCR_REGISTRY_NAME }}"
+          echo "DOCR repository: ${{ env.DOCR_REPOSITORY }}"
+          echo "Remote deploy dir: ${{ env.REMOTE_DEPLOY_DIR }}"
+
+      - name: Validate required files and secrets
+        env:
+          DOCREDS: ${{ secrets.DOCREDS }}
+          DOCREDS_USER: ${{ secrets.DOCREDS_USER }}
+          DROP_HOST: ${{ secrets.DROP_HOST }}
+          DROP_SSH_KEY: ${{ secrets.DROP_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          test -f NemeBook/Web/Dockerfile
+          test -f NemeBook/deploy/docker-compose.droplet.yml
+
+          [ -n "$DOCREDS" ] || (echo "Missing secret: DOCREDS" && exit 1)
+          [ -n "$DOCREDS_USER" ] || (echo "Missing secret: DOCREDS_USER" && exit 1)
+          [ -n "$DROP_HOST" ] || (echo "Missing secret: DROP_HOST" && exit 1)
+          [ -n "$DROP_SSH_KEY" ] || (echo "Missing secret: DROP_SSH_KEY" && exit 1)
+
+          echo "Secrets check passed (values are masked by GitHub)."
+          echo "DOCREDS_USER length: ${#DOCREDS_USER}"
+          echo "DROP_HOST length: ${#DROP_HOST}"
+
+      - name: Runner and Docker diagnostics
+        run: |
+          set -euo pipefail
+          uname -a
+          docker version
+          docker info
+          docker system df
+          df -h
+
       - name: Log in to DOCR
         run: |
+          set -euo pipefail
           echo "${{ secrets.DOCREDS }}" | docker login "${{ env.DOCR_REGISTRY_HOST }}" -u "${{ secrets.DOCREDS_USER }}" --password-stdin
 
       - name: Build and push MVC image
         run: |
+          set -euo pipefail
           REPOSITORY="${{ env.DOCR_REGISTRY_HOST }}/${{ env.DOCR_REGISTRY_NAME }}/${{ env.DOCR_REPOSITORY }}"
           WEB_IMAGE="$REPOSITORY:${{ env.WEB_IMAGE_TAG }}"
+
+          echo "Building image: $WEB_IMAGE"
           docker build -t "$WEB_IMAGE" -f NemeBook/Web/Dockerfile NemeBook
+
+          echo "Built image metadata:"
+          docker image inspect "$WEB_IMAGE" --format 'id={{.Id}} size={{.Size}} created={{.Created}}'
+
+          echo "Pushing image: $WEB_IMAGE"
           docker push "$WEB_IMAGE"
+
+      - name: Verify pushed image manifest
+        run: |
+          set -euo pipefail
+          REPOSITORY="${{ env.DOCR_REGISTRY_HOST }}/${{ env.DOCR_REGISTRY_NAME }}/${{ env.DOCR_REPOSITORY }}"
+          WEB_IMAGE="$REPOSITORY:${{ env.WEB_IMAGE_TAG }}"
+          docker manifest inspect "$WEB_IMAGE" > /dev/null
+          echo "Remote manifest is available for $WEB_IMAGE"
 
       - name: Upload droplet compose file
         uses: appleboy/scp-action@v0.1.7
@@ -55,9 +115,16 @@ jobs:
           username: root
           key: ${{ secrets.DROP_SSH_KEY }}
           script: |
-            set -e
+            set -euxo pipefail
             mkdir -p "${{ env.REMOTE_DEPLOY_DIR }}"
             cd "${{ env.REMOTE_DEPLOY_DIR }}"
+
+            pwd
+            ls -la
+            docker version
+            docker compose version || true
+            docker system df
+            df -h
 
             echo "${{ secrets.DOCREDS }}" | docker login "${{ env.DOCR_REGISTRY_HOST }}" -u "${{ secrets.DOCREDS_USER }}" --password-stdin
 
@@ -65,4 +132,26 @@ jobs:
 
             docker compose -f docker-compose.droplet.yml pull
             docker compose -f docker-compose.droplet.yml up -d --renew-anon-volumes --remove-orphans
+            docker compose -f docker-compose.droplet.yml ps
             docker image prune -f
+
+      - name: Collect droplet debug logs on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROP_HOST }}
+          username: root
+          key: ${{ secrets.DROP_SSH_KEY }}
+          script: |
+            set +e
+            cd "${{ env.REMOTE_DEPLOY_DIR }}" || true
+            echo "===== docker compose ps ====="
+            docker compose -f docker-compose.droplet.yml ps || true
+            echo "===== web logs (last 200) ====="
+            docker compose -f docker-compose.droplet.yml logs web --tail 200 || true
+            echo "===== mssql logs (last 200) ====="
+            docker compose -f docker-compose.droplet.yml logs mssql --tail 200 || true
+            echo "===== docker system df ====="
+            docker system df || true
+            echo "===== filesystem usage ====="
+            df -h || true
