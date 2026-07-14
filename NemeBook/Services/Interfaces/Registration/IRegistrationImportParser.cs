@@ -12,7 +12,4 @@ public interface IRegistrationImportParser
         Stream fileStream,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ParentImportDto>> ParseParentsAsync(
-        Stream fileStream,
-        CancellationToken cancellationToken = default);
 }

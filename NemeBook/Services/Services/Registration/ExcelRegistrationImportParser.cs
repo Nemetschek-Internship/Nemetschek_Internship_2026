@@ -67,25 +67,6 @@ public class ExcelRegistrationImportParser : IRegistrationImportParser
         return Task.FromResult(teachers);
     }
 
-    public Task<IReadOnlyList<ParentImportDto>> ParseParentsAsync(
-        Stream fileStream,
-        CancellationToken cancellationToken = default)
-    {
-        using var workbook = new XLWorkbook(fileStream);
-        var worksheet = GetWorksheet(workbook, "Parents", "Родители");
-        var rows = ReadRows(worksheet);
-
-        IReadOnlyList<ParentImportDto> parents = rows
-            .Select(row => new ParentImportDto
-            {
-                RowNumber = row.RowNumber,
-                Email = row.GetRequired(EmailHeaders)
-            })
-            .ToList();
-
-        return Task.FromResult(parents);
-    }
-
     private static IXLWorksheet GetWorksheet(XLWorkbook workbook, params string[] preferredNames)
     {
         foreach (var preferredName in preferredNames)

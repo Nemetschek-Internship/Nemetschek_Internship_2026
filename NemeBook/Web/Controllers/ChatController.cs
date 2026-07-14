@@ -35,6 +35,53 @@ public class ChatController : Controller
             return RedirectToAction("Login", "Account");
         }
 
+        return RedirectToAction(GetChatActionName(user.Role), new { targetUserId });
+    }
+
+    [HttpGet("Chat/Student")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> Student(Guid? targetUserId, CancellationToken cancellationToken)
+    {
+        return await ChatPageAsync(UserRole.Student, targetUserId, cancellationToken);
+    }
+
+    [HttpGet("Chat/Teacher")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> Teacher(Guid? targetUserId, CancellationToken cancellationToken)
+    {
+        return await ChatPageAsync(UserRole.Teacher, targetUserId, cancellationToken);
+    }
+
+    [HttpGet("Chat/Parent")]
+    [Authorize(Roles = "Parent")]
+    public async Task<IActionResult> Parent(Guid? targetUserId, CancellationToken cancellationToken)
+    {
+        return await ChatPageAsync(UserRole.Parent, targetUserId, cancellationToken);
+    }
+
+    [HttpGet("Chat/Principal")]
+    [Authorize(Roles = "Principal")]
+    public async Task<IActionResult> Principal(Guid? targetUserId, CancellationToken cancellationToken)
+    {
+        return await ChatPageAsync(UserRole.Principal, targetUserId, cancellationToken);
+    }
+
+    private async Task<IActionResult> ChatPageAsync(
+        UserRole expectedRole,
+        Guid? targetUserId,
+        CancellationToken cancellationToken)
+    {
+        var user = await GetCurrentUserAsync(cancellationToken);
+        if (user is null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        if (user.Role != expectedRole)
+        {
+            return RedirectToAction(GetChatActionName(user.Role), new { targetUserId });
+        }
+
         var chats = await GetChatsForUserSafelyAsync(user.Id, cancellationToken);
 
         var model = new ChatIndexViewModel
@@ -43,11 +90,13 @@ public class ChatController : Controller
             CurrentUserName = FormatFullName(user),
             CurrentUserInitials = FormatInitials(user.FirstName, user.LastName),
             CurrentUserRole = GetRoleDisplayName(user.Role),
+            CurrentUserRoleValue = user.Role,
+            AllowedContactDescription = GetAllowedContactDescription(user.Role),
             PendingTargetUserId = targetUserId,
             Chats = await MapChatsAsync(user.Id, chats, cancellationToken)
         };
 
-        return View(model);
+        return View("Index", model);
     }
 
     [HttpGet]
@@ -263,6 +312,30 @@ public class ChatController : Controller
             UserRole.Teacher => "Учител",
             UserRole.Principal => "Директор",
             _ => role.ToString()
+        };
+    }
+
+    private static string GetAllowedContactDescription(UserRole role)
+    {
+        return role switch
+        {
+            UserRole.Student => "учител",
+            UserRole.Teacher => "ученик или родител",
+            UserRole.Parent => "учител или директор",
+            UserRole.Principal => "потребител",
+            _ => "потребител"
+        };
+    }
+
+    private static string GetChatActionName(UserRole role)
+    {
+        return role switch
+        {
+            UserRole.Student => nameof(Student),
+            UserRole.Teacher => nameof(Teacher),
+            UserRole.Parent => nameof(Parent),
+            UserRole.Principal => nameof(Principal),
+            _ => nameof(Index)
         };
     }
 }

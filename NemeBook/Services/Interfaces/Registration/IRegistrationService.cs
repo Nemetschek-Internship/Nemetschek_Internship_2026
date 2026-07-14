@@ -13,10 +13,6 @@ public interface IRegistrationService
         IReadOnlyCollection<TeacherImportDto> teachers,
         CancellationToken cancellationToken = default);
 
-    Task<RegistrationImportResult> ImportParentsAsync(
-        IReadOnlyCollection<ParentImportDto> parents,
-        CancellationToken cancellationToken = default);
-
     Task CompleteSetPasswordAsync(
         CompleteSetPasswordRequest request,
         CancellationToken cancellationToken = default);

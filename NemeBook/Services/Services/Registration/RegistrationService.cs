@@ -197,29 +197,6 @@ public class RegistrationService : IRegistrationService
         return result;
     }
 
-    public async Task<RegistrationImportResult> ImportParentsAsync(
-        IReadOnlyCollection<ParentImportDto> parents,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(parents);
-
-        var result = new RegistrationImportResult { TotalRows = parents.Count };
-        var importedEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var parentImport in parents)
-        {
-            var email = NormalizeEmail(parentImport.Email);
-            if (!ValidateParentImport(parentImport, email, importedEmails, result))
-            {
-                continue;
-            }
-
-            await InviteOrLinkParentAsync(email, Array.Empty<Guid>(), result, cancellationToken);
-        }
-
-        return result;
-    }
-
     public async Task CompleteSetPasswordAsync(
         CompleteSetPasswordRequest request,
         CancellationToken cancellationToken = default)
@@ -792,15 +769,6 @@ public class RegistrationService : IRegistrationService
             .Select(subjectName => subjectName!)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
-    }
-
-    private static bool ValidateParentImport(
-        ParentImportDto parentImport,
-        string email,
-        HashSet<string> importedEmails,
-        RegistrationImportResult result)
-    {
-        return ValidateImportedEmail(email, importedEmails, parentImport.RowNumber, result);
     }
 
     private static bool ValidateImportedName(

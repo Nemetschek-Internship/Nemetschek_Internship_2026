@@ -45,6 +45,11 @@ public class NotificationService : INotificationService
     {
         try
         {
+            if (await ShouldSkipNotificationAsync(userId, cancellationToken))
+            {
+                return Guid.Empty;
+            }
+
             var notification = new Notification
             {
                 Id = Guid.NewGuid(),
@@ -75,6 +80,18 @@ public class NotificationService : INotificationService
             _logger.LogError(ex, "Error creating notification for user {UserId}", userId);
             throw;
         }
+    }
+
+    private async Task<bool> ShouldSkipNotificationAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user?.Role != UserRole.Principal)
+        {
+            return false;
+        }
+
+        _logger.LogInformation("Notification skipped for principal user {UserId}", userId);
+        return true;
     }
 
     public async Task<List<NotificationDto>> GetUserNotificationsAsync(Guid userId, CancellationToken cancellationToken = default)

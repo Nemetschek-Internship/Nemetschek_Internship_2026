@@ -81,6 +81,7 @@ public class ChatService : IChatService
         {
             var search = searchTerm.Trim();
             query = query.Where(user =>
+                FormatSearchName(user).Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 user.FirstName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 (user.MiddleName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 user.LastName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
@@ -299,7 +300,7 @@ public class ChatService : IChatService
 
     private static bool CanUserSeeChat(User requester, Chat chat)
     {
-        return requester.Role != UserRole.Student || chat.Users.All(user => user.Role != UserRole.Principal);
+        return true;
     }
 
     private async Task<HashSet<Guid>> GetAllowedDirectContactIdsAsync(Guid requesterUserId, CancellationToken cancellationToken)
@@ -323,7 +324,7 @@ public class ChatService : IChatService
         {
             UserRole.Student => GetAllowedForStudent(requesterUserId, students, classSubjects, classes, teacherUserByTeacherId),
             UserRole.Parent => GetAllowedForParent(requesterUserId, parents, classSubjects, classes, teacherUserByTeacherId, principalIds),
-            UserRole.Teacher => GetAllowedForTeacher(requesterUserId, teachers, students, parents, classes, classSubjects, principalIds),
+            UserRole.Teacher => GetAllowedForTeacher(requesterUserId, teachers, students, parents, classes, classSubjects),
             UserRole.Principal => GetAllowedForPrincipal(users),
             _ => new HashSet<Guid>()
         };
@@ -413,8 +414,7 @@ public class ChatService : IChatService
         IReadOnlyList<Student> students,
         IReadOnlyList<Parent> parents,
         IReadOnlyList<Class> classes,
-        IReadOnlyList<ClassSubject> classSubjects,
-        IReadOnlySet<Guid> principalIds)
+        IReadOnlyList<ClassSubject> classSubjects)
     {
         var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == requesterUserId)
             ?? throw new InvalidOperationException("Профилът на учителя не беше намерен.");
@@ -446,11 +446,6 @@ public class ChatService : IChatService
             studentUserIds.Add(parentUserId);
         }
 
-        foreach (var principalId in principalIds)
-        {
-            studentUserIds.Add(principalId);
-        }
-
         return studentUserIds;
     }
 
@@ -461,6 +456,14 @@ public class ChatService : IChatService
             .Where(user => user.IsActive)
             .Select(user => user.Id)
             .ToHashSet();
+    }
+
+    private static string FormatSearchName(User user)
+    {
+        return string.Join(
+            " ",
+            new[] { user.FirstName, user.MiddleName, user.LastName }
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
     }
 
     private async Task<HashSet<Guid>> GetTeacherClassIdsByUserIdAsync(Guid teacherUserId, CancellationToken cancellationToken)

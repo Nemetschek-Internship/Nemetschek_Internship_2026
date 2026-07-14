@@ -26,7 +26,7 @@
     <div class="@shellClass">
         @if (isAdminShell)
         {
-            <partial name="~/Views/Shared/Components/Admin/_AdminNavigation.cshtml" />
+            <partial name="~/Views/Admin/Shared/_PrincipalSideNav.cshtml" model='@(ViewData["PrincipalActiveSection"]?.ToString() ?? ViewData["ActiveNav"]?.ToString())' />
         }
         else if (isTeacherShell)
         {

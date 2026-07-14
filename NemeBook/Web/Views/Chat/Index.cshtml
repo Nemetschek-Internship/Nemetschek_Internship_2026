@@ -1,9 +1,11 @@
+@using Entities.Enums
 @model Web.ViewModels.Chat.ChatIndexViewModel
 
 @{
     Layout = "_AppShell";
     ViewData["Title"] = "Чатове";
-    ViewData["ActiveNav"] = "Chats";
+    ViewData["ActiveNav"] = Model.CurrentUserRoleValue == UserRole.Principal ? "Chat" : "Chats";
+    ViewData["PrincipalActiveSection"] = "Chat";
     ViewData["ShellClass"] = "nb-chat-shell";
     ViewData["MainClass"] = "nb-chat-main";
     ViewData["ShellCurrentUserId"] = Model.CurrentUserId;
@@ -15,14 +17,27 @@
 }
 
 @section TopbarActions {
-    <button class="nb-notification-button" type="button" data-notification-bell aria-label="Нотификации" title="Нотификации">
-        <i class="bi bi-bell-fill"></i>
-        <span class="nb-notification-dot"></span>
-    </button>
+    @if (Model.CurrentUserRoleValue != UserRole.Principal)
+    {
+        <button class="nb-notification-button" type="button" data-notification-bell aria-label="Нотификации" title="Нотификации">
+            <i class="bi bi-bell-fill"></i>
+            <span class="nb-notification-dot"></span>
+        </button>
+    }
     <div class="nb-chat-status">
         <span id="chatConnectionDot" class="nb-chat-connection-dot"></span>
         <span id="chatConnectionText">Свързване</span>
     </div>
+    @if (Model.CurrentUserRoleValue == UserRole.Principal)
+    {
+        <form asp-action="Logout" asp-area="" asp-controller="Account" method="post">
+            @Html.AntiForgeryToken()
+            <button class="nb-principal-action-btn is-logout" type="submit">
+                <span>Изход</span>
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+            </button>
+        </form>
+    }
 }
 
 @section Styles {
@@ -469,7 +484,7 @@
         <div class="nb-chat-search-row">
             <div class="nb-chat-search">
                 <i class="bi bi-search"></i>
-                <input id="chatContactSearch" type="search" placeholder="Търсене на ученик или учител" autocomplete="off" />
+                <input id="chatContactSearch" type="search" placeholder="Търсене на @Model.AllowedContactDescription" autocomplete="off" />
             </div>
             <button id="chatSearchClose" class="nb-chat-icon-button" type="button" aria-label="Затвори търсенето">
                 <i class="bi bi-x-lg"></i>
@@ -477,7 +492,7 @@
         </div>
 
         <div id="chatContacts" class="nb-chat-contacts" aria-live="polite">
-            <div class="nb-chat-contact-empty">Потърсете ученик или учител, за да започнете чат.</div>
+            <div class="nb-chat-contact-empty">Потърсете @Model.AllowedContactDescription, за да започнете чат.</div>
         </div>
     </div>
 

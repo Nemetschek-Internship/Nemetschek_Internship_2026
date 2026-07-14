@@ -7,8 +7,6 @@ public class ProfileImportUploadViewModel
 {
     public IFormFile? StudentsFile { get; set; }
 
-    public IFormFile? ParentsFile { get; set; }
-
     public IFormFile? TeachersFile { get; set; }
 
     public List<ProfileImportSectionResult> Results { get; set; } = new List<ProfileImportSectionResult>();

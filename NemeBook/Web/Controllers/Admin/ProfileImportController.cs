@@ -40,7 +40,7 @@ public class ProfileImportController : Controller
         ProfileImportUploadViewModel model,
         CancellationToken cancellationToken)
     {
-        if (model.StudentsFile is null && model.ParentsFile is null && model.TeachersFile is null)
+        if (model.StudentsFile is null && model.TeachersFile is null)
         {
             ModelState.AddModelError(string.Empty, "Изберете поне един Excel файл за импорт.");
             return View("Index", model);
@@ -48,7 +48,6 @@ public class ProfileImportController : Controller
 
         await ImportStudentsAsync(model, cancellationToken);
         await ImportTeachersAsync(model, cancellationToken);
-        await ImportParentsAsync(model, cancellationToken);
 
         if (HasImportIssues(model))
         {
@@ -116,34 +115,6 @@ public class ProfileImportController : Controller
         catch (Exception ex)
         {
             logger.LogError(ex, "Teacher profile import failed.");
-            result.ErrorMessage = ex.Message;
-        }
-
-        model.Results.Add(result);
-    }
-
-    private async Task ImportParentsAsync(ProfileImportUploadViewModel model, CancellationToken cancellationToken)
-    {
-        if (!IsProvided(model.ParentsFile))
-        {
-            return;
-        }
-
-        var result = new ProfileImportSectionResult
-        {
-            Title = "Родители",
-            FileName = model.ParentsFile!.FileName
-        };
-
-        try
-        {
-            await using var stream = model.ParentsFile.OpenReadStream();
-            var parents = await importParser.ParseParentsAsync(stream, cancellationToken);
-            result.Result = await registrationService.ImportParentsAsync(parents, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Parent profile import failed.");
             result.ErrorMessage = ex.Message;
         }
 
