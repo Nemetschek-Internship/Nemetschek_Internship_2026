@@ -1,0 +1,12 @@
+﻿.app-layout {
+    display: flex;
+    height: 100vh;
+    background: #f7f4ef;
+    font-family: 'Inter', sans-serif;
+}
+
+.app-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}

@@ -1,0 +1,37 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <title>NemoBook Parent Portal</title>
+
+    <!-- Global Layout CSS -->
+    <link rel="stylesheet" href="~/css/_layout.css" />
+
+    <!-- Parent Portal Layout CSS -->
+    <link rel="stylesheet" href="~/css/parent/layout.css" />
+
+    <!-- Sidebar CSS -->
+    <link rel="stylesheet" href="~/css/parent/sidebar.css" />
+
+    <!-- Page‑specific CSS -->
+    @RenderSection("Styles", required: false)
+</head>
+
+<body>
+    <div class="nb-parent-layout">
+
+        <!-- Sidebar -->
+        @await Html.PartialAsync("_ParentSidebar")
+
+        <!-- Main Content -->
+        <main class="nb-parent-content">
+            @RenderBody()
+        </main>
+
+    </div>
+</body>
+</html>

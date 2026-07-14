@@ -1,0 +1,24 @@
+﻿<nav class="nb-sidebar">
+    <div class="nb-sidebar-logo">NemoBook</div>
+
+    <div class="nb-sidebar-nav">
+        <a asp-controller="ParentHome" asp-action="Index"
+           class="@(ViewContext.RouteData.Values["controller"]!.ToString() == "ParentHome" ? "active" : "")">
+            Home
+        </a>
+
+        <a asp-controller="ParentChats" asp-action="Index"
+           class="@(ViewContext.RouteData.Values["controller"]!.ToString() == "ParentChats" ? "active" : "")">
+            Teacher Chats
+        </a>
+
+        <a asp-controller="ParentSchedule" asp-action="Index"
+           class="@(ViewContext.RouteData.Values["controller"]!.ToString() == "ParentSchedule" ? "active" : "")">
+            Schedule
+        </a>
+
+        <a asp-controller="Account" asp-action="Logout" class="nb-sidebar-logout">
+            Log out
+        </a>
+    </div>
+</nav>

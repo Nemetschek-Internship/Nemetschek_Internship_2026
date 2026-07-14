@@ -1,0 +1,41 @@
+﻿.schedule-container {
+    background: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.schedule-days {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+    .schedule-days button {
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        background: #f0e8df;
+        cursor: pointer;
+    }
+
+        .schedule-days button.active {
+            background: #e88a3c;
+            color: #fff;
+        }
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .schedule-table th,
+    .schedule-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .schedule-table th {
+        text-align: left;
+        font-weight: 600;
+    }
