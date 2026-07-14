@@ -429,7 +429,7 @@ public class PrincipalReportsService : IPrincipalReportsService
         if (worksheetPart.Worksheet.GetFirstChild<S.Drawing>() is null)
         {
             var drawingRelationshipId = worksheetPart.GetIdOfPart(drawingsPart);
-            worksheetPart.Worksheet.Append(new S.Drawing { Id = drawingRelationshipId });
+            InsertWorksheetDrawing(worksheetPart.Worksheet, drawingRelationshipId);
             worksheetPart.Worksheet.Save();
         }
 
@@ -460,12 +460,10 @@ public class PrincipalReportsService : IPrincipalReportsService
                         new C.LineChartSeries(
                             new C.Index { Val = 0U },
                             new C.Order { Val = 0U },
-                            new C.SeriesText(new C.StringLiteral(
-                                new C.PointCount { Val = 1U },
-                                new C.StringPoint { Index = 0U, NumericValue = new C.NumericValue(metricLabel) })),
+                            new C.SeriesText(new C.NumericValue(metricLabel)),
+                            new C.Marker(new C.Symbol { Val = C.MarkerStyleValues.Circle }),
                             new C.CategoryAxisData(new C.StringReference(new C.Formula(categoryRange))),
                             new C.Values(new C.NumberReference(new C.Formula(valueRange))),
-                            new C.Marker(new C.Symbol { Val = C.MarkerStyleValues.Circle }),
                             new C.Smooth { Val = false }),
                         new C.AxisId { Val = categoryAxisId },
                         new C.AxisId { Val = valueAxisId }),
@@ -493,6 +491,30 @@ public class PrincipalReportsService : IPrincipalReportsService
                     new C.LegendPosition { Val = C.LegendPositionValues.Bottom },
                     new C.Layout()),
                 new C.PlotVisibleOnly { Val = true }));
+    }
+
+    private static void InsertWorksheetDrawing(S.Worksheet worksheet, string drawingRelationshipId)
+    {
+        var drawing = new S.Drawing { Id = drawingRelationshipId };
+        var insertBefore = worksheet.Elements()
+            .FirstOrDefault(element =>
+                element is S.LegacyDrawing ||
+                element is S.LegacyDrawingHeaderFooter ||
+                element is S.DrawingHeaderFooter ||
+                element is S.Picture ||
+                element is S.OleObjects ||
+                element is S.Controls ||
+                element is S.WebPublishItems ||
+                element is S.TableParts ||
+                element is S.WorksheetExtensionList);
+
+        if (insertBefore is null)
+        {
+            worksheet.Append(drawing);
+            return;
+        }
+
+        worksheet.InsertBefore(drawing, insertBefore);
     }
 
     private static C.Title CreateChartTitle(string title)

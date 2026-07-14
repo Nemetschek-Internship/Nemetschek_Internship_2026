@@ -1374,6 +1374,39 @@ body {
   width: 132px;
   height: 42px;
   flex: 0 0 auto;
+  background: linear-gradient(135deg, var(--nb-orange), var(--nb-orange-dark));
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.18);
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.nb-report-export-btn i {
+  font-size: 15px;
+  transition: transform 0.16s ease;
+}
+
+.nb-report-export-btn span,
+.nb-report-export-btn i {
+  color: #ffffff;
+}
+
+.nb-report-export-btn:hover,
+.nb-report-export-btn:focus {
+  background: linear-gradient(135deg, var(--nb-orange-dark), #c84f0a);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(249, 115, 22, 0.3);
+  filter: saturate(1.08);
+}
+
+.nb-report-export-btn:hover i,
+.nb-report-export-btn:focus i {
+  transform: translateY(1px);
+}
+
+.nb-report-export-btn:focus-visible {
+  outline: 3px solid rgba(249, 115, 22, 0.25);
+  outline-offset: 3px;
 }
 
 .nb-report-filters {
@@ -1434,9 +1467,7 @@ body {
 }
 
 .nb-report-filters > .nb-principal-action-btn:hover,
-.nb-report-filters > .nb-principal-action-btn:focus,
-.nb-report-export-btn:hover,
-.nb-report-export-btn:focus {
+.nb-report-filters > .nb-principal-action-btn:focus {
   background: var(--nb-orange-dark);
   color: #ffffff;
   transform: translateY(-1px);
