@@ -47,6 +47,11 @@ public class AccountController : Controller
                 {
                     return RedirectToAction("Index", "Student");
                 }
+
+                if (currentUser?.Role == UserRole.Teacher)
+                {
+                    return RedirectToAction("Index", "Teacher");
+                }
             }
 
             return RedirectToAction("Index", "Home");
@@ -82,6 +87,11 @@ public class AccountController : Controller
         if (user.Role == UserRole.Student)
         {
             return RedirectToAction("Index", "Student");
+        }
+
+        if (user.Role == UserRole.Teacher)
+        {
+            return RedirectToAction("Index", "Teacher");
         }
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))

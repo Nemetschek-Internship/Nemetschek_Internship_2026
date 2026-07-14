@@ -1,0 +1,788 @@
+@model Entities.ViewModels.Teachers.TeacherHomeViewModel
+
+@{
+    Layout = "_AppShell";
+    ViewData["Title"] = "Моят клас";
+    ViewData["ActiveNav"] = "MyClass";
+    ViewData["ShellUserName"] = Model.TeacherName;
+    ViewData["ShellUserMeta"] = Model.MainMeta;
+    ViewData["ShellUserInitials"] = Model.TeacherInitials;
+
+    var canCreateRecords = Model.ClassId.HasValue && Model.SubjectId.HasValue;
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+@section Styles {
+<style>
+    .nb-teacher-class-page {
+        min-width: 0;
+        box-sizing: border-box;
+        display: grid;
+        grid-template-columns: minmax(520px, 1fr) 290px;
+        gap: 20px;
+        padding: 28px 34px 44px;
+    }
+    .nb-class-panel,
+    .nb-student-panel {
+        min-width: 0;
+        min-height: 520px;
+        border: 1px solid #eee7df;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
+    }
+    .nb-class-panel {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        padding: 10px 12px 18px;
+    }
+    .nb-class-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 8px;
+        padding: 0;
+    }
+    .nb-class-tab {
+        min-height: 27px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 7px;
+        background: #fff7ef;
+        color: #9b948b;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 850;
+    }
+    .nb-class-tab.is-active {
+        background: #ffffff;
+        color: #f97316;
+        box-shadow: inset 0 0 0 1px #ffe4cc;
+    }
+    .nb-class-search {
+        min-height: 30px;
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: #fbf7f2;
+        color: #b4aea6;
+    }
+    .nb-class-search input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #373b43;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 750;
+    }
+    .nb-class-search input::placeholder {
+        color: #b7b1aa;
+    }
+    .nb-student-list {
+        min-width: 0;
+        display: grid;
+        align-content: start;
+        gap: 2px;
+        overflow-y: auto;
+    }
+    .nb-student-row {
+        min-width: 0;
+        min-height: 38px;
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr) 18px;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .nb-student-row:hover,
+    .nb-student-row:focus-visible,
+    .nb-student-row.is-selected {
+        background: #ffe4c2;
+        outline: none;
+    }
+    .nb-student-dot,
+    .nb-panel-avatar {
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #efece7;
+        color: #9c948b;
+        font-size: 9px;
+        font-weight: 950;
+    }
+    .nb-student-row:nth-child(even) .nb-student-dot,
+    .nb-panel-avatar {
+        background: #ffd9ad;
+        color: #a95508;
+    }
+    .nb-student-dot {
+        width: 18px;
+        height: 18px;
+    }
+    .nb-student-row strong {
+        overflow: hidden;
+        color: #1f232b;
+        font-size: 11px;
+        font-weight: 850;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-student-row i {
+        color: #9a938b;
+        font-size: 10px;
+    }
+    .nb-empty-class {
+        min-height: 86px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        background: #fbf7f2;
+        color: #9f978e;
+        font-size: 12px;
+        font-weight: 850;
+        text-align: center;
+    }
+    .nb-student-panel {
+        box-sizing: border-box;
+        padding: 22px 14px;
+    }
+    .nb-panel-head {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        padding: 0 0 18px;
+        border-bottom: 1px solid #f0e8df;
+    }
+    .nb-panel-avatar {
+        width: 34px;
+        height: 34px;
+    }
+    .nb-panel-head strong {
+        display: block;
+        overflow: hidden;
+        color: #1f232b;
+        font-size: 12px;
+        font-weight: 950;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-panel-head span {
+        display: block;
+        margin-top: 2px;
+        color: #8f887f;
+        font-size: 10px;
+        font-weight: 800;
+    }
+    .nb-panel-section {
+        display: grid;
+        gap: 9px;
+        padding-top: 16px;
+    }
+    .nb-panel-label {
+        color: #77716a;
+        font-size: 10px;
+        font-weight: 900;
+    }
+    .nb-record-count {
+        min-height: 24px;
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: #f2eee9;
+        color: #8e877f;
+        font-size: 11px;
+        font-weight: 950;
+    }
+    .nb-actions {
+        display: grid;
+        gap: 10px;
+    }
+    .nb-action-button {
+        min-height: 32px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 7px;
+        color: #9f5208;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 900;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .nb-action-button.is-primary {
+        background: #ffe4c2;
+        color: #f97316;
+    }
+    .nb-action-button.is-success {
+        background: #dff8e9;
+        color: #159953;
+    }
+    .nb-action-button.is-warning {
+        background: #fff1c8;
+        color: #bf7200;
+    }
+    .nb-action-button[disabled],
+    .nb-action-button[aria-disabled="true"] {
+        cursor: default;
+        opacity: 0.62;
+    }
+    .nb-record-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: grid;
+        place-items: center;
+        padding: 22px;
+        background: rgba(31, 35, 43, 0.42);
+    }
+    .nb-record-modal-backdrop[hidden] {
+        display: none;
+    }
+    .nb-record-modal {
+        width: min(760px, 100%);
+        max-height: min(760px, calc(100vh - 44px));
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        overflow: hidden;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 30px 80px rgba(31, 35, 43, 0.28);
+    }
+    .nb-record-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border-bottom: 1px solid #eee7df;
+    }
+    .nb-record-modal-header h2 {
+        margin: 0;
+        color: #1f232b;
+        font-size: 16px;
+        font-weight: 950;
+    }
+    .nb-record-modal-header p {
+        margin: 4px 0 0;
+        color: #8f887f;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .nb-record-modal-close {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border: 1px solid #f0ded0;
+        border-radius: 50%;
+        background: #fff8f1;
+        color: #e95b0c;
+        cursor: pointer;
+    }
+    .nb-record-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 12px 20px 0;
+    }
+    .nb-record-tabs button {
+        min-height: 34px;
+        border: 0;
+        border-radius: 7px;
+        background: #fbf7f2;
+        color: #8f887f;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+    .nb-record-tabs button.is-active {
+        background: #ffe4c2;
+        color: #f97316;
+    }
+    .nb-record-modal-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 16px 20px 20px;
+    }
+    .nb-record-form {
+        display: grid;
+        gap: 14px;
+    }
+    .nb-record-form[hidden] {
+        display: none;
+    }
+    .nb-record-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .nb-record-field {
+        display: grid;
+        gap: 6px;
+    }
+    .nb-record-field.is-full {
+        grid-column: 1 / -1;
+    }
+    .nb-record-field label {
+        color: #6f6962;
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .nb-record-field input,
+    .nb-record-field select,
+    .nb-record-field textarea {
+        width: 100%;
+        min-height: 38px;
+        border: 1px solid #eee3d8;
+        border-radius: 7px;
+        background: #fffaf5;
+        color: #242832;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 750;
+        padding: 8px 10px;
+    }
+    .nb-record-field textarea {
+        min-height: 82px;
+        resize: vertical;
+    }
+    .nb-record-submit {
+        justify-self: end;
+        min-height: 38px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 7px;
+        background: #f97316;
+        color: #ffffff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 950;
+        cursor: pointer;
+    }
+    .nb-record-unavailable {
+        min-height: 116px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        background: #fbf7f2;
+        color: #8f887f;
+        font-size: 13px;
+        font-weight: 850;
+        text-align: center;
+    }
+    body.nb-record-modal-open {
+        overflow: hidden;
+    }
+    @@media (max-width: 980px) {
+        .nb-teacher-class-page {
+            grid-template-columns: 1fr;
+            padding: 18px;
+        }
+        .nb-class-panel,
+        .nb-student-panel {
+            min-height: auto;
+        }
+    }
+    @@media (max-width: 640px) {
+        .nb-record-grid,
+        .nb-record-tabs {
+            grid-template-columns: 1fr;
+        }
+        .nb-record-modal-backdrop {
+            padding: 10px;
+        }
+        .nb-record-modal {
+            max-height: calc(100vh - 20px);
+        }
+    }
+</style>
+}
+
+<section class="nb-teacher-class-page" aria-label="Моят клас">
+    <article class="nb-class-panel">
+        <div class="nb-class-tabs" role="tablist" aria-label="Действия за класа">
+            <button class="nb-class-tab is-active" type="button">Записи</button>
+            <button class="nb-class-tab" type="button">Корекции</button>
+        </div>
+
+        <label class="nb-class-search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input data-student-search type="search" placeholder="Търси ученик..." aria-label="Търси ученик" />
+        </label>
+
+        @if (Model.Students.Count == 0)
+        {
+            <div class="nb-empty-class">0 ученици</div>
+        }
+        else
+        {
+            <div class="nb-student-list">
+                @foreach (var student in Model.Students)
+                {
+                    <button class="nb-student-row @(student.IsSelected ? "is-selected" : null)"
+                            type="button"
+                            data-student-row
+                            data-student-id="@student.Id"
+                            data-student-name="@student.FullName"
+                            data-student-initials="@student.Initials"
+                            data-student-class="@Model.ClassName"
+                            data-student-record-count="@student.RecordCount">
+                        <span class="nb-student-dot" aria-hidden="true">@student.Initials</span>
+                        <strong>@student.FullName</strong>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </button>
+                }
+            </div>
+        }
+    </article>
+
+    <aside class="nb-student-panel" aria-label="Избран ученик">
+        <div class="nb-panel-head">
+            <span class="nb-panel-avatar" id="selectedStudentInitials" aria-hidden="true">?</span>
+            <span>
+                <strong id="selectedStudentName">Изберете ученик</strong>
+                <span id="selectedStudentClass">Клас @Model.ClassName</span>
+            </span>
+        </div>
+
+        <div class="nb-panel-section">
+            <span class="nb-panel-label">Записи</span>
+            <span class="nb-record-count" id="selectedStudentRecordCount">0</span>
+        </div>
+
+        <div class="nb-panel-section">
+            <span class="nb-panel-label">Действия</span>
+            <div class="nb-actions">
+                @if (canCreateRecords && Model.Students.Count > 0)
+                {
+                    <button class="nb-action-button is-primary" type="button" data-record-open="grade" disabled>+ Оценка</button>
+                    <button class="nb-action-button is-success" type="button" data-record-open="feedback" disabled>+ Забележка / отзив</button>
+                    <button class="nb-action-button is-warning" type="button" data-record-open="absence" disabled>Отсъствие / закъснение</button>
+                }
+                else
+                {
+                    <span class="nb-action-button is-primary" aria-disabled="true">+ Оценка</span>
+                    <span class="nb-action-button is-success" aria-disabled="true">+ Забележка / отзив</span>
+                    <span class="nb-action-button is-warning" aria-disabled="true">Отсъствие / закъснение</span>
+                }
+            </div>
+        </div>
+    </aside>
+</section>
+
+@if (Model.Students.Count > 0)
+{
+    <div class="nb-record-modal-backdrop" data-teacher-record-modal hidden>
+        <section class="nb-record-modal" role="dialog" aria-modal="true" aria-labelledby="teacher-record-title" tabindex="-1">
+            <header class="nb-record-modal-header">
+                <div>
+                    <h2 id="teacher-record-title">Нов запис</h2>
+                    <p><span data-record-student-name>Изберете ученик</span> · <span data-record-student-class>Клас @Model.ClassName</span></p>
+                </div>
+                <button class="nb-record-modal-close" type="button" data-record-close aria-label="Затвори">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </header>
+
+            @if (canCreateRecords)
+            {
+                <div class="nb-record-tabs" role="tablist" aria-label="Тип запис">
+                    <button class="is-active" type="button" data-record-tab="grade">Оценка</button>
+                    <button type="button" data-record-tab="feedback">Отзив</button>
+                    <button type="button" data-record-tab="absence">Отсъствие</button>
+                </div>
+
+                <div class="nb-record-modal-body">
+                    <form class="nb-record-form" method="post" asp-controller="Teacher" asp-action="AddGrade" data-record-form="grade">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ClassId" value="@Model.ClassId" />
+                        <input class="nb-record-student-id" type="hidden" name="StudentId" value="" />
+
+                        <div class="nb-record-grid">
+                            <div class="nb-record-field">
+                                <label for="gradeValue">Оценка</label>
+                                <input id="gradeValue" name="Value" type="number" min="2" max="6" step="0.25" value="6" required />
+                            </div>
+                            <div class="nb-record-field">
+                                <label for="gradeType">Тип</label>
+                                <select id="gradeType" name="Type" required>
+                                    @foreach (var gradeType in Enum.GetValues<Entities.Enums.GradeType>())
+                                    {
+                                        <option value="@gradeType">@GetDisplayName(gradeType)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="nb-record-field is-full">
+                                <label for="gradeNote">Бележка</label>
+                                <textarea id="gradeNote" name="Note" placeholder="Кратка бележка към оценката"></textarea>
+                            </div>
+                        </div>
+
+                        <button class="nb-record-submit" type="submit">Запази оценка</button>
+                    </form>
+
+                    <form class="nb-record-form" method="post" asp-controller="Teacher" asp-action="AddFeedback" data-record-form="feedback" hidden>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ClassId" value="@Model.ClassId" />
+                        <input class="nb-record-student-id" type="hidden" name="StudentId" value="" />
+
+                        <div class="nb-record-grid">
+                            <div class="nb-record-field">
+                                <label for="feedbackDate">Дата</label>
+                                <input id="feedbackDate" name="Date" type="date" value="@today" required />
+                            </div>
+                            <div class="nb-record-field">
+                                <label for="feedbackType">Тип</label>
+                                <select id="feedbackType" name="Type" required>
+                                    @foreach (var feedbackType in Enum.GetValues<Entities.Enums.FeedbackType>())
+                                    {
+                                        <option value="@feedbackType">@GetDisplayName(feedbackType)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="nb-record-field is-full">
+                                <label for="feedbackDescription">Описание</label>
+                                <textarea id="feedbackDescription" name="Description" placeholder="Описание на отзива" required></textarea>
+                            </div>
+                        </div>
+
+                        <button class="nb-record-submit" type="submit">Запази отзив</button>
+                    </form>
+
+                    <form class="nb-record-form" method="post" asp-controller="Teacher" asp-action="AddAbsence" data-record-form="absence" hidden>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ClassId" value="@Model.ClassId" />
+                        <input class="nb-record-student-id" type="hidden" name="StudentId" value="" />
+
+                        <div class="nb-record-grid">
+                            <div class="nb-record-field">
+                                <label for="absenceDate">Дата</label>
+                                <input id="absenceDate" name="Date" type="date" value="@today" required />
+                            </div>
+                            <div class="nb-record-field">
+                                <label for="lessonNumber">Час</label>
+                                <input id="lessonNumber" name="LessonNumber" type="number" min="1" max="12" value="1" required />
+                            </div>
+                            <div class="nb-record-field">
+                                <label for="absenceType">Тип</label>
+                                <select id="absenceType" name="Type" required>
+                                    @foreach (var absenceType in Enum.GetValues<Entities.Enums.AbsenceType>())
+                                    {
+                                        <option value="@absenceType">@GetDisplayName(absenceType)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="nb-record-field">
+                                <label for="absenceStatus">Статус</label>
+                                <select id="absenceStatus" name="Status" required>
+                                    @foreach (var absenceStatus in Enum.GetValues<Entities.Enums.AbsenceStatus>())
+                                    {
+                                        <option value="@absenceStatus">@GetDisplayName(absenceStatus)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="nb-record-field">
+                                <label for="excuseReason">Причина</label>
+                                <select id="excuseReason" name="ExcuseReason">
+                                    <option value="">Няма</option>
+                                    @foreach (var excuseReason in Enum.GetValues<Entities.Enums.AbsenceExcuseReason>())
+                                    {
+                                        <option value="@excuseReason">@GetDisplayName(excuseReason)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="nb-record-field is-full">
+                                <label for="excuseNote">Бележка</label>
+                                <textarea id="excuseNote" name="ExcuseNote" placeholder="Допълнителна информация"></textarea>
+                            </div>
+                        </div>
+
+                        <button class="nb-record-submit" type="submit">Запази отсъствие</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="nb-record-modal-body">
+                    <div class="nb-record-unavailable">Няма назначен предмет за този клас. Записите изискват предмет.</div>
+                </div>
+            }
+        </section>
+    </div>
+}
+
+@section Scripts {
+<script>
+(() => {
+const rows = Array.from(document.querySelectorAll("[data-student-row]"));
+const searchInput = document.querySelector("[data-student-search]");
+const modalBackdrop = document.querySelector("[data-teacher-record-modal]");
+const modal = modalBackdrop?.querySelector(".nb-record-modal");
+const closeButtons = document.querySelectorAll("[data-record-close]");
+const tabs = document.querySelectorAll("[data-record-tab]");
+const forms = document.querySelectorAll("[data-record-form]");
+const hiddenStudentInputs = document.querySelectorAll(".nb-record-student-id");
+const sideButtons = document.querySelectorAll("[data-record-open]");
+const selectedName = document.getElementById("selectedStudentName");
+const selectedClass = document.getElementById("selectedStudentClass");
+const selectedInitials = document.getElementById("selectedStudentInitials");
+const selectedRecordCount = document.getElementById("selectedStudentRecordCount");
+const modalStudentName = document.querySelector("[data-record-student-name]");
+const modalStudentClass = document.querySelector("[data-record-student-class]");
+let selectedStudent = null;
+
+const getStudent = (row) => row ? {
+    id: row.dataset.studentId || "",
+    name: row.dataset.studentName || "0",
+    initials: row.dataset.studentInitials || "0",
+    className: row.dataset.studentClass || "0",
+    recordCount: row.dataset.studentRecordCount || "0"
+} : null;
+
+const setSelectedStudent = (row) => {
+    const student = getStudent(row);
+    if (!student) {
+        return null;
+    }
+
+    selectedStudent = row;
+    rows.forEach((currentRow) => currentRow.classList.toggle("is-selected", currentRow === row));
+
+    if (selectedName) {
+        selectedName.textContent = student.name;
+    }
+    if (selectedClass) {
+        selectedClass.textContent = `Клас ${student.className}`;
+    }
+    if (selectedInitials) {
+        selectedInitials.textContent = student.initials;
+    }
+    if (selectedRecordCount) {
+        selectedRecordCount.textContent = student.recordCount;
+    }
+
+    hiddenStudentInputs.forEach((input) => {
+        input.value = student.id;
+    });
+
+    if (modalStudentName) {
+        modalStudentName.textContent = student.name;
+    }
+    if (modalStudentClass) {
+        modalStudentClass.textContent = `Клас ${student.className}`;
+    }
+
+    sideButtons.forEach((button) => {
+        button.disabled = false;
+    });
+
+    return student;
+};
+
+const activateMode = (mode) => {
+    tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.recordTab === mode));
+    forms.forEach((form) => {
+        form.hidden = form.dataset.recordForm !== mode;
+    });
+};
+
+const openModal = (mode = "grade") => {
+    if (!modalBackdrop || !modal || !selectedStudent) {
+        return;
+    }
+
+    setSelectedStudent(selectedStudent);
+    activateMode(mode);
+    modalBackdrop.hidden = false;
+    document.body.classList.add("nb-record-modal-open");
+    modal.focus();
+};
+
+const closeModal = () => {
+    if (!modalBackdrop) {
+        return;
+    }
+
+    modalBackdrop.hidden = true;
+    document.body.classList.remove("nb-record-modal-open");
+    selectedStudent?.focus();
+};
+
+rows.forEach((row) => {
+    row.addEventListener("click", () => {
+        setSelectedStudent(row);
+    });
+});
+
+sideButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        openModal(button.dataset.recordOpen || "grade");
+    });
+});
+
+tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+        activateMode(tab.dataset.recordTab || "grade");
+    });
+});
+
+closeButtons.forEach((button) => {
+    button.addEventListener("click", closeModal);
+});
+
+modalBackdrop?.addEventListener("click", (event) => {
+    if (event.target === modalBackdrop) {
+        closeModal();
+    }
+});
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modalBackdrop && !modalBackdrop.hidden) {
+        closeModal();
+    }
+});
+
+searchInput?.addEventListener("input", () => {
+    const term = searchInput.value.trim().toLowerCase();
+    rows.forEach((row) => {
+        const name = (row.dataset.studentName || "").toLowerCase();
+        row.hidden = term.length > 0 && !name.includes(term);
+    });
+});
+})();
+</script>
+}
+
+@functions {
+    private static string GetDisplayName(Enum value)
+    {
+        var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+        var display = member?
+            .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), false)
+            .OfType<System.ComponentModel.DataAnnotations.DisplayAttribute>()
+            .FirstOrDefault();
+
+        return display?.Name ?? value.ToString();
+    }
+}

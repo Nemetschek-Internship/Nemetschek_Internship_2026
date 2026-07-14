@@ -10,7 +10,6 @@
     ViewData["ShellUserInitials"] = Model.StudentInitials;
 
     var gradeModalIndex = 0;
-    var feedbackModalIndex = 0;
     var absenceModalIndex = 0;
 }
 
@@ -120,6 +119,13 @@
             font-weight: 900;
             cursor: pointer;
         }
+        .nb-grade-chip {
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+        }
+        .nb-grade-chip:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(42, 35, 29, 0.1);
+        }
         .nb-grade-chip:focus-visible,
         .nb-list-button:focus-visible,
         .nb-popup-close:focus-visible,
@@ -202,21 +208,14 @@
             background: #ffe0dc;
             color: #e04434;
         }
-        .nb-list-lines {
+        .nb-list-subject {
             min-width: 0;
-            display: grid;
-            gap: 5px;
-        }
-        .nb-list-line {
-            height: 7px;
-            border-radius: 999px;
-            background: #e8e2da;
-        }
-        .nb-list-line:first-child {
-            width: min(100%, 172px);
-        }
-        .nb-list-line:last-child {
-            width: min(75%, 138px);
+            overflow: hidden;
+            color: #514b45;
+            font-size: 11px;
+            font-weight: 850;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .nb-list-date {
             color: #b1aaa1;
@@ -292,6 +291,32 @@
             gap: 12px;
             padding: 18px 20px 20px;
         }
+        .nb-grade-detail-grid {
+            display: grid;
+            gap: 9px;
+        }
+        .nb-grade-detail-row {
+            min-height: 38px;
+            display: grid;
+            grid-template-columns: 90px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+            padding: 9px 10px;
+            border-radius: 8px;
+            background: #fbf7f2;
+        }
+        .nb-grade-detail-row span:first-child {
+            color: #8d867c;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        .nb-grade-detail-row span:last-child {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            color: #242832;
+            font-size: 13px;
+            font-weight: 850;
+        }
         .nb-popup-meta {
             display: flex;
             flex-wrap: wrap;
@@ -317,6 +342,24 @@
             color: #514b45;
             font-size: 13px;
             line-height: 1.45;
+        }
+        .nb-feedback-popup-list {
+            max-height: min(58vh, 520px);
+            overflow-y: auto;
+            display: grid;
+            gap: 10px;
+            padding-right: 4px;
+        }
+        .nb-feedback-popup-item {
+            display: grid;
+            gap: 9px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #fbf7f2;
+        }
+        .nb-feedback-popup-item .nb-popup-comment {
+            padding: 0;
+            background: transparent;
         }
         body.nb-popup-open {
             overflow: hidden;
@@ -359,6 +402,10 @@
             .nb-popup-backdrop {
                 padding: 12px;
             }
+            .nb-grade-detail-row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
         }
     </style>
 }
@@ -384,11 +431,16 @@
                             @foreach (var grade in subject.Grades)
                             {
                                 gradeModalIndex++;
-                                var modalId = $"grade-popup-{gradeModalIndex}";
-                                var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
-                                var gradeValue = grade.Value.ToString("0.##");
+                                var modalId = $"grade-popup-{grade.Id:N}";
+                                var displayedGrade = GetDisplayedGrade(grade.Value);
+                                var gradeTone = displayedGrade >= 5 ? "is-good" : displayedGrade >= 4 ? "is-mid" : "is-low";
+                                var gradeValue = displayedGrade.ToString();
 
-                                <button class="nb-grade-chip @gradeTone" type="button" data-nb-popup-open="@modalId" aria-label="Отвори детайли за оценка @gradeValue по @subject.SubjectName">
+                                <button class="nb-grade-chip @gradeTone"
+                                        type="button"
+                                        data-nb-popup-open="@modalId"
+                                        title="Детайли за оценката"
+                                        aria-label="Отвори детайли за оценка @gradeValue по @subject.SubjectName">
                                     @gradeValue
                                 </button>
                             }
@@ -418,18 +470,13 @@
         @if (Model.Feedbacks.Any())
         {
             <div class="nb-side-list">
-                @foreach (var feedback in Model.Feedbacks.Take(4))
+                @foreach (var feedback in Model.Feedbacks.Take(2))
                 {
-                    feedbackModalIndex++;
-                    var modalId = $"feedback-popup-{feedbackModalIndex}";
                     var feedbackClass = feedback.Type == "Похвала" ? "is-praise" : "is-remark";
 
-                    <button class="nb-list-button @feedbackClass" type="button" data-nb-popup-open="@modalId">
+                    <button class="nb-list-button @feedbackClass" type="button" data-nb-popup-open="feedbacks-popup">
                         <span class="nb-list-pill">@feedback.Type</span>
-                        <span class="nb-list-lines" aria-hidden="true">
-                            <span class="nb-list-line"></span>
-                            <span class="nb-list-line"></span>
-                        </span>
+                        <span class="nb-list-subject" title="@feedback.SubjectName">@feedback.SubjectName</span>
                         <span class="nb-list-date">@feedback.Date.ToString("dd.MM")</span>
                     </button>
                 }
@@ -457,12 +504,9 @@
                     var absenceClass = absence.Status == "Уважено" ? "is-excused" : "is-unexcused";
 
                     <button class="nb-list-button @absenceClass" type="button" data-nb-popup-open="@modalId">
-                        <span class="nb-list-lines" aria-hidden="true">
-                            <span class="nb-list-line"></span>
-                            <span class="nb-list-line"></span>
-                        </span>
-                        <span class="nb-list-date">@absence.Date.ToString("dd.MM")</span>
                         <span class="nb-list-pill">@absence.Status</span>
+                        <span class="nb-list-subject" title="@absence.SubjectName">@absence.SubjectName</span>
+                        <span class="nb-list-date">@absence.Date.ToString("dd.MM")</span>
                     </button>
                 }
             </div>
@@ -477,7 +521,6 @@
 
 @{
 gradeModalIndex = 0;
-feedbackModalIndex = 0;
 absenceModalIndex = 0;
 }
 
@@ -486,8 +529,9 @@ absenceModalIndex = 0;
 foreach (var grade in subject.Grades)
 {
 gradeModalIndex++;
-var modalId = $"grade-popup-{gradeModalIndex}";
-var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is-low";
+var modalId = $"grade-popup-{grade.Id:N}";
+var displayedGrade = GetDisplayedGrade(grade.Value);
+var gradeTone = displayedGrade >= 5 ? "is-good" : displayedGrade >= 4 ? "is-mid" : "is-low";
 
 <div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
 <section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
@@ -501,45 +545,68 @@ var gradeTone = grade.Value >= 5 ? "is-good" : grade.Value >= 4 ? "is-mid" : "is
         </button>
     </header>
     <div class="nb-popup-body">
-        <span class="nb-popup-grade @gradeTone">@grade.Value.ToString("0.##")</span>
-        <div class="nb-popup-meta">
-            <span>@grade.TeacherName</span>
-            <span>@grade.Date.ToString("dd.MM.yyyy HH:mm")</span>
+        <span class="nb-popup-grade @gradeTone">@grade.Value.ToString("0.00")</span>
+        <div class="nb-grade-detail-grid">
+            <div class="nb-grade-detail-row">
+                <span>Предмет</span>
+                <span>@grade.SubjectName</span>
+            </div>
+            <div class="nb-grade-detail-row">
+                <span>Учител</span>
+                <span>@grade.TeacherName</span>
+            </div>
+            <div class="nb-grade-detail-row">
+                <span>Тип</span>
+                <span>@grade.Type</span>
+            </div>
+            <div class="nb-grade-detail-row">
+                <span>Дата</span>
+                <span>@grade.Date.ToString("dd.MM.yyyy HH:mm")</span>
+            </div>
+            <div class="nb-grade-detail-row">
+                <span>Бележка</span>
+                <span>@grade.Comment</span>
+            </div>
         </div>
-        <p class="nb-popup-comment">@grade.Comment</p>
     </div>
 </section>
 </div>
 }
 }
 
-@foreach (var feedback in Model.Feedbacks.Take(4))
+@if (Model.Feedbacks.Any())
 {
-feedbackModalIndex++;
-var modalId = $"feedback-popup-{feedbackModalIndex}";
-var feedbackTone = feedback.Type == "Похвала" ? "is-good" : "is-low";
+    <div class="nb-popup-backdrop" data-nb-popup="feedbacks-popup" hidden>
+        <section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="feedbacks-popup-title" tabindex="-1">
+            <header class="nb-popup-header">
+                <div>
+                    <h3 id="feedbacks-popup-title">Всички отзиви</h3>
+                    <p>@Model.FeedbackSummary.Count @Model.FeedbackSummary.Label</p>
+                </div>
+                <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </header>
+            <div class="nb-popup-body">
+                <div class="nb-feedback-popup-list">
+                    @foreach (var feedback in Model.Feedbacks)
+                    {
+                        var feedbackTone = feedback.Type == "Похвала" ? "is-good" : "is-low";
 
-<div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
-<section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
-<header class="nb-popup-header">
-    <div>
-        <h3 id="@($"{modalId}-title")">@feedback.SubjectName</h3>
-        <p>@feedback.Type</p>
+                        <article class="nb-feedback-popup-item">
+                            <div class="nb-popup-meta">
+                                <span class="nb-status @feedbackTone">@feedback.Type</span>
+                                <span>@feedback.SubjectName</span>
+                                <span>@feedback.TeacherName</span>
+                                <span>@feedback.Date.ToString("dd.MM.yyyy")</span>
+                            </div>
+                            <p class="nb-popup-comment">@feedback.Comment</p>
+                        </article>
+                    }
+                </div>
+            </div>
+        </section>
     </div>
-    <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
-        <i class="bi bi-x-lg"></i>
-    </button>
-</header>
-<div class="nb-popup-body">
-    <div class="nb-popup-meta">
-        <span class="nb-status @feedbackTone">@feedback.Type</span>
-        <span>@feedback.TeacherName</span>
-        <span>@feedback.Date.ToString("dd.MM.yyyy")</span>
-    </div>
-    <p class="nb-popup-comment">@feedback.Comment</p>
-</div>
-</section>
-</div>
 }
 
 @foreach (var absence in Model.Absences.Take(4))
@@ -620,6 +687,11 @@ popup.addEventListener("click", (event) => {
 });
 });
 
+const requestedGradeId = new URLSearchParams(window.location.search).get("gradeId");
+if (requestedGradeId) {
+    openPopup(`grade-popup-${requestedGradeId.replaceAll("-", "")}`, null);
+}
+
 document.addEventListener("keydown", (event) => {
 if (event.key === "Escape") {
     closePopup(document.querySelector("[data-nb-popup]:not([hidden])"));
@@ -627,4 +699,16 @@ if (event.key === "Escape") {
 });
 })();
 </script>
+}
+
+@functions {
+    private static int GetDisplayedGrade(decimal value)
+    {
+        if (value < 3)
+        {
+            return 2;
+        }
+
+        return Math.Clamp((int)Math.Floor(value + 0.5m), 3, 6);
+    }
 }

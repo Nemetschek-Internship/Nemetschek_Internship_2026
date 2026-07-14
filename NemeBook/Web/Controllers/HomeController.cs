@@ -28,6 +28,11 @@ public class HomeController : Controller
             {
                 return RedirectToAction("Index", "Student");
             }
+
+            if (currentUser?.Role == UserRole.Teacher)
+            {
+                return RedirectToAction("Index", "Teacher");
+            }
         }
 
         if (User.IsInRole("Principal"))

@@ -57,6 +57,8 @@ public class StudentAcademicSubjectItem
 
 public class StudentGradeDetailItem
 {
+    public Guid Id { get; set; }
+
     public string SubjectName { get; set; } = string.Empty;
 
     public decimal Value { get; set; }

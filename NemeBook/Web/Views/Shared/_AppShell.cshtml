@@ -1,5 +1,6 @@
 @{
     var isAdminShell = User.IsInRole("Principal");
+    var isTeacherShell = User.IsInRole("Teacher");
     var shellPrefix = isAdminShell ? "nb-principal" : "nb-student";
     var bodyClass = isAdminShell ? "nb-principal-body" : "nb-student-body";
     var shellClass = $"{shellPrefix}-shell {ViewData["ShellClass"]}".Trim();
@@ -26,6 +27,10 @@
         @if (isAdminShell)
         {
             <partial name="~/Views/Shared/Components/Admin/_AdminNavigation.cshtml" />
+        }
+        else if (isTeacherShell)
+        {
+            <partial name="~/Views/Teacher/Components/_TeacherNavigation.cshtml" />
         }
         else
         {
@@ -81,6 +86,7 @@
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/microsoft-signalr/signalr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/pwa.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

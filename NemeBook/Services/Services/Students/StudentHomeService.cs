@@ -193,6 +193,7 @@ public class StudentHomeService : IStudentHomeService
                     Grades = subjectGrades
                         .Select(grade => new StudentGradeDetailItem
                         {
+                            Id = grade.Id,
                             SubjectName = subject.Value,
                             Value = grade.Value,
                             Type = GetDisplayName(grade.Type),
@@ -219,9 +220,19 @@ public class StudentHomeService : IStudentHomeService
             {
                 Title = GetSubjectName(grade.ClassSubjectId, subjectByClassSubjectId),
                 Detail = $"{GetDisplayName(grade.Type)} - {grade.CreatedAt:dd.MM.yyyy}",
-                Value = grade.Value.ToString("0.##")
+                Value = FormatDisplayedGrade(grade.Value)
             })
             .ToList();
+    }
+
+    private static string FormatDisplayedGrade(decimal value)
+    {
+        if (value < 3)
+        {
+            return "2";
+        }
+
+        return Math.Clamp((int)Math.Floor(value + 0.5m), 3, 6).ToString();
     }
 
     private static IReadOnlyList<StudentFeedbackDetailItem> BuildFeedbackDetails(

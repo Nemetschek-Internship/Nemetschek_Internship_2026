@@ -1,4 +1,4 @@
-const CACHE_NAME = "nemebook-pwa-v1";
+const CACHE_NAME = "nemebook-pwa-v2";
 const CORE_ASSETS = [
     "/offline.html",
     "/css/site.css",
@@ -33,6 +33,11 @@ self.addEventListener("fetch", (event) => {
 
     const requestUrl = new URL(event.request.url);
     if (requestUrl.origin !== self.location.origin) {
+        return;
+    }
+
+    if (requestUrl.pathname.startsWith("/notifications")) {
+        event.respondWith(fetch(event.request));
         return;
     }
 
