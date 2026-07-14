@@ -9,6 +9,7 @@
         {
             id = classSubject.ClassSubjectId,
             name = classSubject.SubjectName,
+            teacherId = classSubject.TeacherId,
             teacherName = classSubject.TeacherName
         }));
 }
@@ -87,6 +88,7 @@
                                                     type="button"
                                                     data-entry-id="@entry.Id"
                                                     data-class-subject-id="@entry.ClassSubjectId"
+                                                    data-teacher-id="@entry.TeacherId"
                                                     data-substitute-teacher-id="@entry.SubstituteTeacherId"
                                                     data-substitute-teacher-name="@entry.SubstituteTeacherName"
                                                     data-day-of-week="@((int)entry.DayOfWeek)"
@@ -196,28 +198,32 @@
                     <button class="nb-schedule-clear-substitute" type="button" id="clearSubstituteTeacher">
                         Без заместващ учител
                     </button>
-                </div>
-
-                <div class="nb-schedule-dialog-actions">
-                    <button class="nb-principal-action-btn" type="submit">
-                        <span>Запази</span>
-                        <i class="bi bi-check-lg" aria-hidden="true"></i>
+                    <button class="nb-schedule-show-all-teachers" type="button" id="toggleScheduleTeacherScope">
+                        Покажи всички свободни учители
                     </button>
                 </div>
+
             </form>
 
-            <form asp-controller="ClassManagement"
-                  asp-action="DeleteScheduleEntry"
-                  method="post"
-                  onsubmit="return confirm('Сигурни ли сте, че искате да изтриете този час?');">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="classId" value="@Model.ClassId" />
-                <input type="hidden" name="scheduleEntryId" id="deleteScheduleEntryId" />
-                <button class="nb-schedule-delete-btn" type="submit">
-                    <i class="bi bi-trash3" aria-hidden="true"></i>
-                    <span>Изтрий часа</span>
+            <div class="nb-schedule-dialog-footer">
+                <button class="nb-principal-action-btn" type="submit" form="scheduleEditForm">
+                    <span>Запази</span>
+                    <i class="bi bi-check-lg" aria-hidden="true"></i>
                 </button>
-            </form>
+
+                <form asp-controller="ClassManagement"
+                      asp-action="DeleteScheduleEntry"
+                      method="post"
+                      onsubmit="return confirm('Сигурни ли сте, че искате да изтриете този час?');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="classId" value="@Model.ClassId" />
+                    <input type="hidden" name="scheduleEntryId" id="deleteScheduleEntryId" />
+                    <button class="nb-schedule-delete-btn" type="submit">
+                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                        <span>Изтрий часа</span>
+                    </button>
+                </form>
+            </div>
         </section>
     </div>
 
@@ -264,9 +270,12 @@
             const substituteSearch = document.getElementById('editSubstituteTeacherSearch');
             const substituteDropdown = document.querySelector('.nb-schedule-teacher-dropdown');
             const clearSubstitute = document.getElementById('clearSubstituteTeacher');
+            const teacherScopeToggle = document.getElementById('toggleScheduleTeacherScope');
             const teacherSearchUrl = '@Url.Action("SearchFreeScheduleTeacherMatches", "ClassManagement")';
             let selectedDayOfWeek = '';
             let selectedPeriodNumber = '';
+            let selectedTeacherId = '';
+            let includeAllTeachers = false;
             let abortController = null;
 
             document.querySelectorAll('.nb-schedule-add-toggle').forEach(function (button) {
@@ -311,8 +320,12 @@
                     editEntryId.value = card.dataset.entryId || '';
                     deleteEntryId.value = card.dataset.entryId || '';
                     editClassSubject.value = card.dataset.classSubjectId || '';
+                    selectedTeacherId = card.dataset.teacherId || '';
+                    includeAllTeachers = false;
                     substituteId.value = card.dataset.substituteTeacherId || '';
                     substituteSearch.value = card.dataset.substituteTeacherName || '';
+                    updateSubstitutePlaceholder();
+                    updateTeacherScopeToggle();
                     updateClearSubstituteVisibility();
                     editPeriod.textContent = selectedPeriodNumber + '. час';
                     editTime.textContent = card.dataset.timeRange || '';
@@ -345,9 +358,12 @@
                 clearSubstitute.hidden = !substituteId.value;
             }
 
-            function searchFreeTeachers() {
+            function searchFreeTeachers(clearSelection) {
                 const query = substituteSearch.value.trim();
-                substituteId.value = '';
+                if (clearSelection) {
+                    substituteId.value = '';
+                    updateClearSubstituteVisibility();
+                }
 
                 if (abortController) {
                     abortController.abort();
@@ -360,6 +376,9 @@
                     + '?dayOfWeek=' + encodeURIComponent(selectedDayOfWeek)
                     + '&periodNumber=' + encodeURIComponent(selectedPeriodNumber)
                     + '&scheduleEntryId=' + encodeURIComponent(editEntryId.value)
+                    + '&classSubjectId=' + encodeURIComponent(editClassSubject.value)
+                    + '&includeAllTeachers=' + encodeURIComponent(includeAllTeachers)
+                    + '&excludedTeacherId=' + encodeURIComponent(selectedTeacherId)
                     + '&query=' + encodeURIComponent(query),
                     {
                         headers: { 'Accept': 'application/json' },
@@ -378,8 +397,11 @@
 
             function renderTeacherResults(results) {
                 substituteDropdown.innerHTML = '';
+                const availableResults = results.filter(function (teacher) {
+                    return teacher.id !== selectedTeacherId;
+                });
 
-                if (results.length === 0) {
+                if (availableResults.length === 0) {
                     const empty = document.createElement('span');
                     empty.className = 'nb-main-teacher-empty';
                     empty.textContent = 'Няма свободни учители';
@@ -388,7 +410,7 @@
                     return;
                 }
 
-                results.forEach(function (teacher) {
+                availableResults.forEach(function (teacher) {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.textContent = teacher.fullName;
@@ -406,8 +428,17 @@
 
             closeDialog.addEventListener('click', closeEditDialog);
             clearSubstitute.addEventListener('click', clearSubstituteTeacher);
-            substituteSearch.addEventListener('input', searchFreeTeachers);
-            substituteSearch.addEventListener('focus', searchFreeTeachers);
+            teacherScopeToggle.addEventListener('click', function () {
+                includeAllTeachers = !includeAllTeachers;
+                updateTeacherScopeToggle();
+                searchFreeTeachers(false);
+            });
+            substituteSearch.addEventListener('input', function () {
+                searchFreeTeachers(true);
+            });
+            substituteSearch.addEventListener('focus', function () {
+                searchFreeTeachers(false);
+            });
 
             editDialog.addEventListener('click', function (event) {
                 if (event.target === editDialog) {
@@ -443,12 +474,35 @@
                     return classSubject.id === editClassSubject.value;
                 });
 
-                if (selectedSubject && !substituteId.value) {
-                    substituteSearch.placeholder = selectedSubject.teacherName
-                        ? 'Търси заместващ за ' + selectedSubject.teacherName
-                        : 'Търси свободен учител';
+                selectedTeacherId = selectedSubject && selectedSubject.teacherId
+                    ? selectedSubject.teacherId
+                    : '';
+
+                includeAllTeachers = false;
+
+                if (substituteId.value) {
+                    clearSubstituteTeacher();
                 }
+
+                updateSubstitutePlaceholder();
+                updateTeacherScopeToggle();
             });
+
+            function updateSubstitutePlaceholder() {
+                const selectedSubject = classSubjects.find(function (classSubject) {
+                    return classSubject.id === editClassSubject.value;
+                });
+
+                substituteSearch.placeholder = selectedSubject && selectedSubject.teacherName
+                    ? 'Търси заместващ за ' + selectedSubject.teacherName
+                    : 'Търси свободен учител';
+            }
+
+            function updateTeacherScopeToggle() {
+                teacherScopeToggle.textContent = includeAllTeachers
+                    ? 'Покажи само учители по предмета'
+                    : 'Покажи всички свободни учители';
+            }
         }());
     </script>
 </body>

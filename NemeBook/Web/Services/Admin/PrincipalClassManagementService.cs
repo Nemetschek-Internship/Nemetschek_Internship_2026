@@ -434,6 +434,7 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
             {
                 scheduleEntry.Id,
                 scheduleEntry.ClassSubjectId,
+                TeacherId = scheduleEntry.ClassSubject.TeacherId,
                 scheduleEntry.SubstituteTeacherId,
                 scheduleEntry.DayOfWeek,
                 scheduleEntry.PeriodNumber,
@@ -470,6 +471,7 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
                     {
                         Id = scheduleEntry.Id,
                         ClassSubjectId = scheduleEntry.ClassSubjectId,
+                        TeacherId = scheduleEntry.TeacherId,
                         SubstituteTeacherId = scheduleEntry.SubstituteTeacherId,
                         DayOfWeek = scheduleEntry.DayOfWeek,
                         PeriodNumber = scheduleEntry.PeriodNumber,
@@ -625,6 +627,14 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
             return new PrincipalScheduleMutationResult { NotFound = true };
         }
 
+        if (substituteTeacherId.HasValue && classSubject.TeacherId == substituteTeacherId.Value)
+        {
+            return new PrincipalScheduleMutationResult
+            {
+                Message = "Избраният учител вече води този час и не може да бъде заместващ.",
+            };
+        }
+
         Guid? effectiveTeacherId = substituteTeacherId ?? classSubject.TeacherId;
         string? effectiveTeacherName = null;
 
@@ -730,6 +740,9 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
         DayOfWeek dayOfWeek,
         int periodNumber,
         Guid? scheduleEntryId,
+        Guid? classSubjectId,
+        bool includeAllTeachers,
+        Guid? excludedTeacherId,
         string? query,
         CancellationToken cancellationToken = default)
     {
@@ -748,7 +761,29 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
         var teachersQuery = (await teacherRepository.GetAllAsync(cancellationToken))
             .Where(teacher =>
                 teacher.User.IsActive &&
-                !busyTeacherIds.Contains(teacher.Id));
+                !busyTeacherIds.Contains(teacher.Id) &&
+                (!excludedTeacherId.HasValue || teacher.Id != excludedTeacherId.Value));
+
+        if (!includeAllTeachers)
+        {
+            if (!classSubjectId.HasValue)
+            {
+                return Array.Empty<PrincipalTeacherSearchResult>();
+            }
+
+            var subjectId = (await classSubjectRepository.GetAllAsync(cancellationToken))
+                .Where(classSubject => classSubject.Id == classSubjectId.Value)
+                .Select(classSubject => classSubject.SubjectId)
+                .FirstOrDefault();
+
+            if (subjectId == Guid.Empty)
+            {
+                return Array.Empty<PrincipalTeacherSearchResult>();
+            }
+
+            teachersQuery = teachersQuery.Where(teacher =>
+                teacher.TeacherSubjects.Any(teacherSubject => teacherSubject.SubjectId == subjectId));
+        }
 
         return await BuildTeacherSearchResultsAsync(teachersQuery, searchTerms, cancellationToken);
     }

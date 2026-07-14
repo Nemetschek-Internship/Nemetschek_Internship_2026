@@ -2397,6 +2397,7 @@ body {
 }
 
 .nb-schedule-clear-substitute,
+.nb-schedule-show-all-teachers,
 .nb-schedule-delete-btn,
 .nb-schedule-conflict-close {
   min-height: 38px;
@@ -2421,15 +2422,28 @@ body {
 
 .nb-schedule-clear-substitute:hover,
 .nb-schedule-clear-substitute:focus,
+.nb-schedule-show-all-teachers:hover,
+.nb-schedule-show-all-teachers:focus,
 .nb-schedule-conflict-close:hover,
 .nb-schedule-conflict-close:focus {
   background: var(--nb-orange);
   color: #ffffff;
 }
 
-.nb-schedule-dialog-actions {
+.nb-schedule-show-all-teachers {
+  background: #f4f6f8;
+  color: #4d5562;
+}
+
+.nb-schedule-dialog-footer {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nb-schedule-dialog-footer form {
+  margin: 0;
 }
 
 .nb-schedule-delete-btn {
