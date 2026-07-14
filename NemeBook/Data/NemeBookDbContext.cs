@@ -19,6 +19,7 @@ public class NemeBookDbContext : DbContext
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<Grade> Grades => Set<Grade>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<News> News => Set<News>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Parent> Parents => Set<Parent>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
@@ -41,6 +42,7 @@ public class NemeBookDbContext : DbContext
         ConfigureAbsences(modelBuilder);
         ConfigureFeedbacks(modelBuilder);
         ConfigureEvents(modelBuilder);
+        ConfigureNews(modelBuilder);
         ConfigureChats(modelBuilder);
         ConfigureNotifications(modelBuilder);
         ConfigurePasswordResetTokens(modelBuilder);
@@ -313,6 +315,21 @@ public class NemeBookDbContext : DbContext
             entity.HasOne(message => message.Sender)
                 .WithMany()
                 .HasForeignKey(message => message.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureNews(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<News>(entity =>
+        {
+            entity.Property(news => news.Title).HasMaxLength(200);
+            entity.Property(news => news.Text).HasMaxLength(4000);
+            entity.Property(news => news.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(news => news.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(news => news.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

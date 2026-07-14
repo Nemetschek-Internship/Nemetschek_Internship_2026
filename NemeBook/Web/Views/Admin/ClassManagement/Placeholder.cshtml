@@ -1,17 +1,8 @@
-@using System.ComponentModel.DataAnnotations
-@using Entities.Enums
 @model Web.ViewModels.PrincipalClassManagementViewModel
 
 @{
     Layout = null;
     ViewData["Title"] = $"Клас {Model.ClassName} - {Model.SectionTitle}";
-
-    var principalDisplayName = typeof(UserRole)
-        .GetMember(nameof(UserRole.Principal))[0]
-        .GetCustomAttributes(typeof(DisplayAttribute), false)
-        .Cast<DisplayAttribute>()
-        .FirstOrDefault()
-        ?.GetName() ?? nameof(UserRole.Principal);
 }
 
 <!DOCTYPE html>
@@ -25,48 +16,7 @@
 </head>
 <body class="nb-principal-body">
     <div class="nb-principal-shell">
-        <aside class="nb-principal-sidebar" aria-label="Главна навигация">
-            <a class="nb-principal-logo" asp-controller="Dashboard" asp-action="Index">
-                <span class="nb-principal-logo-mark">
-                    <i class="bi bi-book-half" aria-hidden="true"></i>
-                </span>
-                <span>
-                    <strong>NemeBook</strong>
-                    <small>@principalDisplayName</small>
-                </span>
-            </a>
-
-            <nav class="nb-principal-nav">
-                <a asp-controller="Dashboard" asp-action="Index">
-                    <i class="bi bi-house-fill" aria-hidden="true"></i>
-                    <span>Начало</span>
-                </a>
-                <a href="#">
-                    <i class="bi bi-newspaper" aria-hidden="true"></i>
-                    <span>Новини</span>
-                </a>
-                <a class="is-active" asp-controller="Classes" asp-action="AllClasses">
-                    <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
-                    <span>Класове</span>
-                </a>
-                <a asp-area="" asp-controller="Chat" asp-action="Index">
-                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
-                    <span>Учителски чатове</span>
-                </a>
-                <a asp-controller="ProfileImport" asp-action="Index">
-                    <i class="bi bi-upload" aria-hidden="true"></i>
-                    <span>Импорт на профили</span>
-                </a>
-            </nav>
-
-            <a class="nb-principal-user-card" asp-area="" asp-controller="Account" asp-action="Profile">
-                <span class="nb-principal-user-avatar"></span>
-                <span>
-                    <strong>@(User.FindFirst("FullName")?.Value ?? "Директор")</strong>
-                    <small>Директорски профил</small>
-                </span>
-            </a>
-        </aside>
+        <partial name="~/Views/Admin/Shared/_PrincipalSideNav.cshtml" model='@("Classes")' />
 
         <main class="nb-principal-main">
             <header class="nb-principal-topbar">
