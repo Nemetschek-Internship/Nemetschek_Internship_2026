@@ -17,18 +17,28 @@ public class GradeRepository : IGradeRepository
     public Task<Grade?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return _dbContext.Grades
+            .Include(g => g.Student)
+            .ThenInclude(student => student.Class)
             .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Grade>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbContext.Grades
+            .Include(g => g.Student)
+            .ThenInclude(student => student.Class)
             .ToListAsync(cancellationToken);
     }
 
     public async Task CreateAsync(Grade grade, CancellationToken cancellationToken = default)
     {
         await _dbContext.Grades.AddAsync(grade, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task CreateRangeAsync(IEnumerable<Grade> grades, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.Grades.AddRangeAsync(grades, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 

@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Entities.ViewModels.Grades;
 using Services.Interfaces.ClassSubjects;
 using Services.Interfaces.Classes;
 using Services.Interfaces.Grades;
-using Services.Interfaces.Parents;
-using Services.Interfaces.Students;
 using Services.Interfaces.Subjects;
 using Services.Interfaces.Teachers;
-using Entities.ViewModels.Grades;
 using System.Security.Claims;
 
 namespace Web.Controllers;
@@ -16,61 +14,34 @@ namespace Web.Controllers;
 public class GradeController : Controller
 {
     private readonly IGradeService _gradeService;
-    private readonly IStudentService _studentService;
     private readonly IClassService _classService;
     private readonly ISubjectService _subjectService;
     private readonly ITeacherService _teacherService;
-    private readonly IParentService _parentService;
     private readonly IClassSubjectService _classSubjectService;
     private readonly ILogger<GradeController> _logger;
 
     public GradeController(
         IGradeService gradeService,
-        IStudentService studentService,
         IClassService classService,
         ISubjectService subjectService,
         ITeacherService teacherService,
-        IParentService parentService,
         IClassSubjectService classSubjectService,
         ILogger<GradeController> logger)
     {
         _gradeService = gradeService;
-        _studentService = studentService;
         _classService = classService;
         _subjectService = subjectService;
         _teacherService = teacherService;
-        _parentService = parentService;
         _classSubjectService = classSubjectService;
         _logger = logger;
     }
 
     [HttpGet]
-    public async Task<IActionResult> MyGrades(GradeFilterRequest? filter = null)
+    public IActionResult MyGrades()
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return RedirectToAction("Login", "Account");
-
-        var students = await _studentService.GetAllAsync();
-        var student = students.FirstOrDefault(s => s.UserId == userId.Value);
-
-        if (student is null)
-            return RedirectToAction("AccessDenied", "Account");
-
-        var viewModel = await _gradeService.GetStudentGradesAsync(
-            student.Id,
-            filter,
-            CancellationToken.None);
-
-        ViewBag.Subjects = await GetSubjectsForStudentAsync(student.Id);
-        ViewBag.FromDate = filter?.FromDate?.ToString("yyyy-MM-dd");
-        ViewBag.ToDate = filter?.ToDate?.ToString("yyyy-MM-dd");
-
-        await SetTeacherViewBagDataAsync(); 
-
-        return View(viewModel);
-
+        return RedirectToAction("MyGrades", "Student");
     }
+
     private async Task SetTeacherViewBagDataAsync()
     {
         var userId = GetCurrentUserId();
@@ -96,25 +67,6 @@ public class GradeController : Controller
             }
         }
     }
-    [HttpGet]
-    [Authorize(Roles = "Teacher,Principal,Parent")]
-    public async Task<IActionResult> StudentGrades(Guid studentId, GradeFilterRequest? filter = null)
-    {
-        if (!await CanAccessStudentGradesAsync(studentId))
-            return RedirectToAction("AccessDenied", "Account");
-
-        var viewModel = await _gradeService.GetStudentGradesAsync(
-            studentId,
-            filter,
-            CancellationToken.None);
-
-        ViewBag.Subjects = await GetSubjectsForStudentAsync(studentId);
-        ViewBag.FromDate = filter?.FromDate?.ToString("yyyy-MM-dd");
-        ViewBag.ToDate = filter?.ToDate?.ToString("yyyy-MM-dd");
-
-        return View(viewModel);
-    }
-
     [HttpGet]
     [Authorize(Roles = "Teacher,Principal")]
     public async Task<IActionResult> ClassGrades(Guid classId, Guid subjectId, GradeFilterRequest? filter = null)
@@ -151,8 +103,8 @@ public class GradeController : Controller
 
         ViewBag.ClassName = classEntity is not null
             ? $"{classEntity.GradeNumber}{classEntity.Letter}"
-            : "Unknown";
-        ViewBag.SubjectName = subject?.Name ?? "Unknown";
+            : "Неизвестно";
+        ViewBag.SubjectName = subject?.Name ?? "Неизвестно";
 
         return View(ranking);
     }
@@ -214,42 +166,147 @@ public IActionResult SelectClassAndSubject(Guid classId, Guid subjectId)
     return RedirectToAction("ClassGrades", new { classId, subjectId });
 }
 
+[HttpPost]
+[Authorize(Roles = "Teacher,Principal")]
+// TODO: Replace [IgnoreAntiforgeryToken] with header-based CSRF
+// protection (X-CSRF-TOKEN) before merging this branch into dev.
+// Temporarily disabled only to allow direct Postman testing during
+// development — this is a tracked, intentional gap, not an oversight.
+// Tracked in the team to-do list under point 2 (Grades).
+[IgnoreAntiforgeryToken]
+public async Task<IActionResult> CreateGrade([FromBody] CreateGradeRequest request, CancellationToken cancellationToken)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+
+    var userId = GetCurrentUserId();
+    if (!userId.HasValue)
+        return Unauthorized();
+
+    try
+    {
+        var gradeDto = await _gradeService.CreateGradeAsync(request, userId.Value, cancellationToken);
+        return Ok(gradeDto);
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        _logger.LogWarning(ex, "User {UserId} was denied creating a grade for class subject {ClassSubjectId}", userId, request.ClassSubjectId);
+        return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+    }
+    catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+    {
+        _logger.LogWarning(ex, "Grade creation failed for student {StudentId}", request.StudentId);
+        return BadRequest(new { error = ex.Message });
+    }
+}
+
+[HttpPost]
+[Authorize(Roles = "Teacher,Principal")]
+// TODO: Replace [IgnoreAntiforgeryToken] with header-based CSRF
+// protection (X-CSRF-TOKEN) before merging this branch into dev.
+// Same tracked gap as CreateGrade — see team to-do list, point 2.
+[IgnoreAntiforgeryToken]
+public async Task<IActionResult> CreateGradesBulk([FromBody] BulkCreateGradeRequest request, CancellationToken cancellationToken)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+
+    var userId = GetCurrentUserId();
+    if (!userId.HasValue)
+        return Unauthorized();
+
+    try
+    {
+        var result = await _gradeService.CreateGradesBulkAsync(request, userId.Value, cancellationToken);
+
+        if (result.CreatedGrades.Count == 0)
+            return BadRequest(new { error = "Нито една от избраните оценки не можа да бъде записана.", errors = result.Errors });
+
+        return Ok(result);
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        _logger.LogWarning(ex, "User {UserId} was denied bulk-creating grades for class subject {ClassSubjectId}", userId, request.ClassSubjectId);
+        return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+    }
+    catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+    {
+        _logger.LogWarning(ex, "Bulk grade creation failed for class subject {ClassSubjectId}", request.ClassSubjectId);
+        return BadRequest(new { error = ex.Message });
+    }
+}
+
+[HttpPut]
+[Authorize(Roles = "Teacher,Principal")]
+// TODO: Replace [IgnoreAntiforgeryToken] with header-based CSRF
+// protection (X-CSRF-TOKEN) before merging this branch into dev.
+// Same tracked gap as CreateGrade/CreateGradesBulk — see team to-do
+// list, point 2.
+[IgnoreAntiforgeryToken]
+public async Task<IActionResult> UpdateGrade([FromBody] UpdateGradeRequest request, CancellationToken cancellationToken)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+
+    var userId = GetCurrentUserId();
+    if (!userId.HasValue)
+        return Unauthorized();
+
+    var role = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+
+    try
+    {
+        var gradeDto = await _gradeService.UpdateGradeAsync(request, userId.Value, role, cancellationToken);
+        return Ok(gradeDto);
+    }
+    catch (KeyNotFoundException)
+    {
+        return NotFound();
+    }
+    catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+    {
+        _logger.LogWarning(ex, "Grade update failed for grade {GradeId}", request.GradeId);
+        return BadRequest(new { error = ex.Message });
+    }
+}
+
+[HttpDelete]
+[Authorize(Roles = "Teacher,Principal")]
+// TODO: Replace [IgnoreAntiforgeryToken] with header-based CSRF
+// protection (X-CSRF-TOKEN) before merging this branch into dev.
+// Same tracked gap as CreateGrade/CreateGradesBulk/UpdateGrade — see
+// team to-do list, point 2.
+[IgnoreAntiforgeryToken]
+public async Task<IActionResult> DeleteGrade(Guid gradeId, CancellationToken cancellationToken)
+{
+    var userId = GetCurrentUserId();
+    if (!userId.HasValue)
+        return Unauthorized();
+
+    var role = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+
+    try
+    {
+        await _gradeService.DeleteGradeAsync(gradeId, userId.Value, role, cancellationToken);
+        return NoContent();
+    }
+    catch (KeyNotFoundException)
+    {
+        return NotFound();
+    }
+    catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+    {
+        _logger.LogWarning(ex, "Grade deletion failed for grade {GradeId}", gradeId);
+        return BadRequest(new { error = ex.Message });
+    }
+}
+
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim is not null && Guid.TryParse(userIdClaim.Value, out var userId))
             return userId;
         return null;
-    }
-
-    private async Task<bool> CanAccessStudentGradesAsync(Guid studentId)
-    {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue) return false;
-
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-
-        if (role == "Teacher" || role == "Principal")
-            return true;
-
-        if (role == "Parent")
-        {
-            var parents = await _parentService.GetAllAsync();
-            var parent = parents.FirstOrDefault(p => p.UserId == userId.Value);
-            if (parent is not null)
-            {
-                return parent.Students.Any(s => s.Id == studentId);
-            }
-        }
-
-        if (role == "Student")
-        {
-            var students = await _studentService.GetAllAsync();
-            var student = students.FirstOrDefault(s => s.UserId == userId.Value);
-            return student is not null && student.Id == studentId;
-        }
-
-        return false;
     }
 
     private async Task<bool> CanAccessClassGradesAsync(Guid classId, Guid subjectId)
@@ -277,30 +334,6 @@ public IActionResult SelectClassAndSubject(Guid classId, Guid subjectId)
         return false;
     }
 
-    private async Task<List<SubjectDto>> GetSubjectsForStudentAsync(Guid studentId)
-    {
-        var student = await _studentService.GetByIdAsync(studentId);
-        if (student is null) return new List<SubjectDto>();
-
-        var classSubjects = await _classSubjectService.GetAllAsync();
-        var subjectIds = classSubjects
-            .Where(cs => cs.ClassId == student.ClassId)
-            .Select(cs => cs.SubjectId)
-            .Distinct()
-            .ToList();
-
-        var subjects = await _subjectService.GetAllAsync();
-        return subjects
-            .Where(s => subjectIds.Contains(s.Id))
-            .Select(s => new SubjectDto { Id = s.Id, Name = s.Name })
-            .ToList();
-    }
-}
-
-public class SubjectDto
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
 }
 
 public class SelectClassSubjectViewModel

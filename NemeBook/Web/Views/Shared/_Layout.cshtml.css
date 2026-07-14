@@ -46,3 +46,25 @@ button.accept-policy {
   white-space: nowrap;
   line-height: 60px;
 }
+
+.notification-dropdown {
+  min-width: 22rem;
+  max-width: 22rem;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+.notification-item {
+  white-space: normal;
+  cursor: pointer;
+}
+
+.notification-item-unread {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.notification-item-time {
+  font-size: .75rem;
+  color: #6c757d;
+}

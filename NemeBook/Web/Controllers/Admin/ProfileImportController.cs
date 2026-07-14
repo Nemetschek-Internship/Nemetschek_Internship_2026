@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces.Registration;
 using Web.ViewModels;
 
-namespace Web.Controllers;
+namespace Web.Controllers.Admin;
 
+[Route("Admin/[controller]/[action]")]
 [Authorize(Roles = "Principal")]
 public class ProfileImportController : Controller
 {
@@ -22,6 +23,7 @@ public class ProfileImportController : Controller
         this.logger = logger;
     }
 
+    [HttpGet("/Admin/ProfileImport")]
     [HttpGet]
     public IActionResult Index()
     {

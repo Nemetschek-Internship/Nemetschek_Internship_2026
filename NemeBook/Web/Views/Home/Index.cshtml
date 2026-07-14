@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Начало";
 }
 
 <style>
@@ -35,47 +35,11 @@
         color: #737a85;
         font-size: 16px;
     }
-
-    .nb-admin-actions {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .nb-admin-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-height: 44px;
-        padding: 0 18px;
-        border-radius: 11px;
-        background: #f37021;
-        color: #ffffff;
-        font-weight: 700;
-        text-decoration: none;
-    }
-
-    .nb-admin-btn:hover {
-        background: #d95f16;
-        color: #ffffff;
-    }
 </style>
 
 <div class="nb-home">
     <section class="nb-home-panel">
-        <h1 class="nb-home-title">Welcome to NemeBook</h1>
-        <p class="nb-home-text">Manage school information, profiles and communication from one place.</p>
-
-        @if (User.IsInRole("Principal"))
-        {
-            <div class="nb-admin-actions">
-                <a class="nb-admin-btn" asp-controller="ProfileImport" asp-action="Index">
-                    <i class="bi bi-file-earmark-spreadsheet"></i>
-                    Import profiles
-                </a>
-            </div>
-        }
+        <h1 class="nb-home-title">Добре дошли в NemeBook</h1>
+        <p class="nb-home-text">Следете оценки, съобщения и училищна информация от едно място.</p>
     </section>
 </div>

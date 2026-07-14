@@ -4,6 +4,7 @@ using DotNetEnv;
 using Entities.Enums;
 using Entities.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Services.Dtos.Registration;
 using Services.Interfaces;
@@ -11,6 +12,7 @@ using Services.Interfaces.Chats;
 using Services.Interfaces.Classes;
 using Services.Interfaces.ClassSubjects;
 using Services.Interfaces.Grades;
+using Services.Interfaces.News;
 using Services.Interfaces.Parents;
 using Services.Interfaces.Registration;
 using Services.Interfaces.Security;
@@ -27,13 +29,16 @@ using Services.Services.ClassSubjects;
 using Services.Services.Email;
 using Services.Services.Grades;
 using Services.Services.Notifications;
+using Services.Services.News;
 using Services.Services.Parents;
 using Services.Services.Registration;
 using Services.Services.Security;
 using Services.Services.Students;
 using Services.Services.Subjects;
 using Services.Services.Teachers;
+using Web.Hubs;
 using Web.Services;
+using Web.Services.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,6 +85,7 @@ builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IGradeRepository, GradeRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<INewsRepository, NewsRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IParentRepository, ParentRepository>();
 builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
@@ -111,10 +117,17 @@ builder.Services.AddScoped<IEmailService>(serviceProvider => serviceProvider.Get
 builder.Services.AddScoped<IRegistrationEmailSender>(serviceProvider => serviceProvider.GetRequiredService<EmailService>());
 builder.Services.AddScoped<IRegistrationImportParser, ExcelRegistrationImportParser>();
 builder.Services.AddScoped<IInvitationTokenService, InvitationTokenService>();
+builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<INotificationPushService, SignalRNotificationPushService>();
+builder.Services.AddScoped<IStudentHomeService, StudentHomeService>();
+builder.Services.AddScoped<ITeacherHomeService, TeacherHomeService>();
+builder.Services.AddScoped<IPrincipalDashboardService, PrincipalDashboardService>();
+builder.Services.AddScoped<IPrincipalClassesService, PrincipalClassesService>();
+builder.Services.AddScoped<IPrincipalClassManagementService, PrincipalClassManagementService>();
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));
@@ -146,7 +159,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddRazorOptions(options =>
+    {
+        options.ViewLocationFormats.Insert(0, "/Views/Admin/{1}/{0}.cshtml");
+        options.ViewLocationFormats.Insert(1, "/Views/Admin/Shared/{0}.cshtml");
+    });
+builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<BackgroundEmailQueue>();
 builder.Services.AddSingleton<IBackgroundEmailQueue>(serviceProvider => serviceProvider.GetRequiredService<BackgroundEmailQueue>());
@@ -179,11 +198,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapHub<ChatHub>("/chatHub");
 
 app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();
 
@@ -242,7 +264,7 @@ static async Task SeedDefaultUsersAsync(WebApplication app)
     await SeedUserBySectionAsync(app, "SeedTeacher", UserRole.Teacher, "TeacherSeeder");
     await SeedUserBySectionAsync(app, "SeedParent", UserRole.Parent, "ParentSeeder");
     await SeedUserBySectionAsync(app, "SeedStudent", UserRole.Student, "StudentSeeder");
-    await SeedBorisVelkovTeacherAsync(app);
+    await SeedGeorgiGeorgievStudentAsync(app);
 }
 
 static async Task SeedUserBySectionAsync(
@@ -287,15 +309,15 @@ static async Task SeedUserBySectionAsync(
         email);
 }
 
-static async Task SeedBorisVelkovTeacherAsync(WebApplication app)
+static async Task SeedGeorgiGeorgievStudentAsync(WebApplication app)
 {
-    const string email = "boris.velkov.highschool@buditel.bg";
+    const string email = "georgi.georgiev.highschool@buditel.bg";
     const string password = "BobE0000";
 
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<NemeBookDbContext>();
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("BorisVelkovSeeder");
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GeorgiGeorgievStudentSeeder");
 
     var user = await dbContext.Users.FirstOrDefaultAsync(existingUser => existingUser.Email == email);
     if (user is null)
@@ -303,28 +325,30 @@ static async Task SeedBorisVelkovTeacherAsync(WebApplication app)
         user = new User
         {
             Id = Guid.NewGuid(),
-            FirstName = "Boris",
-            LastName = "Velkov",
+            FirstName = "Georgi",
+            LastName = "Georgiev",
             Email = email,
             Password = passwordHasher.HashPassword(password),
-            Role = UserRole.Teacher
+            IsActive = true,
+            Role = UserRole.Student
         };
 
         await dbContext.Users.AddAsync(user);
         await dbContext.SaveChangesAsync();
 
-        logger.LogInformation("Boris Velkov seed completed. Created: true, UserId: {UserId}, Email: {Email}", user.Id, email);
+        logger.LogInformation("Georgi Georgiev student seed completed. Created: true, UserId: {UserId}, Email: {Email}", user.Id, email);
         return;
     }
 
-    user.FirstName = "Boris";
-    user.LastName = "Velkov";
+    user.FirstName = "Georgi";
+    user.LastName = "Georgiev";
     user.Email = email;
     user.Password = passwordHasher.HashPassword(password);
-    user.Role = UserRole.Teacher;
+    user.Role = UserRole.Student;
     user.IsDeleted = false;
+    user.IsActive = true;
 
     await dbContext.SaveChangesAsync();
 
-    logger.LogInformation("Boris Velkov seed completed. Created: false, UserId: {UserId}, Email: {Email}", user.Id, email);
+    logger.LogInformation("Georgi Georgiev student seed completed. Created: false, UserId: {UserId}, Email: {Email}", user.Id, email);
 }

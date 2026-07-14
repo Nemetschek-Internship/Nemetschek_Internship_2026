@@ -41,6 +41,12 @@ public class AuthService : IAuthService
             return null;
         }
 
+        if (!user.IsActive)
+        {
+            _logger.LogWarning("Login failed - user is inactive: {Email}", request.Email);
+            return null;
+        }
+
         if (!_passwordHasher.VerifyPassword(request.Password, user.Password))
         {
             _logger.LogWarning("Login failed - invalid password for: {Email}", request.Email);
@@ -76,6 +82,7 @@ public class AuthService : IAuthService
         }
 
         user.Password = _passwordHasher.HashPassword(newPassword);
+        user.IsActive = true;
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         _logger.LogInformation("Password changed for user: {UserId}", userId);
@@ -91,6 +98,7 @@ public class AuthService : IAuthService
         }
 
         user.Password = _passwordHasher.HashPassword(newPassword);
+        user.IsActive = true;
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         _logger.LogInformation("Password reset for user: {UserId}", userId);

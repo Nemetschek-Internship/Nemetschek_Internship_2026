@@ -17,7 +17,7 @@ public class StudentService : IStudentService
     {
         if (id == Guid.Empty)
         {
-            throw new ArgumentException("Student id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на ученика не може да бъде празен.", nameof(id));
         }
 
         return studentRepository.GetByIdAsync(id, cancellationToken);
@@ -34,12 +34,12 @@ public class StudentService : IStudentService
 
         if (student.UserId == Guid.Empty)
         {
-            throw new ArgumentException("Student UserId cannot be empty.", nameof(student));
+            throw new ArgumentException("Идентификаторът на потребителя за този ученик не може да бъде празен.", nameof(student));
         }
 
         if (student.ClassId == Guid.Empty)
         {
-            throw new ArgumentException("Student ClassId cannot be empty.", nameof(student));
+            throw new ArgumentException("Идентификаторът на класа за този ученик не може да бъде празен.", nameof(student));
         }
 
         await studentRepository.CreateAsync(student, cancellationToken);
@@ -51,13 +51,13 @@ public class StudentService : IStudentService
 
         if (student.Id == Guid.Empty)
         {
-            throw new ArgumentException("Student id cannot be empty.", nameof(student));
+            throw new ArgumentException("Идентификаторът на ученика не може да бъде празен.", nameof(student));
         }
 
         var existingStudent = await studentRepository.GetByIdAsync(student.Id, cancellationToken);
         if (existingStudent is null)
         {
-            throw new InvalidOperationException("Student was not found.");
+            throw new InvalidOperationException("Ученикът не беше намерен.");
         }
 
         await studentRepository.UpdateAsync(student, cancellationToken);
@@ -67,7 +67,7 @@ public class StudentService : IStudentService
     {
         if (id == Guid.Empty)
         {
-            throw new ArgumentException("Student id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на ученика не може да бъде празен.", nameof(id));
         }
 
         var existingStudent = await studentRepository.GetByIdAsync(id, cancellationToken);

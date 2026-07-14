@@ -19,6 +19,11 @@ public class ClassScheduleEntryRepository : IClassScheduleEntryRepository
             .Include(scheduleEntry => scheduleEntry.Class)
             .Include(scheduleEntry => scheduleEntry.ClassSubject)
             .ThenInclude(classSubject => classSubject.Subject)
+            .Include(scheduleEntry => scheduleEntry.ClassSubject)
+            .ThenInclude(classSubject => classSubject.Teacher)
+            .ThenInclude(teacher => teacher!.User)
+            .Include(scheduleEntry => scheduleEntry.SubstituteTeacher)
+            .ThenInclude(teacher => teacher!.User)
             .FirstOrDefaultAsync(scheduleEntry => scheduleEntry.Id == id, cancellationToken);
     }
 
@@ -28,6 +33,11 @@ public class ClassScheduleEntryRepository : IClassScheduleEntryRepository
             .Include(scheduleEntry => scheduleEntry.Class)
             .Include(scheduleEntry => scheduleEntry.ClassSubject)
             .ThenInclude(classSubject => classSubject.Subject)
+            .Include(scheduleEntry => scheduleEntry.ClassSubject)
+            .ThenInclude(classSubject => classSubject.Teacher)
+            .ThenInclude(teacher => teacher!.User)
+            .Include(scheduleEntry => scheduleEntry.SubstituteTeacher)
+            .ThenInclude(teacher => teacher!.User)
             .ToListAsync(cancellationToken);
     }
 

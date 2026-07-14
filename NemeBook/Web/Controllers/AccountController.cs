@@ -1,4 +1,6 @@
 // Web/Controllers/AccountController.cs
+
+using System.Diagnostics;
 using System.Security.Claims;
 using Entities.Enums;
 using Entities.ViewModels.Auth;
@@ -33,10 +35,25 @@ public class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null, CancellationToken cancellationToken = default)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
+            var userId = GetCurrentUserId();
+            if (userId.HasValue)
+            {
+                var currentUser = await _authService.GetUserByIdAsync(userId.Value, cancellationToken);
+                if (currentUser?.Role == UserRole.Student)
+                {
+                    return RedirectToAction("Index", "Student");
+                }
+
+                if (currentUser?.Role == UserRole.Teacher)
+                {
+                    return RedirectToAction("Index", "Teacher");
+                }
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
@@ -66,6 +83,16 @@ public class AccountController : Controller
         await SignInUserAsync(user, request.RememberMe);
 
         _logger.LogInformation("User logged in: {Email}", user.Email);
+
+        if (user.Role == UserRole.Student)
+        {
+            return RedirectToAction("Index", "Student");
+        }
+
+        if (user.Role == UserRole.Teacher)
+        {
+            return RedirectToAction("Index", "Teacher");
+        }
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
@@ -290,7 +317,7 @@ public class AccountController : Controller
             return RedirectToAction("Login", "Account");
         }
 
-        var userInfo = new UserInfoDto
+        var userInfo = new AccountViewModel
         {
             Id = user.Id,
             FirstName = user.FirstName,
@@ -298,7 +325,7 @@ public class AccountController : Controller
             LastName = user.LastName,
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
-            Role = user.Role.ToString(),
+            Role = GetRoleDisplayName(user.Role),
         };
 
         return View(userInfo);
@@ -379,7 +406,11 @@ public class AccountController : Controller
             new Claim("FullName", FormatFullName(user.FirstName, user.MiddleName, user.LastName)),
         };
 
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var identity = new ClaimsIdentity(
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            ClaimTypes.Name,
+            ClaimTypes.Role);
         var principal = new ClaimsPrincipal(identity);
 
         var authProperties = new AuthenticationProperties
@@ -401,6 +432,18 @@ public class AccountController : Controller
             " ",
             new[] { firstName, middleName, lastName }
                 .Where(name => !string.IsNullOrWhiteSpace(name)));
+    }
+
+    private static string GetRoleDisplayName(UserRole role)
+    {
+        return role switch
+        {
+            UserRole.Student => "Ученик",
+            UserRole.Parent => "Родител",
+            UserRole.Teacher => "Учител",
+            UserRole.Principal => "Директор",
+            _ => role.ToString()
+        };
     }
 
     private Guid? GetCurrentUserId()
@@ -436,10 +479,10 @@ public class AccountController : Controller
     {
         return error switch
         {
-            "Invitation has already been used." => "Тази покана вече е използвана.",
-            "Invitation has expired." => "Тази покана е изтекла.",
-            "Invitation was not found." => "Поканата не беше намерена.",
-            "Invitation type is invalid." => "Поканата е невалидна.",
+            "Поканата вече е използвана." => "Тази покана вече е използвана.",
+            "Поканата е изтекла." => "Тази покана е изтекла.",
+            "Поканата не беше намерена." => "Поканата не беше намерена.",
+            "Типът на поканата е невалиден." => "Поканата е невалидна.",
             _ => "Поканата е невалидна или вече е използвана.",
         };
     }
@@ -448,9 +491,9 @@ public class AccountController : Controller
     {
         return error switch
         {
-            "Password reset link is invalid." => "Линкът за възстановяване е невалиден.",
-            "Password reset link has expired." => "Линкът за възстановяване е изтекъл.",
-            "Password must be at least 8 characters." => "Паролата трябва да бъде поне 8 символа.",
+            "Линкът за възстановяване е невалиден." => "Линкът за възстановяване е невалиден.",
+            "Линкът за възстановяване е изтекъл." => "Линкът за възстановяване е изтекъл.",
+            "Паролата трябва да бъде поне 8 символа." => "Паролата трябва да бъде поне 8 символа.",
             _ => "Неуспешно възстановяване на паролата.",
         };
     }

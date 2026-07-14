@@ -16,7 +16,7 @@ public class ClassSubjectService : IClassSubjectService
     public Task<ClassSubject?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("ClassSubject id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на предмета в класа не може да бъде празен.", nameof(id));
 
         return _classSubjectRepository.GetByIdAsync(id, cancellationToken);
     }
@@ -31,13 +31,13 @@ public class ClassSubjectService : IClassSubjectService
         ArgumentNullException.ThrowIfNull(classSubject);
 
         if (classSubject.ClassId == Guid.Empty)
-            throw new ArgumentException("ClassSubject ClassId cannot be empty.", nameof(classSubject));
+            throw new ArgumentException("Идентификаторът на класа за този предмет не може да бъде празен.", nameof(classSubject));
 
         if (classSubject.SubjectId == Guid.Empty)
-            throw new ArgumentException("ClassSubject SubjectId cannot be empty.", nameof(classSubject));
+            throw new ArgumentException("Идентификаторът на предмета не може да бъде празен.", nameof(classSubject));
 
         if (classSubject.TeacherId == Guid.Empty)
-            throw new ArgumentException("ClassSubject TeacherId cannot be empty.", nameof(classSubject));
+            throw new ArgumentException("Идентификаторът на учителя за този предмет не може да бъде празен.", nameof(classSubject));
 
         await _classSubjectRepository.CreateAsync(classSubject, cancellationToken);
     }
@@ -48,7 +48,7 @@ public class ClassSubjectService : IClassSubjectService
 
         var existing = await _classSubjectRepository.GetByIdAsync(classSubject.Id, cancellationToken);
         if (existing is null)
-            throw new InvalidOperationException("ClassSubject not found.");
+            throw new InvalidOperationException("Предметът в класа не беше намерен.");
 
         await _classSubjectRepository.UpdateAsync(classSubject, cancellationToken);
     }
@@ -56,7 +56,7 @@ public class ClassSubjectService : IClassSubjectService
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("ClassSubject id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на предмета в класа не може да бъде празен.", nameof(id));
 
         await _classSubjectRepository.DeleteAsync(id, cancellationToken);
     }

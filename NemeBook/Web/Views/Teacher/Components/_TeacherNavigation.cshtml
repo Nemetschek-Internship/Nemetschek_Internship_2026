@@ -1,0 +1,53 @@
+@{
+    var activeNav = ViewData["ActiveNav"]?.ToString() ?? string.Empty;
+    var initials = ViewData["ShellUserInitials"]?.ToString() ?? "N";
+    var fullName = ViewData["ShellUserName"]?.ToString()
+        ?? User.FindFirst("FullName")?.Value
+        ?? "Учител";
+    var meta = ViewData["ShellUserMeta"]?.ToString() ?? "Учител";
+}
+
+<aside class="nb-student-sidebar" aria-label="Навигация за учител">
+    <a class="nb-student-brand" asp-area="" asp-controller="Teacher" asp-action="Index">
+        <span class="nb-student-brand-mark">N</span>
+        <span>
+            <strong>NemeBook</strong>
+            <small>Учител</small>
+        </span>
+    </a>
+
+    <nav class="nb-student-nav">
+        <a class="@(activeNav == "Home" ? "is-active" : null)" asp-area="" asp-controller="Teacher" asp-action="Index">
+            <i class="bi bi-house-fill"></i>
+            <span>Начало</span>
+        </a>
+        <a class="@(activeNav == "MyClass" ? "is-active" : null)" asp-area="" asp-controller="Teacher" asp-action="MyClass">
+            <i class="bi bi-people-fill"></i>
+            <span>Моите класове</span>
+        </a>
+        <a class="@(activeNav == "Chats" ? "is-active" : null)" asp-area="" asp-controller="Chat" asp-action="Index">
+            <i class="bi bi-chat-dots"></i>
+            <span>Чатове</span>
+        </a>
+        <a class="@(activeNav == "Schedule" ? "is-active" : null)" asp-area="" asp-controller="Teacher" asp-action="Schedule">
+            <i class="bi bi-calendar-week"></i>
+            <span>Програма</span>
+        </a>
+        <a class="@(activeNav == "Calendar" ? "is-active" : null)" asp-area="" asp-controller="Teacher" asp-action="Calendar">
+            <i class="bi bi-calendar3"></i>
+            <span>Календар</span>
+        </a>
+        <a class="@(activeNav == "Profile" ? "is-active" : null)" asp-area="" asp-controller="Account" asp-action="Profile">
+            <i class="bi bi-person"></i>
+            <span>Профил</span>
+        </a>
+    </nav>
+
+    <a class="nb-student-user" asp-area="" asp-controller="Account" asp-action="Profile" aria-label="Отвори профила">
+        <span class="nb-student-avatar">@initials</span>
+        <span>
+            <strong>@fullName</strong>
+            <small>@meta</small>
+        </span>
+    </a>
+</aside>

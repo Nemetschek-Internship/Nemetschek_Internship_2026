@@ -16,7 +16,7 @@ public class ClassService : IClassService
     public Task<Class?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("Class id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на класа не може да бъде празен.", nameof(id));
 
         return _classRepository.GetByIdAsync(id, cancellationToken);
     }
@@ -31,10 +31,10 @@ public class ClassService : IClassService
         ArgumentNullException.ThrowIfNull(classEntity);
 
         if (classEntity.GradeNumber < 1 || classEntity.GradeNumber > 12)
-            throw new ArgumentException("Grade number must be between 1 and 12.", nameof(classEntity));
+            throw new ArgumentException("Номерът на класа трябва да бъде между 1 и 12.", nameof(classEntity));
 
         if (!char.IsLetter(classEntity.Letter))
-            throw new ArgumentException("Letter must be a valid character.", nameof(classEntity));
+            throw new ArgumentException("Буквата трябва да бъде валиден символ.", nameof(classEntity));
 
         await _classRepository.CreateAsync(classEntity, cancellationToken);
     }
@@ -45,7 +45,7 @@ public class ClassService : IClassService
 
         var existing = await _classRepository.GetByIdAsync(classEntity.Id, cancellationToken);
         if (existing is null)
-            throw new InvalidOperationException("Class not found.");
+            throw new InvalidOperationException("Класът не беше намерен.");
 
         await _classRepository.UpdateAsync(classEntity, cancellationToken);
     }
@@ -53,7 +53,7 @@ public class ClassService : IClassService
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("Class id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на класа не може да бъде празен.", nameof(id));
 
         await _classRepository.DeleteAsync(id, cancellationToken);
     }

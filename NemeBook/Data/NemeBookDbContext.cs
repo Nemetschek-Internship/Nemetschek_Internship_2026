@@ -19,6 +19,7 @@ public class NemeBookDbContext : DbContext
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<Grade> Grades => Set<Grade>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<News> News => Set<News>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Parent> Parents => Set<Parent>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
@@ -41,6 +42,7 @@ public class NemeBookDbContext : DbContext
         ConfigureAbsences(modelBuilder);
         ConfigureFeedbacks(modelBuilder);
         ConfigureEvents(modelBuilder);
+        ConfigureNews(modelBuilder);
         ConfigureChats(modelBuilder);
         ConfigureNotifications(modelBuilder);
         ConfigurePasswordResetTokens(modelBuilder);
@@ -61,6 +63,7 @@ public class NemeBookDbContext : DbContext
             entity.Property(user => user.Email).HasMaxLength(256);
             entity.Property(user => user.Password).HasMaxLength(512);
             entity.Property(user => user.PhoneNumber).HasMaxLength(30);
+            entity.Property(user => user.IsActive).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<Student>()
@@ -82,7 +85,7 @@ public class NemeBookDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Teacher>()
-            .HasQueryFilter(teacher => !teacher.User.IsDeleted);
+            .HasQueryFilter(teacher => !teacher.User.IsDeleted && teacher.User.IsActive);
 
         modelBuilder.Entity<Teacher>()
             .HasOne(teacher => teacher.User)
@@ -125,7 +128,7 @@ public class NemeBookDbContext : DbContext
 
         modelBuilder.Entity<TeacherSubject>(entity =>
         {
-            entity.HasQueryFilter(teacherSubject => !teacherSubject.Teacher.User.IsDeleted);
+            entity.HasQueryFilter(teacherSubject => !teacherSubject.Teacher.User.IsDeleted && teacherSubject.Teacher.User.IsActive);
 
             entity.HasIndex(teacherSubject => new { teacherSubject.TeacherId, teacherSubject.SubjectId })
                 .IsUnique();
@@ -184,6 +187,11 @@ public class NemeBookDbContext : DbContext
                 .WithMany(classSubject => classSubject.ScheduleEntries)
                 .HasForeignKey(scheduleEntry => scheduleEntry.ClassSubjectId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(scheduleEntry => scheduleEntry.SubstituteTeacher)
+                .WithMany()
+                .HasForeignKey(scheduleEntry => scheduleEntry.SubstituteTeacherId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
@@ -311,6 +319,21 @@ public class NemeBookDbContext : DbContext
         });
     }
 
+    private static void ConfigureNews(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<News>(entity =>
+        {
+            entity.Property(news => news.Title).HasMaxLength(200);
+            entity.Property(news => news.Text).HasMaxLength(4000);
+            entity.Property(news => news.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(news => news.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(news => news.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
     private static void ConfigureNotifications(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Notification>(entity =>
@@ -341,6 +364,16 @@ public class NemeBookDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(notification => notification.FeedbackId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(notification => notification.Chat)
+                .WithMany()
+                .HasForeignKey(notification => notification.ChatId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(notification => notification.Message)
+                .WithMany()
+                .HasForeignKey(notification => notification.MessageId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
     }
 
