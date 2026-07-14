@@ -4,6 +4,7 @@ using DotNetEnv;
 using Entities.Enums;
 using Entities.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Services.Dtos.Registration;
 using Services.Interfaces;
@@ -11,6 +12,7 @@ using Services.Interfaces.Chats;
 using Services.Interfaces.Classes;
 using Services.Interfaces.ClassSubjects;
 using Services.Interfaces.Grades;
+using Services.Interfaces.News;
 using Services.Interfaces.Parents;
 using Services.Interfaces.Registration;
 using Services.Interfaces.Security;
@@ -27,6 +29,7 @@ using Services.Services.ClassSubjects;
 using Services.Services.Email;
 using Services.Services.Grades;
 using Services.Services.Notifications;
+using Services.Services.News;
 using Services.Services.Parents;
 using Services.Services.Registration;
 using Services.Services.Security;
@@ -35,6 +38,7 @@ using Services.Services.Subjects;
 using Services.Services.Teachers;
 using Web.Hubs;
 using Web.Services;
+using Web.Services.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,6 +85,7 @@ builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IGradeRepository, GradeRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<INewsRepository, NewsRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IParentRepository, ParentRepository>();
 builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
@@ -112,6 +117,7 @@ builder.Services.AddScoped<IEmailService>(serviceProvider => serviceProvider.Get
 builder.Services.AddScoped<IRegistrationEmailSender>(serviceProvider => serviceProvider.GetRequiredService<EmailService>());
 builder.Services.AddScoped<IRegistrationImportParser, ExcelRegistrationImportParser>();
 builder.Services.AddScoped<IInvitationTokenService, InvitationTokenService>();
+builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
@@ -119,6 +125,9 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<INotificationPushService, SignalRNotificationPushService>();
 builder.Services.AddScoped<IStudentHomeService, StudentHomeService>();
 builder.Services.AddScoped<ITeacherHomeService, TeacherHomeService>();
+builder.Services.AddScoped<IPrincipalDashboardService, PrincipalDashboardService>();
+builder.Services.AddScoped<IPrincipalClassesService, PrincipalClassesService>();
+builder.Services.AddScoped<IPrincipalClassManagementService, PrincipalClassManagementService>();
 
 builder.Services.Configure<RegistrationEmailOptions>(
     builder.Configuration.GetSection("RegistrationEmail"));
@@ -150,7 +159,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddRazorOptions(options =>
+    {
+        options.ViewLocationFormats.Insert(0, "/Views/Admin/{1}/{0}.cshtml");
+        options.ViewLocationFormats.Insert(1, "/Views/Admin/Shared/{0}.cshtml");
+    });
 builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<BackgroundEmailQueue>();
@@ -185,11 +199,6 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 app.MapHub<ChatHub>("/chatHub");
-
-app.MapControllerRoute(
-        name: "areas",
-        pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}")
-    .WithStaticAssets();
 
 app.MapControllerRoute(
         name: "default",

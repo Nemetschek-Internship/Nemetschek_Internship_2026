@@ -1,0 +1,468 @@
+@model Web.ViewModels.PrincipalClassManagementViewModel
+
+@{
+    Layout = null;
+    ViewData["Title"] = $"Клас {Model.ClassName} - Програма";
+
+    var classSubjectOptionsJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.ClassSubjects.Select(classSubject => new
+        {
+            id = classSubject.ClassSubjectId,
+            name = classSubject.SubjectName,
+            teacherName = classSubject.TeacherName
+        }));
+}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Клас @Model.ClassName - Програма - NemeBook</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="nb-principal-body">
+    <div class="nb-principal-shell">
+        <partial name="~/Views/Admin/Shared/_PrincipalSideNav.cshtml" model='@("Classes")' />
+
+        <main class="nb-principal-main">
+            <header class="nb-principal-topbar">
+                <h1>Клас @Model.ClassName</h1>
+                <partial name="_PrincipalStudentSearch" />
+                <div class="nb-principal-top-actions">
+                    <form asp-action="Logout" asp-area="" asp-controller="Account" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="nb-principal-action-btn is-logout" type="submit">
+                            <span>Изход</span>
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <section class="nb-principal-content nb-class-management-content" aria-label="Управление на клас">
+                <div class="nb-class-management-tabs-row">
+                    <nav class="nb-class-management-tabs" aria-label="Секции на класа">
+                        <a class="@GetTabClass("Class")" asp-controller="ClassManagement" asp-action="Students" asp-route-classId="@Model.ClassId">Клас</a>
+                        <a class="@GetTabClass("Subjects")" asp-controller="ClassManagement" asp-action="Subjects" asp-route-classId="@Model.ClassId">Предмети</a>
+                        <a class="@GetTabClass("Schedule")" asp-controller="ClassManagement" asp-action="Schedule" asp-route-classId="@Model.ClassId">Програма</a>
+                        <a class="@GetTabClass("Events")" asp-controller="ClassManagement" asp-action="Events" asp-route-classId="@Model.ClassId">Събития</a>
+                    </nav>
+                    <a class="nb-principal-action-btn nb-class-back-btn" asp-controller="Classes" asp-action="AllClasses" asp-route-grade="@GetGradeNumber(Model.ClassName)">
+                        <span>Всички класове</span>
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    </a>
+                </div>
+
+                <section class="nb-class-students-panel nb-schedule-panel" aria-label="Програма">
+                    @if (TempData["ScheduleMessage"] is string scheduleMessage)
+                    {
+                        <div class="nb-schedule-inline-warning">
+                            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                            <span>@scheduleMessage</span>
+                        </div>
+                    }
+
+                    @if (Model.ClassSubjects.Count == 0)
+                    {
+                        <div class="nb-class-subjects-empty">
+                            <span>Първо добавете предмети към класа, за да съставите програма.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="nb-schedule-week" aria-label="Седмична програма">
+                            @foreach (var day in Model.ScheduleDays)
+                            {
+                                <section class="nb-schedule-day" aria-label="@day.DayName">
+                                    <header>
+                                        <strong>@day.DayName</strong>
+                                    </header>
+
+                                    <div class="nb-schedule-day-stack">
+                                        @foreach (var entry in day.Entries)
+                                        {
+                                            <button class="nb-schedule-card js-schedule-card"
+                                                    type="button"
+                                                    data-entry-id="@entry.Id"
+                                                    data-class-subject-id="@entry.ClassSubjectId"
+                                                    data-substitute-teacher-id="@entry.SubstituteTeacherId"
+                                                    data-substitute-teacher-name="@entry.SubstituteTeacherName"
+                                                    data-day-of-week="@((int)entry.DayOfWeek)"
+                                                    data-period-number="@entry.PeriodNumber"
+                                                    data-subject-name="@entry.SubjectName"
+                                                    data-teacher-name="@entry.TeacherName"
+                                                    data-time-range="@entry.TimeRange">
+                                                <span class="nb-schedule-period">@entry.PeriodNumber</span>
+                                                <span class="nb-schedule-card-body">
+                                                    <strong>@entry.SubjectName</strong>
+                                                    <small>@(entry.SubstituteTeacherName ?? entry.TeacherName ?? "Няма избран учител")</small>
+                                                    @if (entry.SubstituteTeacherName is not null)
+                                                    {
+                                                        <em>заместващ</em>
+                                                    }
+                                                    <span>@entry.TimeRange</span>
+                                                </span>
+                                            </button>
+                                        }
+
+                                        <button class="nb-schedule-add-toggle"
+                                                type="button"
+                                                aria-label="Добави час в @day.DayName"
+                                                data-target="add-form-@((int)day.DayOfWeek)">
+                                            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                        </button>
+
+                                        <form class="nb-schedule-add-form"
+                                              id="add-form-@((int)day.DayOfWeek)"
+                                              asp-controller="ClassManagement"
+                                              asp-action="AddScheduleEntry"
+                                              method="post"
+                                              hidden>
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="classId" value="@Model.ClassId" />
+                                            <input type="hidden" name="dayOfWeek" value="@day.DayOfWeek" />
+                                            <input type="hidden" name="periodNumber" value="@day.NextPeriodNumber" />
+                                            <label>
+                                                <span>Предмет</span>
+                                                <select name="classSubjectId" required>
+                                                    <option value="" selected hidden>Изберете предмет</option>
+                                                    @foreach (var classSubject in Model.ClassSubjects)
+                                                    {
+                                                        <option value="@classSubject.ClassSubjectId">
+                                                            @classSubject.SubjectName (@(classSubject.TeacherName ?? "без учител"))
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </label>
+                                            <div class="nb-schedule-add-actions">
+                                                <button type="submit">Добави</button>
+                                                <button type="button" class="nb-schedule-add-cancel">Отказ</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </section>
+                            }
+                        </div>
+                    }
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <div class="nb-modal-backdrop" id="scheduleEditDialog" aria-hidden="true">
+        <section class="nb-schedule-dialog" role="dialog" aria-modal="true" aria-labelledby="schedule-dialog-title">
+            <div class="nb-subject-dialog-header">
+                <h2 id="schedule-dialog-title">Редактирай час</h2>
+                <button class="nb-dialog-close" type="button" id="closeScheduleDialog" aria-label="Затвори">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <form asp-controller="ClassManagement" asp-action="UpdateScheduleEntry" method="post" id="scheduleEditForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="classId" value="@Model.ClassId" />
+                <input type="hidden" name="scheduleEntryId" id="editScheduleEntryId" />
+                <input type="hidden" name="substituteTeacherId" id="editSubstituteTeacherId" />
+
+                <div class="nb-schedule-dialog-meta">
+                    <span id="editSchedulePeriod"></span>
+                    <strong id="editScheduleTime"></strong>
+                </div>
+
+                <label class="nb-schedule-dialog-field">
+                    <span>Предмет</span>
+                    <select name="classSubjectId" id="editClassSubjectId" required>
+                        @foreach (var classSubject in Model.ClassSubjects)
+                        {
+                            <option value="@classSubject.ClassSubjectId">
+                                @classSubject.SubjectName (@(classSubject.TeacherName ?? "без учител"))
+                            </option>
+                        }
+                    </select>
+                </label>
+
+                <div class="nb-schedule-dialog-field">
+                    <span>Заместващ учител</span>
+                    <div class="nb-schedule-teacher-search">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <input id="editSubstituteTeacherSearch"
+                               type="search"
+                               placeholder="Търси свободен учител"
+                               autocomplete="off" />
+                        <div class="nb-schedule-teacher-dropdown" role="listbox" hidden></div>
+                    </div>
+                    <button class="nb-schedule-clear-substitute" type="button" id="clearSubstituteTeacher">
+                        Без заместващ учител
+                    </button>
+                </div>
+
+                <div class="nb-schedule-dialog-actions">
+                    <button class="nb-principal-action-btn" type="submit">
+                        <span>Запази</span>
+                        <i class="bi bi-check-lg" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </form>
+
+            <form asp-controller="ClassManagement"
+                  asp-action="DeleteScheduleEntry"
+                  method="post"
+                  onsubmit="return confirm('Сигурни ли сте, че искате да изтриете този час?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="classId" value="@Model.ClassId" />
+                <input type="hidden" name="scheduleEntryId" id="deleteScheduleEntryId" />
+                <button class="nb-schedule-delete-btn" type="submit">
+                    <i class="bi bi-trash3" aria-hidden="true"></i>
+                    <span>Изтрий часа</span>
+                </button>
+            </form>
+        </section>
+    </div>
+
+    @if (Model.ScheduleConflict is not null)
+    {
+        <div class="nb-modal-backdrop is-visible" id="scheduleConflictDialog" aria-hidden="false">
+            <section class="nb-schedule-conflict-dialog" role="alertdialog" aria-modal="true" aria-labelledby="schedule-conflict-title">
+                <div class="nb-schedule-conflict-icon">
+                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                </div>
+                <h2 id="schedule-conflict-title">Учителят е зает</h2>
+                <p>
+                    @Model.ScheduleConflict.TeacherName вече има час с @Model.ScheduleConflict.ClassName
+                    в @Model.ScheduleConflict.DayName, @Model.ScheduleConflict.PeriodNumber. час
+                    (@Model.ScheduleConflict.TimeRange).
+                </p>
+                <div class="nb-schedule-conflict-actions">
+                    <a class="nb-principal-action-btn"
+                       asp-controller="ClassManagement"
+                       asp-action="Schedule"
+                       asp-route-classId="@Model.ScheduleConflict.ClassId">
+                        <span>Виж програмата</span>
+                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </a>
+                    <button class="nb-schedule-conflict-close" type="button" id="closeScheduleConflict">
+                        Затвори
+                    </button>
+                </div>
+            </section>
+        </div>
+    }
+
+    <script>
+        (function () {
+            const classSubjects = @Html.Raw(classSubjectOptionsJson);
+            const editDialog = document.getElementById('scheduleEditDialog');
+            const closeDialog = document.getElementById('closeScheduleDialog');
+            const editEntryId = document.getElementById('editScheduleEntryId');
+            const deleteEntryId = document.getElementById('deleteScheduleEntryId');
+            const editClassSubject = document.getElementById('editClassSubjectId');
+            const editPeriod = document.getElementById('editSchedulePeriod');
+            const editTime = document.getElementById('editScheduleTime');
+            const substituteId = document.getElementById('editSubstituteTeacherId');
+            const substituteSearch = document.getElementById('editSubstituteTeacherSearch');
+            const substituteDropdown = document.querySelector('.nb-schedule-teacher-dropdown');
+            const clearSubstitute = document.getElementById('clearSubstituteTeacher');
+            const teacherSearchUrl = '@Url.Action("SearchFreeScheduleTeacherMatches", "ClassManagement")';
+            let selectedDayOfWeek = '';
+            let selectedPeriodNumber = '';
+            let abortController = null;
+
+            document.querySelectorAll('.nb-schedule-add-toggle').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const form = document.getElementById(button.dataset.target);
+                    if (!form) {
+                        return;
+                    }
+
+                    button.hidden = true;
+                    form.hidden = false;
+
+                    const select = form.querySelector('select');
+                    if (select) {
+                        select.focus();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.nb-schedule-add-cancel').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const form = button.closest('.nb-schedule-add-form');
+                    if (!form) {
+                        return;
+                    }
+
+                    const toggle = document.querySelector('[data-target="' + form.id + '"]');
+                    form.reset();
+                    form.hidden = true;
+
+                    if (toggle) {
+                        toggle.hidden = false;
+                        toggle.focus();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.js-schedule-card').forEach(function (card) {
+                card.addEventListener('click', function () {
+                    selectedDayOfWeek = card.dataset.dayOfWeek || '';
+                    selectedPeriodNumber = card.dataset.periodNumber || '';
+                    editEntryId.value = card.dataset.entryId || '';
+                    deleteEntryId.value = card.dataset.entryId || '';
+                    editClassSubject.value = card.dataset.classSubjectId || '';
+                    substituteId.value = card.dataset.substituteTeacherId || '';
+                    substituteSearch.value = card.dataset.substituteTeacherName || '';
+                    updateClearSubstituteVisibility();
+                    editPeriod.textContent = selectedPeriodNumber + '. час';
+                    editTime.textContent = card.dataset.timeRange || '';
+                    closeTeacherDropdown();
+                    editDialog.classList.add('is-visible');
+                    editDialog.setAttribute('aria-hidden', 'false');
+                    editClassSubject.focus();
+                });
+            });
+
+            function closeEditDialog() {
+                editDialog.classList.remove('is-visible');
+                editDialog.setAttribute('aria-hidden', 'true');
+                closeTeacherDropdown();
+            }
+
+            function closeTeacherDropdown() {
+                substituteDropdown.hidden = true;
+                substituteDropdown.innerHTML = '';
+            }
+
+            function clearSubstituteTeacher() {
+                substituteId.value = '';
+                substituteSearch.value = '';
+                updateClearSubstituteVisibility();
+                closeTeacherDropdown();
+            }
+
+            function updateClearSubstituteVisibility() {
+                clearSubstitute.hidden = !substituteId.value;
+            }
+
+            function searchFreeTeachers() {
+                const query = substituteSearch.value.trim();
+                substituteId.value = '';
+
+                if (abortController) {
+                    abortController.abort();
+                }
+
+                abortController = new AbortController();
+
+                fetch(
+                    teacherSearchUrl
+                    + '?dayOfWeek=' + encodeURIComponent(selectedDayOfWeek)
+                    + '&periodNumber=' + encodeURIComponent(selectedPeriodNumber)
+                    + '&scheduleEntryId=' + encodeURIComponent(editEntryId.value)
+                    + '&query=' + encodeURIComponent(query),
+                    {
+                        headers: { 'Accept': 'application/json' },
+                        signal: abortController.signal
+                    })
+                    .then(function (response) {
+                        return response.ok ? response.json() : [];
+                    })
+                    .then(renderTeacherResults)
+                    .catch(function (error) {
+                        if (error.name !== 'AbortError') {
+                            closeTeacherDropdown();
+                        }
+                    });
+            }
+
+            function renderTeacherResults(results) {
+                substituteDropdown.innerHTML = '';
+
+                if (results.length === 0) {
+                    const empty = document.createElement('span');
+                    empty.className = 'nb-main-teacher-empty';
+                    empty.textContent = 'Няма свободни учители';
+                    substituteDropdown.appendChild(empty);
+                    substituteDropdown.hidden = false;
+                    return;
+                }
+
+                results.forEach(function (teacher) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.textContent = teacher.fullName;
+                    button.addEventListener('click', function () {
+                        substituteId.value = teacher.id;
+                        substituteSearch.value = teacher.fullName;
+                        updateClearSubstituteVisibility();
+                        closeTeacherDropdown();
+                    });
+                    substituteDropdown.appendChild(button);
+                });
+
+                substituteDropdown.hidden = false;
+            }
+
+            closeDialog.addEventListener('click', closeEditDialog);
+            clearSubstitute.addEventListener('click', clearSubstituteTeacher);
+            substituteSearch.addEventListener('input', searchFreeTeachers);
+            substituteSearch.addEventListener('focus', searchFreeTeachers);
+
+            editDialog.addEventListener('click', function (event) {
+                if (event.target === editDialog) {
+                    closeEditDialog();
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeEditDialog();
+                    const conflictDialog = document.getElementById('scheduleConflictDialog');
+                    if (conflictDialog) {
+                        conflictDialog.classList.remove('is-visible');
+                    }
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('.nb-schedule-teacher-search')) {
+                    closeTeacherDropdown();
+                }
+            });
+
+            const conflictClose = document.getElementById('closeScheduleConflict');
+            if (conflictClose) {
+                conflictClose.addEventListener('click', function () {
+                    document.getElementById('scheduleConflictDialog').classList.remove('is-visible');
+                });
+            }
+
+            editClassSubject.addEventListener('change', function () {
+                const selectedSubject = classSubjects.find(function (classSubject) {
+                    return classSubject.id === editClassSubject.value;
+                });
+
+                if (selectedSubject && !substituteId.value) {
+                    substituteSearch.placeholder = selectedSubject.teacherName
+                        ? 'Търси заместващ за ' + selectedSubject.teacherName
+                        : 'Търси свободен учител';
+                }
+            });
+        }());
+    </script>
+</body>
+</html>
+
+@functions {
+    private string GetTabClass(string tab)
+    {
+        return Model.ActiveTab == tab ? "is-active" : string.Empty;
+    }
+
+    private static int GetGradeNumber(string className)
+    {
+        var digits = new string(className.TakeWhile(char.IsDigit).ToArray());
+        return int.TryParse(digits, out var gradeNumber) ? gradeNumber : 1;
+    }
+}

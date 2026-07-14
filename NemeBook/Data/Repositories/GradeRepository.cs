@@ -17,12 +17,16 @@ public class GradeRepository : IGradeRepository
     public Task<Grade?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return _dbContext.Grades
+            .Include(g => g.Student)
+            .ThenInclude(student => student.Class)
             .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Grade>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbContext.Grades
+            .Include(g => g.Student)
+            .ThenInclude(student => student.Class)
             .ToListAsync(cancellationToken);
     }
 

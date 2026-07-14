@@ -15,7 +15,7 @@ public class InvitationTokenService : IInvitationTokenService
     {
         if (string.IsNullOrWhiteSpace(token))
         {
-            throw new ArgumentException("Token cannot be empty.", nameof(token));
+            throw new ArgumentException("Токенът не може да бъде празен.", nameof(token));
         }
 
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(token));

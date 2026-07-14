@@ -17,6 +17,10 @@ public class StudentRepository : IStudentRepository
     {
         return dbContext.Students
             .Include(student => student.User)
+            .Include(student => student.Class)
+            .Include(student => student.Grades)
+            .Include(student => student.Feedbacks)
+            .Include(student => student.Absences)
             .Include(student => student.Parents)
             .FirstOrDefaultAsync(student => student.Id == id, cancellationToken);
     }
@@ -25,6 +29,10 @@ public class StudentRepository : IStudentRepository
     {
         return await dbContext.Students
             .Include(student => student.User)
+            .Include(student => student.Class)
+            .Include(student => student.Grades)
+            .Include(student => student.Feedbacks)
+            .Include(student => student.Absences)
             .Include(student => student.Parents)
             .ToListAsync(cancellationToken);
     }

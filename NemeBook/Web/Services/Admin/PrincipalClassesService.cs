@@ -1,29 +1,28 @@
-using Data;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Services.Repositories;
 using Web.ViewModels;
 
-namespace Web.Areas.Admin.Controllers;
+namespace Web.Services.Admin;
 
-[Area("Admin")]
-[Authorize(Roles = "Principal")]
-public class ClassesController : Controller
+public class PrincipalClassesService : IPrincipalClassesService
 {
-    private readonly NemeBookDbContext dbContext;
+    private readonly IClassRepository classRepository;
+    private readonly IGradeRepository gradeRepository;
 
-    public ClassesController(NemeBookDbContext dbContext)
+    public PrincipalClassesService(
+        IClassRepository classRepository,
+        IGradeRepository gradeRepository)
     {
-        this.dbContext = dbContext;
+        this.classRepository = classRepository;
+        this.gradeRepository = gradeRepository;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> AllClasses(int grade = 1, CancellationToken cancellationToken = default)
+    public async Task<PrincipalClassesViewModel> BuildClassesViewModelAsync(
+        int grade,
+        CancellationToken cancellationToken = default)
     {
         var selectedGrade = Math.Clamp(grade, 1, 7);
 
-        var classRows = await dbContext.Classes
-            .AsNoTracking()
+        var classRows = (await classRepository.GetAllAsync(cancellationToken))
             .Where(schoolClass => schoolClass.GradeNumber == selectedGrade)
             .OrderBy(schoolClass => schoolClass.Letter)
             .Select(schoolClass => new
@@ -32,19 +31,18 @@ public class ClassesController : Controller
                 schoolClass.GradeNumber,
                 schoolClass.Letter,
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var classIds = classRows.Select(schoolClass => schoolClass.Id).ToList();
 
-        var gradeRows = await dbContext.Grades
-            .AsNoTracking()
+        var gradeRows = (await gradeRepository.GetAllAsync(cancellationToken))
             .Where(gradeEntry => classIds.Contains(gradeEntry.Student.ClassId))
             .Select(gradeEntry => new
             {
                 gradeEntry.Student.ClassId,
                 gradeEntry.Value,
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var classAverages = gradeRows
             .GroupBy(gradeEntry => gradeEntry.ClassId)
@@ -52,7 +50,7 @@ public class ClassesController : Controller
                 group => group.Key,
                 group => Math.Round(group.Average(gradeEntry => gradeEntry.Value), 2));
 
-        var viewModel = new PrincipalClassesViewModel
+        return new PrincipalClassesViewModel
         {
             SelectedGrade = selectedGrade,
             GradeNumbers = Enumerable.Range(1, 7).ToList(),
@@ -68,7 +66,5 @@ public class ClassesController : Controller
                 })
                 .ToList(),
         };
-
-        return View(viewModel);
     }
 }

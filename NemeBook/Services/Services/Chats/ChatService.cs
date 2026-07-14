@@ -98,23 +98,23 @@ public class ChatService : IChatService
     {
         if (requesterUserId == Guid.Empty)
         {
-            throw new ArgumentException("Requester user id cannot be empty.", nameof(requesterUserId));
+            throw new ArgumentException("Идентификаторът на потребителя заявител не може да бъде празен.", nameof(requesterUserId));
         }
 
         if (targetUserId == Guid.Empty)
         {
-            throw new ArgumentException("Target user id cannot be empty.", nameof(targetUserId));
+            throw new ArgumentException("Идентификаторът на избрания потребител не може да бъде празен.", nameof(targetUserId));
         }
 
         if (requesterUserId == targetUserId)
         {
-            throw new InvalidOperationException("Cannot start chat with the same user.");
+            throw new InvalidOperationException("Не може да започнете чат със същия потребител.");
         }
 
         var allowedContactIds = await GetAllowedDirectContactIdsAsync(requesterUserId, cancellationToken);
         if (!allowedContactIds.Contains(targetUserId))
         {
-            throw new InvalidOperationException("This direct chat is not allowed for the current user role.");
+            throw new InvalidOperationException("Този директен чат не е разрешен за текущата потребителска роля.");
         }
 
         var chats = await chatRepository.GetAllAsync(cancellationToken);
@@ -146,13 +146,13 @@ public class ChatService : IChatService
     {
         if (classId == Guid.Empty)
         {
-            throw new ArgumentException("Class id cannot be empty.", nameof(classId));
+            throw new ArgumentException("Идентификаторът на класа не може да бъде празен.", nameof(classId));
         }
 
         var creator = await GetUserOrThrowAsync(creatorUserId, cancellationToken);
         if (creator.Role is not UserRole.Teacher and not UserRole.Principal)
         {
-            throw new InvalidOperationException("Only teacher or principal can create class chat.");
+            throw new InvalidOperationException("Само учител или директор може да създаде чат на клас.");
         }
 
         if (creator.Role == UserRole.Teacher)
@@ -160,12 +160,12 @@ public class ChatService : IChatService
             var teacherClassIds = await GetTeacherClassIdsByUserIdAsync(creatorUserId, cancellationToken);
             if (!teacherClassIds.Contains(classId))
             {
-                throw new InvalidOperationException("Teacher is not related to this class.");
+                throw new InvalidOperationException("Учителят не е свързан с този клас.");
             }
         }
 
         var schoolClass = await classRepository.GetByIdAsync(classId, cancellationToken)
-            ?? throw new InvalidOperationException("Class was not found.");
+            ?? throw new InvalidOperationException("Класът не беше намерен.");
 
         var chatName = $"{ClassChatPrefix}{classId}";
         var chats = await chatRepository.GetAllAsync(cancellationToken);
@@ -203,7 +203,7 @@ public class ChatService : IChatService
         var creator = await GetUserOrThrowAsync(creatorUserId, cancellationToken);
         if (creator.Role is not UserRole.Teacher and not UserRole.Principal)
         {
-            throw new InvalidOperationException("Only teacher or principal can create teachers group chat.");
+            throw new InvalidOperationException("Само учител или директор може да създаде групов чат за учители.");
         }
 
         var chats = await chatRepository.GetAllAsync(cancellationToken);
@@ -234,12 +234,12 @@ public class ChatService : IChatService
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            throw new ArgumentException("Message text cannot be empty.", nameof(text));
+            throw new ArgumentException("Текстът на съобщението не може да бъде празен.", nameof(text));
         }
 
         if (text.Length > 4000)
         {
-            throw new ArgumentException("Message text cannot exceed 4000 characters.", nameof(text));
+            throw new ArgumentException("Текстът на съобщението не може да бъде по-дълъг от 4000 символа.", nameof(text));
         }
 
         await EnsureUserCanAccessChatAsync(senderUserId, chatId, cancellationToken);
@@ -263,18 +263,18 @@ public class ChatService : IChatService
     {
         if (userId == Guid.Empty)
         {
-            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+            throw new ArgumentException("Идентификаторът на потребителя не може да бъде празен.", nameof(userId));
         }
 
         return await userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new InvalidOperationException("User was not found.");
+            ?? throw new InvalidOperationException("Потребителят не беше намерен.");
     }
 
     private async Task EnsureUserCanAccessChatAsync(Guid userId, Guid chatId, CancellationToken cancellationToken)
     {
         var requester = await GetUserOrThrowAsync(userId, cancellationToken);
         var chat = await chatRepository.GetByIdAsync(chatId, cancellationToken)
-            ?? throw new InvalidOperationException("Chat was not found.");
+            ?? throw new InvalidOperationException("Чатът не беше намерен.");
 
         if (chat.Users.All(user => user.Id != userId))
         {
@@ -305,11 +305,160 @@ public class ChatService : IChatService
     private async Task<HashSet<Guid>> GetAllowedDirectContactIdsAsync(Guid requesterUserId, CancellationToken cancellationToken)
     {
         var users = await userRepository.GetAllAsync(cancellationToken);
+        var requester = users.FirstOrDefault(user => user.Id == requesterUserId)
+            ?? throw new InvalidOperationException("Потребителят не беше намерен.");
+        var students = await studentRepository.GetAllAsync(cancellationToken);
+        var parents = await parentRepository.GetAllAsync(cancellationToken);
+        var teachers = await teacherRepository.GetAllAsync(cancellationToken);
+        var classes = await classRepository.GetAllAsync(cancellationToken);
+        var classSubjects = await classSubjectRepository.GetAllAsync(cancellationToken);
+
+        var teacherUserByTeacherId = teachers.ToDictionary(teacher => teacher.Id, teacher => teacher.UserId);
+        var principalIds = users
+            .Where(user => user.Role == UserRole.Principal)
+            .Select(user => user.Id)
+            .ToHashSet();
+
+        HashSet<Guid> allowedIds = requester.Role switch
+        {
+            UserRole.Student => GetAllowedForStudent(requesterUserId, students, classSubjects, classes, teacherUserByTeacherId),
+            UserRole.Parent => GetAllowedForParent(requesterUserId, parents, classSubjects, classes, teacherUserByTeacherId, principalIds),
+            UserRole.Teacher => GetAllowedForTeacher(requesterUserId, teachers, students, parents, classes, classSubjects, principalIds),
+            UserRole.Principal => GetAllowedForPrincipal(users),
+            _ => new HashSet<Guid>()
+        };
+
+        allowedIds.Remove(requesterUserId);
+        return allowedIds;
+    }
+
+    private static HashSet<Guid> GetAllowedForStudent(
+        Guid requesterUserId,
+        IReadOnlyList<Student> students,
+        IReadOnlyList<ClassSubject> classSubjects,
+        IReadOnlyList<Class> classes,
+        IReadOnlyDictionary<Guid, Guid> teacherUserByTeacherId)
+    {
+        var student = students.FirstOrDefault(currentStudent => currentStudent.UserId == requesterUserId)
+            ?? throw new InvalidOperationException("Профилът на ученика не беше намерен.");
+
+        var classTeacherIds = classSubjects
+            .Where(classSubject => classSubject.ClassId == student.ClassId)
+            .Where(classSubject => classSubject.TeacherId.HasValue)
+            .Select(classSubject => classSubject.TeacherId!.Value)
+            .ToHashSet();
+
+        var mainTeacherId = classes
+            .FirstOrDefault(currentClass => currentClass.Id == student.ClassId)
+            ?.MainTeacherId;
+
+        if (mainTeacherId.HasValue)
+        {
+            classTeacherIds.Add(mainTeacherId.Value);
+        }
+
+        return classTeacherIds
+            .Where(teacherUserByTeacherId.ContainsKey)
+            .Select(teacherId => teacherUserByTeacherId[teacherId])
+            .ToHashSet();
+    }
+
+    private static HashSet<Guid> GetAllowedForParent(
+        Guid requesterUserId,
+        IReadOnlyList<Parent> parents,
+        IReadOnlyList<ClassSubject> classSubjects,
+        IReadOnlyList<Class> classes,
+        IReadOnlyDictionary<Guid, Guid> teacherUserByTeacherId,
+        IReadOnlySet<Guid> principalIds)
+    {
+        var parent = parents.FirstOrDefault(currentParent => currentParent.UserId == requesterUserId)
+            ?? throw new InvalidOperationException("Профилът на родителя не беше намерен.");
+
+        var childClassIds = parent.Students
+            .Select(student => student.ClassId)
+            .ToHashSet();
+
+        var teacherIds = classSubjects
+            .Where(classSubject => childClassIds.Contains(classSubject.ClassId))
+            .Where(classSubject => classSubject.TeacherId.HasValue)
+            .Select(classSubject => classSubject.TeacherId!.Value)
+            .ToHashSet();
+
+        foreach (var mainTeacherId in classes
+                     .Where(currentClass => childClassIds.Contains(currentClass.Id))
+                     .Select(currentClass => currentClass.MainTeacherId))
+        {
+            if (mainTeacherId.HasValue)
+            {
+                teacherIds.Add(mainTeacherId.Value);
+            }
+        }
+
+        var allowed = teacherIds
+            .Where(teacherUserByTeacherId.ContainsKey)
+            .Select(teacherId => teacherUserByTeacherId[teacherId])
+            .ToHashSet();
+
+        foreach (var principalId in principalIds)
+        {
+            allowed.Add(principalId);
+        }
+
+        return allowed;
+    }
+
+    private static HashSet<Guid> GetAllowedForTeacher(
+        Guid requesterUserId,
+        IReadOnlyList<Teacher> teachers,
+        IReadOnlyList<Student> students,
+        IReadOnlyList<Parent> parents,
+        IReadOnlyList<Class> classes,
+        IReadOnlyList<ClassSubject> classSubjects,
+        IReadOnlySet<Guid> principalIds)
+    {
+        var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == requesterUserId)
+            ?? throw new InvalidOperationException("Профилът на учителя не беше намерен.");
+
+        var classIds = classSubjects
+            .Where(classSubject => classSubject.TeacherId == teacher.Id)
+            .Select(classSubject => classSubject.ClassId)
+            .ToHashSet();
+
+        foreach (var classId in classes
+                     .Where(currentClass => currentClass.MainTeacherId == teacher.Id)
+                     .Select(currentClass => currentClass.Id))
+        {
+            classIds.Add(classId);
+        }
+
+        var studentUserIds = students
+            .Where(student => classIds.Contains(student.ClassId))
+            .Select(student => student.UserId)
+            .ToHashSet();
+
+        var parentUserIds = parents
+            .Where(parent => parent.Students.Any(student => classIds.Contains(student.ClassId)))
+            .Select(parent => parent.UserId)
+            .ToHashSet();
+
+        foreach (var parentUserId in parentUserIds)
+        {
+            studentUserIds.Add(parentUserId);
+        }
+
+        foreach (var principalId in principalIds)
+        {
+            studentUserIds.Add(principalId);
+        }
+
+        return studentUserIds;
+    }
+
+    private static HashSet<Guid> GetAllowedForPrincipal(IReadOnlyList<User> users)
+    {
         return users
-            .Where(user => user.Id != requesterUserId)
             .Where(user => !user.IsDeleted)
             .Where(user => user.IsActive)
-            .Where(user => user.Role is UserRole.Student or UserRole.Teacher)
             .Select(user => user.Id)
             .ToHashSet();
     }
@@ -321,7 +470,7 @@ public class ChatService : IChatService
         var classSubjects = await classSubjectRepository.GetAllAsync(cancellationToken);
 
         var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == teacherUserId)
-            ?? throw new InvalidOperationException("Teacher profile was not found.");
+            ?? throw new InvalidOperationException("Профилът на учителя не беше намерен.");
 
         var classIds = classSubjects
             .Where(classSubject => classSubject.TeacherId == teacher.Id)

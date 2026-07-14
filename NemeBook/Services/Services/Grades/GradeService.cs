@@ -51,11 +51,11 @@ public class GradeService : IGradeService
 
         var student = await _studentRepository.GetByIdAsync(studentId, cancellationToken);
         if (student is null)
-            throw new InvalidOperationException("Student not found.");
+            throw new InvalidOperationException("Ученикът не беше намерен.");
 
         var classEntity = await _classService.GetByIdAsync(student.ClassId, cancellationToken);
         if (classEntity is null)
-            throw new InvalidOperationException("Class not found.");
+            throw new InvalidOperationException("Класът не беше намерен.");
 
         var gradeFilter = filter is not null ? new GradeFilter
         {
@@ -208,23 +208,23 @@ public class GradeService : IGradeService
 
         var classEntity = await _classService.GetByIdAsync(classId, cancellationToken);
         if (classEntity is null)
-            throw new InvalidOperationException("Class not found.");
+            throw new InvalidOperationException("Класът не беше намерен.");
 
         var subject = await _subjectService.GetByIdAsync(subjectId, cancellationToken);
         if (subject is null)
-            throw new InvalidOperationException("Subject not found.");
+            throw new InvalidOperationException("Предметът не беше намерен.");
 
         var allClassSubjects = await _classSubjectService.GetAllAsync(cancellationToken);
         var classSubject = allClassSubjects.FirstOrDefault(cs => cs.ClassId == classId && cs.SubjectId == subjectId);
         if (classSubject is null)
-            throw new InvalidOperationException("Subject is not taught in this class.");
+            throw new InvalidOperationException("Този предмет не се преподава в този клас.");
 
         var teacherName = "Няма назначен учител";
         if (classSubject.TeacherId.HasValue)
         {
             var teacher = await _teacherService.GetByIdAsync(classSubject.TeacherId.Value, cancellationToken);
             if (teacher is null)
-                throw new InvalidOperationException("Teacher not found.");
+                throw new InvalidOperationException("Учителят не беше намерен.");
 
             var teacherUser = await _userRepository.GetByIdAsync(teacher.UserId, cancellationToken);
             teacherName = teacherUser is not null

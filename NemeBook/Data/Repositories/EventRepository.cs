@@ -16,12 +16,18 @@ public class EventRepository : IEventRepository
     public Task<Event?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return dbContext.Events
+            .Include(schoolEvent => schoolEvent.Classes)
+            .Include(schoolEvent => schoolEvent.ClassSubject)
+            .ThenInclude(classSubject => classSubject!.Subject)
             .FirstOrDefaultAsync(schoolEvent => schoolEvent.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Event>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Events
+            .Include(schoolEvent => schoolEvent.Classes)
+            .Include(schoolEvent => schoolEvent.ClassSubject)
+            .ThenInclude(classSubject => classSubject!.Subject)
             .ToListAsync(cancellationToken);
     }
 

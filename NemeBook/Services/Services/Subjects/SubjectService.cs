@@ -16,7 +16,7 @@ public class SubjectService : ISubjectService
     public Task<Subject?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("Subject id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на предмета не може да бъде празен.", nameof(id));
 
         return _subjectRepository.GetByIdAsync(id, cancellationToken);
     }
@@ -31,10 +31,10 @@ public class SubjectService : ISubjectService
         ArgumentNullException.ThrowIfNull(subject);
 
         if (string.IsNullOrWhiteSpace(subject.Name))
-            throw new ArgumentException("Subject name cannot be empty.", nameof(subject));
+            throw new ArgumentException("Името на предмета не може да бъде празно.", nameof(subject));
 
         if (subject.Name.Length > 100)
-            throw new ArgumentException("Subject name cannot exceed 100 characters.", nameof(subject));
+            throw new ArgumentException("Името на предмета не може да бъде по-дълго от 100 символа.", nameof(subject));
 
         await _subjectRepository.CreateAsync(subject, cancellationToken);
     }
@@ -45,7 +45,7 @@ public class SubjectService : ISubjectService
 
         var existing = await _subjectRepository.GetByIdAsync(subject.Id, cancellationToken);
         if (existing is null)
-            throw new InvalidOperationException("Subject not found.");
+            throw new InvalidOperationException("Предметът не беше намерен.");
 
         await _subjectRepository.UpdateAsync(subject, cancellationToken);
     }
@@ -53,7 +53,7 @@ public class SubjectService : ISubjectService
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("Subject id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на предмета не може да бъде празен.", nameof(id));
 
         await _subjectRepository.DeleteAsync(id, cancellationToken);
     }

@@ -37,7 +37,7 @@ public class HomeController : Controller
 
         if (User.IsInRole("Principal"))
         {
-            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+            return RedirectToAction("Index", "Dashboard");
         }
 
         return View();

@@ -140,7 +140,7 @@ public class AccountController : Controller
             "Account",
             values: null,
             protocol: Request.Scheme);
-       
+
         if (string.IsNullOrWhiteSpace(resetUrlBase))
         {
             ModelState.AddModelError(string.Empty, "Неуспешно създаване на линк за възстановяване.");
@@ -479,10 +479,10 @@ public class AccountController : Controller
     {
         return error switch
         {
-            "Invitation has already been used." => "Тази покана вече е използвана.",
-            "Invitation has expired." => "Тази покана е изтекла.",
-            "Invitation was not found." => "Поканата не беше намерена.",
-            "Invitation type is invalid." => "Поканата е невалидна.",
+            "Поканата вече е използвана." => "Тази покана вече е използвана.",
+            "Поканата е изтекла." => "Тази покана е изтекла.",
+            "Поканата не беше намерена." => "Поканата не беше намерена.",
+            "Типът на поканата е невалиден." => "Поканата е невалидна.",
             _ => "Поканата е невалидна или вече е използвана.",
         };
     }
@@ -491,9 +491,9 @@ public class AccountController : Controller
     {
         return error switch
         {
-            "Password reset link is invalid." => "Линкът за възстановяване е невалиден.",
-            "Password reset link has expired." => "Линкът за възстановяване е изтекъл.",
-            "Password must be at least 8 characters." => "Паролата трябва да бъде поне 8 символа.",
+            "Линкът за възстановяване е невалиден." => "Линкът за възстановяване е невалиден.",
+            "Линкът за възстановяване е изтекъл." => "Линкът за възстановяване е изтекъл.",
+            "Паролата трябва да бъде поне 8 символа." => "Паролата трябва да бъде поне 8 символа.",
             _ => "Неуспешно възстановяване на паролата.",
         };
     }

@@ -16,7 +16,7 @@ public class ParentService : IParentService
     public Task<Parent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("Parent id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на родителя не може да бъде празен.", nameof(id));
 
         return _parentRepository.GetByIdAsync(id, cancellationToken);
     }
@@ -31,7 +31,7 @@ public class ParentService : IParentService
         ArgumentNullException.ThrowIfNull(parent);
 
         if (parent.UserId == Guid.Empty)
-            throw new ArgumentException("Parent UserId cannot be empty.", nameof(parent));
+            throw new ArgumentException("Идентификаторът на потребителя за този родител не може да бъде празен.", nameof(parent));
 
         await _parentRepository.CreateAsync(parent, cancellationToken);
     }
@@ -42,7 +42,7 @@ public class ParentService : IParentService
 
         var existing = await _parentRepository.GetByIdAsync(parent.Id, cancellationToken);
         if (existing is null)
-            throw new InvalidOperationException("Parent not found.");
+            throw new InvalidOperationException("Родителят не беше намерен.");
 
         await _parentRepository.UpdateAsync(parent, cancellationToken);
     }
@@ -50,7 +50,7 @@ public class ParentService : IParentService
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException("Parent id cannot be empty.", nameof(id));
+            throw new ArgumentException("Идентификаторът на родителя не може да бъде празен.", nameof(id));
 
         await _parentRepository.DeleteAsync(id, cancellationToken);
     }

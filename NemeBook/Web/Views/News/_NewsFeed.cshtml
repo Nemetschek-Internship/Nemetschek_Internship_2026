@@ -1,0 +1,288 @@
+@using System.Text.Json
+@model Web.ViewModels.NewsIndexViewModel
+
+@{
+    var canManageNews = User.IsInRole("Principal");
+    var shouldOpenCreateDialog = canManageNews && !ViewContext.ViewData.ModelState.IsValid;
+    var newsItemsJson = JsonSerializer.Serialize(Model.News.Select(news => new
+    {
+        id = news.Id.ToString(),
+        title = news.Title,
+        text = news.Text,
+        createdAt = news.CreatedAt.ToString("O"),
+        createdAtLabel = news.CreatedAtLabel,
+    }));
+}
+
+<div class="nb-news-shell">
+    <section class="nb-news-list-card" aria-labelledby="news-list-title">
+        <div class="nb-news-list-header">
+            <div>
+                <h2 id="news-list-title">Всички новини</h2>
+                <span>@Model.News.Count публикации</span>
+            </div>
+
+            @if (canManageNews)
+            {
+                <button class="nb-news-add-btn" type="button" id="openNewsDialog">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    <span>Добави новина</span>
+                </button>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+        {
+            <div class="nb-news-success">@Model.SuccessMessage</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="nb-news-error">@Model.ErrorMessage</div>
+        }
+
+        @if (Model.News.Count == 0)
+        {
+            <div class="nb-news-empty">Все още няма публикувани новини.</div>
+        }
+        else
+        {
+            <div class="nb-news-list">
+                @foreach (var news in Model.News)
+                {
+                    <button class="nb-news-card js-news-card" type="button" data-news-id="@news.Id">
+                        <div class="nb-news-card-header">
+                            <h3>@news.Title</h3>
+                            <time datetime="@news.CreatedAt.ToString("O")">@news.CreatedAtLabel</time>
+                        </div>
+                        <p>@news.PreviewText</p>
+                    </button>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+<div class="nb-modal-backdrop"
+     id="newsDetailsBackdrop"
+     aria-hidden="true">
+    <section class="nb-news-create-card nb-news-details-dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="news-details-title">
+        <div class="nb-subject-dialog-header">
+            <div>
+                <h2 id="news-details-title"></h2>
+                <time id="news-details-date"></time>
+            </div>
+            <button class="nb-dialog-close" type="button" id="closeNewsDetailsDialog" aria-label="Затвори">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <p class="nb-news-details-text" id="news-details-text"></p>
+
+        @if (canManageNews)
+        {
+            <div class="nb-news-details-actions" id="newsDetailsActions">
+                <button class="nb-news-secondary-btn" type="button" id="editNewsButton">
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                    <span>Редактирай</span>
+                </button>
+                <form asp-controller="News"
+                      asp-action="Delete"
+                      method="post"
+                      onsubmit="return confirm('Сигурни ли сте, че искате да изтриете тази новина?');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="newsId" id="deleteNewsId" />
+                    <button class="nb-news-danger-btn" type="submit">
+                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                        <span>Изтрий</span>
+                    </button>
+                </form>
+            </div>
+
+            <form asp-controller="News"
+                  asp-action="Update"
+                  method="post"
+                  class="nb-news-form nb-news-edit-form"
+                  id="editNewsForm"
+                  hidden>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="newsId" id="editNewsId" />
+
+                <label class="nb-news-field">
+                    <span>Заглавие</span>
+                    <input name="title" id="editNewsTitle" maxlength="200" required />
+                </label>
+
+                <label class="nb-news-field">
+                    <span>Текст</span>
+                    <textarea name="text" id="editNewsText" maxlength="4000" rows="6" required></textarea>
+                </label>
+
+                <div class="nb-news-edit-actions">
+                    <button class="nb-news-secondary-btn" type="button" id="cancelEditNewsButton">
+                        <span>Отказ</span>
+                    </button>
+                    <button class="nb-news-submit" type="submit">
+                        <i class="bi bi-check-lg" aria-hidden="true"></i>
+                        <span>Запази</span>
+                    </button>
+                </div>
+            </form>
+        }
+    </section>
+</div>
+
+@if (canManageNews)
+{
+    <div class="nb-modal-backdrop @(shouldOpenCreateDialog ? "is-visible" : null)"
+         id="newsDialogBackdrop"
+         aria-hidden="@(shouldOpenCreateDialog ? "false" : "true")">
+        <section class="nb-news-create-card"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="news-create-title">
+            <div class="nb-subject-dialog-header">
+                <h2 id="news-create-title">Добави новина</h2>
+                <button class="nb-dialog-close" type="button" id="closeNewsDialog" aria-label="Затвори">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <form asp-controller="News" asp-action="Create" method="post" class="nb-news-form">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="nb-news-validation"></div>
+
+                <label class="nb-news-field">
+                    <span>Заглавие</span>
+                    <input asp-for="Title" maxlength="200" />
+                    <span asp-validation-for="Title"></span>
+                </label>
+
+                <label class="nb-news-field">
+                    <span>Текст</span>
+                    <textarea asp-for="Text" maxlength="4000" rows="6"></textarea>
+                    <span asp-validation-for="Text"></span>
+                </label>
+
+                <button class="nb-news-submit" type="submit">
+                    <i class="bi bi-send-fill" aria-hidden="true"></i>
+                    <span>Публикувай</span>
+                </button>
+            </form>
+        </section>
+    </div>
+}
+
+<script>
+    (() => {
+        const newsItems = @Html.Raw(newsItemsJson);
+        const detailsBackdrop = document.getElementById('newsDetailsBackdrop');
+        const detailsTitle = document.getElementById('news-details-title');
+        const detailsDate = document.getElementById('news-details-date');
+        const detailsText = document.getElementById('news-details-text');
+        const closeDetailsButton = document.getElementById('closeNewsDetailsDialog');
+        const detailsActions = document.getElementById('newsDetailsActions');
+        const editButton = document.getElementById('editNewsButton');
+        const editForm = document.getElementById('editNewsForm');
+        const cancelEditButton = document.getElementById('cancelEditNewsButton');
+        const editNewsId = document.getElementById('editNewsId');
+        const editNewsTitle = document.getElementById('editNewsTitle');
+        const editNewsText = document.getElementById('editNewsText');
+        const deleteNewsId = document.getElementById('deleteNewsId');
+        let selectedNews = null;
+
+        const openBackdrop = (backdrop, focusTarget) => {
+            backdrop.classList.add('is-visible');
+            backdrop.setAttribute('aria-hidden', 'false');
+            focusTarget?.focus();
+        };
+
+        const closeBackdrop = (backdrop) => {
+            backdrop.classList.remove('is-visible');
+            backdrop.setAttribute('aria-hidden', 'true');
+        };
+
+        const showDetailsMode = () => {
+            detailsText.hidden = false;
+            detailsActions?.removeAttribute('hidden');
+            editForm?.setAttribute('hidden', 'hidden');
+        };
+
+        const openDetailsDialog = (news) => {
+            selectedNews = news;
+            detailsTitle.textContent = news.title;
+            detailsDate.textContent = news.createdAtLabel;
+            detailsDate.setAttribute('datetime', news.createdAt);
+            detailsText.textContent = news.text;
+            deleteNewsId && (deleteNewsId.value = news.id);
+            showDetailsMode();
+            openBackdrop(detailsBackdrop, closeDetailsButton);
+        };
+
+        document.querySelectorAll('.js-news-card').forEach((card) => {
+            card.addEventListener('click', () => {
+                const news = newsItems.find((item) => item.id === card.dataset.newsId);
+                if (news) {
+                    openDetailsDialog(news);
+                }
+            });
+        });
+
+        closeDetailsButton?.addEventListener('click', () => closeBackdrop(detailsBackdrop));
+        detailsBackdrop?.addEventListener('click', (event) => {
+            if (event.target === detailsBackdrop) {
+                closeBackdrop(detailsBackdrop);
+            }
+        });
+
+        editButton?.addEventListener('click', () => {
+            if (!selectedNews || !editForm || !detailsActions) {
+                return;
+            }
+
+            editNewsId.value = selectedNews.id;
+            editNewsTitle.value = selectedNews.title;
+            editNewsText.value = selectedNews.text;
+            detailsText.hidden = true;
+            detailsActions.setAttribute('hidden', 'hidden');
+            editForm.removeAttribute('hidden');
+            editNewsTitle.focus();
+        });
+
+        cancelEditButton?.addEventListener('click', showDetailsMode);
+
+        const createBackdrop = document.getElementById('newsDialogBackdrop');
+        const openCreateButton = document.getElementById('openNewsDialog');
+        const closeCreateButton = document.getElementById('closeNewsDialog');
+
+        if (createBackdrop && openCreateButton && closeCreateButton) {
+            openCreateButton.addEventListener('click', () => {
+                openBackdrop(createBackdrop, createBackdrop.querySelector('input, textarea, button'));
+            });
+            closeCreateButton.addEventListener('click', () => {
+                closeBackdrop(createBackdrop);
+                openCreateButton.focus();
+            });
+            createBackdrop.addEventListener('click', (event) => {
+                if (event.target === createBackdrop) {
+                    closeBackdrop(createBackdrop);
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            if (detailsBackdrop?.classList.contains('is-visible')) {
+                closeBackdrop(detailsBackdrop);
+            }
+            if (createBackdrop?.classList.contains('is-visible')) {
+                closeBackdrop(createBackdrop);
+            }
+        });
+    })();
+</script>

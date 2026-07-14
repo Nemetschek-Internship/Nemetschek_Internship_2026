@@ -110,6 +110,17 @@ public class GradeController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> GetAverage(Guid studentId, Guid? subjectId = null)
+    {
+        var average = await _gradeService.GetStudentAverageAsync(
+            studentId,
+            subjectId,
+            CancellationToken.None);
+
+        return Json(new { studentId, subjectId, average });
+    }
+
+    [HttpGet]
 [Authorize(Roles = "Teacher,Principal")]
 public async Task<IActionResult> SelectClassAndSubject()
 {

@@ -1,47 +1,41 @@
-using Data;
 using Entities.Enums;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Services.Repositories;
 using Web.ViewModels;
 
-namespace Web.Areas.Admin.Controllers;
+namespace Web.Services.Admin;
 
-[Area("Admin")]
-[Authorize(Roles = "Principal")]
-public class DashboardController : Controller
+public class PrincipalDashboardService : IPrincipalDashboardService
 {
     private const int MaximumGradeBarHeight = 170;
     private const int MinimumGradeBarHeight = 18;
 
-    private readonly NemeBookDbContext dbContext;
+    private readonly IAbsenceRepository absenceRepository;
+    private readonly IFeedbackRepository feedbackRepository;
+    private readonly IGradeRepository gradeRepository;
 
-    public DashboardController(NemeBookDbContext dbContext)
+    public PrincipalDashboardService(
+        IAbsenceRepository absenceRepository,
+        IFeedbackRepository feedbackRepository,
+        IGradeRepository gradeRepository)
     {
-        this.dbContext = dbContext;
+        this.absenceRepository = absenceRepository;
+        this.feedbackRepository = feedbackRepository;
+        this.gradeRepository = gradeRepository;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
-    {
-        var viewModel = await BuildPrincipalHomeViewModelAsync(cancellationToken);
-        return View(viewModel);
-    }
-
-    private async Task<PrincipalHomeViewModel> BuildPrincipalHomeViewModelAsync(CancellationToken cancellationToken)
+    public async Task<PrincipalHomeViewModel> BuildHomeViewModelAsync(CancellationToken cancellationToken = default)
     {
         var viewModel = new PrincipalHomeViewModel
         {
             Reports = CreateDefaultReports(),
         };
 
-        var gradeRows = await dbContext.Grades
-            .AsNoTracking()
+        var gradeRows = (await gradeRepository.GetAllAsync(cancellationToken))
             .Select(grade => new PrincipalGradeRow(
                 grade.Value,
                 grade.Student.Class.GradeNumber,
                 grade.Student.Class.Letter))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         if (gradeRows.Count > 0)
         {
@@ -86,27 +80,22 @@ public class DashboardController : Controller
                 .ToList();
         }
 
-        var absencesCount = await dbContext.Absences
-            .AsNoTracking()
-            .CountAsync(cancellationToken);
+        var absences = await absenceRepository.GetAllAsync(cancellationToken);
+        var absencesCount = absences.Count;
 
         if (absencesCount > 0)
         {
             viewModel.Reports[1].Value = absencesCount.ToString();
         }
 
-        var unexcusedAbsencesCount = await dbContext.Absences
-            .AsNoTracking()
-            .CountAsync(absence => absence.Status == AbsenceStatus.Unexcused, cancellationToken);
+        var unexcusedAbsencesCount = absences.Count(absence => absence.Status == AbsenceStatus.Unexcused);
 
         if (unexcusedAbsencesCount > 0)
         {
             viewModel.Reports[2].Value = unexcusedAbsencesCount.ToString();
         }
 
-        var feedbacksCount = await dbContext.Feedbacks
-            .AsNoTracking()
-            .CountAsync(cancellationToken);
+        var feedbacksCount = (await feedbackRepository.GetAllAsync(cancellationToken)).Count;
 
         if (feedbacksCount > 0)
         {

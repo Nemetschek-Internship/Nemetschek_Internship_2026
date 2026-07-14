@@ -14,7 +14,7 @@ public class Pbkdf2PasswordHasher : IPasswordHasher
     {
         if (string.IsNullOrWhiteSpace(password))
         {
-            throw new ArgumentException("Password cannot be empty.", nameof(password));
+            throw new ArgumentException("Паролата не може да бъде празна.", nameof(password));
         }
 
         var salt = RandomNumberGenerator.GetBytes(SaltSize);

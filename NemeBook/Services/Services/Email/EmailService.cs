@@ -290,7 +290,7 @@ public class EmailService : IEmailService, IRegistrationEmailSender
     {
         if (string.IsNullOrWhiteSpace(_registrationEmailOptions.BaseUrl))
         {
-            throw new InvalidOperationException("RegistrationEmail:BaseUrl is not configured.");
+            throw new InvalidOperationException("Основният адрес за регистрационните имейли не е конфигуриран.");
         }
 
         var path = request.Type == RegistrationInvitationType.ParentSignUp

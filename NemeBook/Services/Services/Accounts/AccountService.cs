@@ -67,24 +67,24 @@ public class AccountService : IAccountService
     {
         if (string.IsNullOrWhiteSpace(token))
         {
-            throw new ArgumentException("Password reset token is required.", nameof(token));
+            throw new ArgumentException("Токенът за възстановяване на паролата е задължителен.", nameof(token));
         }
 
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
         {
-            throw new ArgumentException("Password must be at least 8 characters.", nameof(password));
+            throw new ArgumentException("Паролата трябва да бъде поне 8 символа.", nameof(password));
         }
 
         var passwordResetToken = await _passwordResetRepository.GetByTokenAsync(token, cancellationToken);
         if (passwordResetToken is null || passwordResetToken.User is null || !passwordResetToken.User.IsActive)
         {
-            throw new InvalidOperationException("Password reset link is invalid.");
+            throw new InvalidOperationException("Линкът за възстановяване е невалиден.");
         }
 
         if (passwordResetToken.ExpiresAt < DateTime.UtcNow)
         {
             await _passwordResetRepository.DeleteAsync(passwordResetToken.Id, cancellationToken);
-            throw new InvalidOperationException("Password reset link has expired.");
+            throw new InvalidOperationException("Линкът за възстановяване е изтекъл.");
         }
 
         passwordResetToken.User.Password = _passwordHasher.HashPassword(password);

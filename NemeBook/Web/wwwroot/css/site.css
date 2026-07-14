@@ -1635,6 +1635,7 @@ body {
   font-size: 13px;
   font-weight: 900;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .nb-class-main-teacher form > button:disabled {
@@ -1669,12 +1670,12 @@ body {
 }
 
 .nb-class-add-subject-btn {
-  min-height: 36px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0 14px;
+  padding: 0 15px;
   border: 0;
   border-radius: 999px;
   background: var(--nb-orange);
@@ -1682,11 +1683,18 @@ body {
   font-size: 13px;
   font-weight: 900;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .nb-class-add-subject-btn:hover,
 .nb-class-add-subject-btn:focus {
   background: var(--nb-orange-dark);
+}
+
+.nb-class-add-subject-btn,
+.nb-class-add-subject-btn span,
+.nb-class-add-subject-btn i {
+  color: #ffffff;
 }
 
 .nb-class-subjects-empty {
@@ -2028,6 +2036,1316 @@ body {
 .nb-add-class-subject-submit:hover,
 .nb-add-class-subject-submit:focus {
   background: var(--nb-orange-dark);
+}
+
+.nb-schedule-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.nb-schedule-inline-warning {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid #ffe0ad;
+  border-radius: 12px;
+  background: #fff8eb;
+  color: #9a5a00;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.nb-schedule-week {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
+  align-items: start;
+  overflow-x: auto;
+  padding: 0 0 6px;
+}
+
+.nb-schedule-day {
+  min-width: 150px;
+  display: grid;
+  gap: 10px;
+}
+
+.nb-schedule-day > header {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #f1e6dc;
+  border-radius: 12px;
+  background: #fffaf5;
+  color: #25262b;
+}
+
+.nb-schedule-day > header strong {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.nb-schedule-day-stack {
+  display: grid;
+  gap: 9px;
+}
+
+.nb-schedule-card,
+.nb-schedule-add-toggle {
+  width: 100%;
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid #f1e6dc;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #25262b;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.nb-schedule-card:hover,
+.nb-schedule-card:focus,
+.nb-schedule-add-toggle:hover,
+.nb-schedule-add-toggle:focus {
+  border-color: #ffd0a7;
+  box-shadow: 0 12px 26px rgba(196, 104, 33, 0.13);
+  transform: translateY(-1px);
+}
+
+.nb-schedule-period {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #fff0e3;
+  color: var(--nb-orange-dark);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.nb-schedule-card-body {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.nb-schedule-card-body strong {
+  overflow: hidden;
+  color: #25262b;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-schedule-card-body small,
+.nb-schedule-card-body span,
+.nb-schedule-card-body em {
+  overflow: hidden;
+  color: #747c88;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-schedule-card-body em {
+  width: max-content;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eef7ff;
+  color: #226aa5;
+  font-style: normal;
+}
+
+.nb-schedule-add-toggle {
+  grid-template-columns: 1fr;
+  place-items: center;
+  align-items: center;
+  justify-items: center;
+  border-style: dashed;
+  background: #fffaf5;
+}
+
+.nb-schedule-add-toggle[hidden] {
+  display: none;
+}
+
+.nb-schedule-add-toggle i {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: var(--nb-orange);
+  color: #ffffff;
+  font-size: 24px;
+}
+
+.nb-schedule-add-form {
+  min-height: 104px;
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid #f1e6dc;
+  border-radius: 13px;
+  background: #fffaf5;
+}
+
+.nb-schedule-add-form[hidden] {
+  display: none;
+}
+
+.nb-schedule-add-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.nb-schedule-add-form label span {
+  color: #4d5562;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-schedule-add-form select,
+.nb-schedule-dialog-field select,
+.nb-schedule-teacher-search input {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  border: 1px solid #ede5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #25262b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.nb-schedule-add-form select,
+.nb-schedule-dialog-field select {
+  padding: 0 10px;
+}
+
+.nb-schedule-add-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.nb-schedule-add-form button[type="submit"],
+.nb-schedule-add-cancel {
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nb-schedule-add-form button[type="submit"] {
+  background: var(--nb-orange);
+  color: #ffffff;
+}
+
+.nb-schedule-add-cancel {
+  padding: 0 12px;
+  background: #fff0e3;
+  color: var(--nb-orange);
+}
+
+.nb-schedule-add-form button[type="submit"]:hover,
+.nb-schedule-add-form button[type="submit"]:focus {
+  background: var(--nb-orange-dark);
+}
+
+.nb-schedule-add-cancel:hover,
+.nb-schedule-add-cancel:focus {
+  background: var(--nb-orange);
+  color: #ffffff;
+}
+
+.nb-schedule-dialog,
+.nb-schedule-conflict-dialog {
+  width: min(100%, 560px);
+  max-height: min(720px, calc(100dvh - 48px));
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  overflow: visible;
+  border: 1px solid #ede5dd;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 72px rgba(20, 16, 12, 0.24);
+}
+
+.nb-schedule-dialog-meta {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #fffaf5;
+  color: #25262b;
+}
+
+.nb-schedule-dialog-meta span,
+.nb-schedule-dialog-meta strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+#scheduleEditForm {
+  display: grid;
+  gap: 15px;
+}
+
+.nb-schedule-dialog-field {
+  display: grid;
+  gap: 7px;
+}
+
+.nb-schedule-dialog-field > span {
+  color: #4d5562;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-schedule-teacher-search {
+  position: relative;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid #ede5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #9a8f84;
+}
+
+.nb-schedule-teacher-search input {
+  height: auto;
+  padding: 0;
+  border: 0;
+  outline: 0;
+}
+
+.nb-schedule-teacher-dropdown {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 245px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid #ede5dd;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(40, 30, 22, 0.16);
+}
+
+.nb-schedule-teacher-dropdown button,
+.nb-schedule-teacher-dropdown span {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #2c2f36;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.nb-schedule-teacher-dropdown button {
+  cursor: pointer;
+}
+
+.nb-schedule-teacher-dropdown button:hover,
+.nb-schedule-teacher-dropdown button:focus {
+  background: #fff0e3;
+  color: var(--nb-orange-dark);
+}
+
+.nb-schedule-clear-substitute,
+.nb-schedule-delete-btn,
+.nb-schedule-conflict-close {
+  min-height: 38px;
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff0e3;
+  color: var(--nb-orange);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nb-schedule-clear-substitute[hidden] {
+  display: none;
+}
+
+.nb-schedule-clear-substitute:hover,
+.nb-schedule-clear-substitute:focus,
+.nb-schedule-conflict-close:hover,
+.nb-schedule-conflict-close:focus {
+  background: var(--nb-orange);
+  color: #ffffff;
+}
+
+.nb-schedule-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nb-schedule-delete-btn {
+  background: #ffe7e4;
+  color: #b42318;
+}
+
+.nb-schedule-delete-btn:hover,
+.nb-schedule-delete-btn:focus {
+  background: #b42318;
+  color: #ffffff;
+}
+
+.nb-schedule-conflict-dialog {
+  justify-items: center;
+  text-align: center;
+}
+
+.nb-schedule-conflict-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #fff0e3;
+  color: var(--nb-orange);
+  font-size: 22px;
+}
+
+.nb-schedule-conflict-dialog h2,
+.nb-schedule-conflict-dialog p {
+  margin: 0;
+}
+
+.nb-schedule-conflict-dialog h2 {
+  color: #25262b;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.nb-schedule-conflict-dialog p {
+  max-width: 440px;
+  color: #5d6470;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.nb-schedule-conflict-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.nb-class-events-layout {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 292px;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.nb-class-events-calendar,
+.nb-class-upcoming-events {
+  min-height: 0;
+  padding: 16px;
+  border: 1px solid #ede5dd;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.nb-class-events-calendar {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 12px;
+}
+
+.nb-class-events-toolbar,
+.nb-class-events-month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nb-class-events-month {
+  justify-content: flex-start;
+}
+
+.nb-class-events-month h2 {
+  min-width: 170px;
+  margin: 0;
+  color: #25262b;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.nb-class-events-month a {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ede5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #687180;
+  text-decoration: none;
+}
+
+.nb-class-events-month a:hover,
+.nb-class-events-month a:focus {
+  border-color: var(--nb-orange);
+  background: #fff0e3;
+  color: var(--nb-orange);
+}
+
+.nb-class-add-event-btn,
+.nb-class-add-event-submit,
+.nb-news-add-btn {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--nb-orange);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nb-class-add-event-btn:hover,
+.nb-class-add-event-btn:focus,
+.nb-class-add-event-submit:hover,
+.nb-class-add-event-submit:focus,
+.nb-news-add-btn:hover,
+.nb-news-add-btn:focus {
+  background: var(--nb-orange-dark);
+}
+
+.nb-class-add-event-btn,
+.nb-class-add-event-btn span,
+.nb-class-add-event-btn i,
+.nb-class-add-event-submit,
+.nb-class-add-event-submit span,
+.nb-class-add-event-submit i,
+.nb-news-add-btn,
+.nb-news-add-btn span,
+.nb-news-add-btn i {
+  color: #ffffff;
+}
+
+.nb-class-event-alert {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid #ffe0ad;
+  border-radius: 12px;
+  background: #fff8eb;
+  color: #9a5a00;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.nb-class-events-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 8px 10px;
+  border: 1px solid #f1e6dc;
+  border-radius: 12px;
+  background: #fffaf5;
+}
+
+.nb-class-events-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #687180;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-class-events-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.nb-class-events-legend i.is-purple {
+  background: #8b5cf6;
+}
+
+.nb-class-events-legend i.is-blue {
+  background: #3b82f6;
+}
+
+.nb-class-events-legend i.is-green {
+  background: #22c55e;
+}
+
+.nb-class-events-legend i.is-orange {
+  background: var(--nb-orange);
+}
+
+.nb-calendar-weekdays,
+.nb-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.nb-calendar-weekdays span {
+  color: #687180;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.nb-calendar-grid {
+  min-height: 0;
+  overflow: auto;
+}
+
+.nb-calendar-day {
+  min-height: 96px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #f8f1ea;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.nb-calendar-day:hover,
+.nb-calendar-day:focus {
+  border-color: #ffd0a7;
+  box-shadow: 0 12px 26px rgba(196, 104, 33, 0.13);
+  outline: 0;
+  transform: translateY(-1px);
+}
+
+.nb-calendar-day.is-muted {
+  opacity: 0.45;
+}
+
+.nb-calendar-day.is-today {
+  border-color: var(--nb-orange);
+  background: #fffaf5;
+}
+
+.nb-calendar-day-number {
+  width: 24px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #e4ded7;
+  color: #7a8290;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.nb-calendar-event-lines {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.nb-calendar-event-line {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  color: transparent;
+  font-size: 0;
+}
+
+.nb-calendar-event-line.is-purple,
+.nb-upcoming-event-icon.is-purple,
+.nb-day-event-marker.is-purple {
+  background: #8b5cf6;
+}
+
+.nb-calendar-event-line.is-blue,
+.nb-upcoming-event-icon.is-blue,
+.nb-day-event-marker.is-blue {
+  background: #3b82f6;
+}
+
+.nb-calendar-event-line.is-green,
+.nb-upcoming-event-icon.is-green,
+.nb-day-event-marker.is-green {
+  background: #22c55e;
+}
+
+.nb-calendar-event-line.is-orange,
+.nb-upcoming-event-icon.is-orange,
+.nb-day-event-marker.is-orange {
+  background: var(--nb-orange);
+}
+
+.nb-calendar-more {
+  color: #7a8290;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.nb-class-upcoming-events {
+  overflow: auto;
+}
+
+.nb-class-events-empty {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  color: #8a929f;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.nb-news-page {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  padding: 24px 16px 42px;
+}
+
+.nb-news-admin-content {
+  overflow: hidden;
+}
+
+.nb-news-shell {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.nb-news-create-card,
+.nb-news-list-card {
+  min-height: 0;
+  padding: 18px;
+  border: 1px solid #ede5dd;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.nb-news-create-card {
+  width: min(100%, 720px);
+  max-height: calc(100dvh - 48px);
+  display: grid;
+  gap: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 24px 72px rgba(20, 16, 12, 0.24);
+}
+
+.nb-news-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.nb-news-list-header h2 {
+  margin: 0;
+  color: #25262b;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.nb-news-list-header span {
+  display: inline-block;
+  margin-top: 3px;
+  color: #8a929f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-news-list-header .nb-news-add-btn,
+.nb-news-list-header .nb-news-add-btn span,
+.nb-news-list-header .nb-news-add-btn i {
+  color: #ffffff;
+}
+
+.nb-news-list-header .nb-news-add-btn span {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0;
+}
+
+.nb-news-form {
+  display: grid;
+  gap: 13px;
+}
+
+.nb-news-field {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.nb-news-field > span:first-child {
+  color: #4d5562;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-news-field input,
+.nb-news-field textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #ede5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #25262b;
+  font-size: 13px;
+  font-weight: 800;
+  outline: 0;
+}
+
+.nb-news-field input {
+  height: 42px;
+  padding: 0 12px;
+}
+
+.nb-news-field textarea {
+  resize: vertical;
+  padding: 10px 12px;
+  line-height: 1.4;
+}
+
+.nb-news-field input:focus,
+.nb-news-field textarea:focus {
+  border-color: var(--nb-orange);
+  box-shadow: 0 0 0 3px rgba(244, 106, 22, 0.13);
+}
+
+.nb-news-field [data-valmsg-for],
+.nb-news-validation {
+  color: #d92d20;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nb-news-submit {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--nb-orange);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nb-news-submit:hover,
+.nb-news-submit:focus {
+  background: var(--nb-orange-dark);
+}
+
+.nb-news-success {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 12px;
+  border: 1px solid #b9ebcf;
+  border-radius: 12px;
+  background: #ecfdf3;
+  color: #087443;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.nb-news-error {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 12px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.nb-news-list-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.nb-news-list {
+  min-height: 0;
+  max-height: calc(100dvh - 190px);
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.nb-news-page .nb-news-list {
+  max-height: calc(100dvh - 220px);
+}
+
+.nb-news-card {
+  width: 100%;
+  display: grid;
+  gap: 9px;
+  text-align: left;
+  padding: 15px;
+  border: 1px solid #f1e6dc;
+  border-radius: 14px;
+  background: #fffaf5;
+  cursor: pointer;
+}
+
+.nb-news-card:hover,
+.nb-news-card:focus {
+  border-color: var(--nb-orange);
+  background: #fff7ef;
+  box-shadow: 0 8px 22px rgba(244, 106, 22, 0.12);
+}
+
+.nb-news-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nb-news-card h3,
+.nb-news-card p {
+  margin: 0;
+}
+
+.nb-news-card h3 {
+  min-width: 0;
+  color: #25262b;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.nb-news-card time {
+  flex: 0 0 auto;
+  color: #8a929f;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.nb-news-card p {
+  color: #4d5562;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.nb-news-details-dialog time {
+  display: inline-block;
+  margin-top: 4px;
+  color: #8a929f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-news-details-dialog .nb-subject-dialog-header > div {
+  min-width: 0;
+}
+
+.nb-news-details-dialog h2 {
+  overflow-wrap: anywhere;
+}
+
+.nb-news-details-text {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #4d5562;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.nb-news-details-actions,
+.nb-news-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.nb-news-secondary-btn,
+.nb-news-danger-btn {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nb-news-secondary-btn {
+  background: #fff0e3;
+  color: var(--nb-orange);
+}
+
+.nb-news-secondary-btn:hover,
+.nb-news-secondary-btn:focus {
+  background: var(--nb-orange);
+  color: #ffffff;
+}
+
+.nb-news-danger-btn {
+  background: #ffe7e4;
+  color: #b42318;
+}
+
+.nb-news-danger-btn:hover,
+.nb-news-danger-btn:focus {
+  background: #b42318;
+  color: #ffffff;
+}
+
+.nb-news-edit-form[hidden],
+.nb-news-details-text[hidden],
+.nb-news-details-actions[hidden] {
+  display: none;
+}
+
+.nb-news-empty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #eadfd4;
+  border-radius: 14px;
+  background: #fffaf5;
+  color: #8a929f;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.nb-upcoming-event-list {
+  display: grid;
+  gap: 12px;
+}
+
+.nb-upcoming-event-card {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.nb-upcoming-event-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+}
+
+.nb-upcoming-event-icon::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.nb-upcoming-event-info {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.nb-upcoming-event-info strong,
+.nb-upcoming-event-info span,
+.nb-upcoming-event-info small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-upcoming-event-info strong {
+  color: #25262b;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.nb-upcoming-event-info span,
+.nb-upcoming-event-info small {
+  color: #8a929f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nb-event-dialog,
+.nb-day-events-dialog {
+  width: min(100%, 580px);
+  max-height: min(720px, calc(100dvh - 48px));
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  overflow: auto;
+  border: 1px solid #ede5dd;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 72px rgba(20, 16, 12, 0.24);
+}
+
+.nb-day-events-dialog {
+  width: min(100%, 620px);
+}
+
+.nb-event-dialog form {
+  display: grid;
+  gap: 14px;
+}
+
+.nb-event-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nb-event-form-field {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.nb-event-form-field[hidden] {
+  display: none;
+}
+
+.nb-event-form-field span {
+  color: #4d5562;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-event-form-field input,
+.nb-event-form-field select,
+.nb-event-form-field textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #ede5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #25262b;
+  font-size: 13px;
+  font-weight: 800;
+  outline: 0;
+}
+
+.nb-event-form-field input,
+.nb-event-form-field select {
+  height: 42px;
+  padding: 0 12px;
+}
+
+.nb-event-form-field textarea {
+  resize: vertical;
+  padding: 10px 12px;
+}
+
+.nb-event-form-field input:focus,
+.nb-event-form-field select:focus,
+.nb-event-form-field textarea:focus {
+  border-color: var(--nb-orange);
+  box-shadow: 0 0 0 3px rgba(244, 106, 22, 0.13);
+}
+
+.nb-class-add-event-submit {
+  justify-self: center;
+  min-width: 150px;
+}
+
+.nb-day-events-list {
+  max-height: min(520px, calc(100dvh - 170px));
+  display: grid;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.nb-day-events-empty {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #eadfd4;
+  border-radius: 14px;
+  background: #fffaf5;
+  color: #8a929f;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.nb-day-event-card {
+  min-height: 88px;
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid #f1e6dc;
+  border-radius: 14px;
+  background: #fffaf5;
+}
+
+.nb-day-event-marker {
+  width: 10px;
+  min-height: 100%;
+  border-radius: 999px;
+}
+
+.nb-day-event-content {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.nb-day-event-content h3,
+.nb-day-event-content p {
+  margin: 0;
+}
+
+.nb-day-event-content h3 {
+  overflow: hidden;
+  color: #25262b;
+  font-size: 15px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-day-event-content span {
+  color: #7a8290;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nb-day-event-content p {
+  color: #5d6470;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.nb-day-event-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.nb-day-event-actions form {
+  margin: 0;
+}
+
+.nb-day-event-action {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff0e3;
+  color: var(--nb-orange);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nb-day-event-action:hover,
+.nb-day-event-action:focus {
+  background: var(--nb-orange);
+  color: #ffffff;
+}
+
+.nb-day-event-action.is-danger {
+  background: #ffe9e6;
+  color: #d92d20;
+}
+
+.nb-day-event-action.is-danger:hover,
+.nb-day-event-action.is-danger:focus {
+  background: #d92d20;
+  color: #ffffff;
 }
 
 .nb-class-students-panel .nb-student-list {
@@ -2801,6 +4119,79 @@ body {
   .nb-new-subject-row,
   .nb-subject-teacher-row {
     grid-template-columns: 1fr;
+  }
+
+  .nb-class-events-layout {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .nb-class-events-calendar,
+  .nb-class-upcoming-events {
+    padding: 12px;
+  }
+
+  .nb-class-events-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nb-class-events-month {
+    justify-content: space-between;
+  }
+
+  .nb-class-add-event-btn {
+    width: 100%;
+  }
+
+  .nb-calendar-grid {
+    overflow: visible;
+  }
+
+  .nb-calendar-day {
+    min-height: 74px;
+    padding: 7px;
+  }
+
+  .nb-event-dialog {
+    padding: 18px;
+  }
+
+  .nb-event-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nb-news-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .nb-news-admin-content {
+    overflow: visible;
+  }
+
+  .nb-news-list-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nb-news-add-btn {
+    width: 100%;
+  }
+
+  .nb-news-list-header .nb-news-add-btn,
+  .nb-news-list-header .nb-news-add-btn span,
+  .nb-news-list-header .nb-news-add-btn i {
+    color: #ffffff;
+  }
+
+  .nb-news-list {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .nb-news-card-header {
+    flex-direction: column;
+    gap: 5px;
   }
 
   .nb-class-students-panel .nb-student-card {
