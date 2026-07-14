@@ -7,6 +7,7 @@ using Services.Interfaces.Grades;
 using Services.Interfaces.Parents;
 using Services.Interfaces.Students;
 using Services.Interfaces.Subjects;
+using Services.Interfaces.Teachers;
 
 namespace Web.Controllers;
 
@@ -19,19 +20,22 @@ public class StudentGradesController : Controller
     private readonly IParentService parentService;
     private readonly IClassSubjectService classSubjectService;
     private readonly ISubjectService subjectService;
+    private readonly ITeacherService teacherService;
 
     public StudentGradesController(
         IGradeService gradeService,
         IStudentService studentService,
         IParentService parentService,
         IClassSubjectService classSubjectService,
-        ISubjectService subjectService)
+        ISubjectService subjectService,
+        ITeacherService teacherService)
     {
         this.gradeService = gradeService;
         this.studentService = studentService;
         this.parentService = parentService;
         this.classSubjectService = classSubjectService;
         this.subjectService = subjectService;
+        this.teacherService = teacherService;
     }
 
     [HttpGet("StudentGrades")]
@@ -47,6 +51,8 @@ public class StudentGradesController : Controller
             studentId,
             filter,
             CancellationToken.None);
+
+        await SetGradeManagementFlagsAsync(viewModel);
 
         ViewBag.Subjects = await GetSubjectsForStudentAsync(studentId);
         ViewBag.FromDate = filter?.FromDate?.ToString("yyyy-MM-dd");
@@ -132,6 +138,44 @@ public class StudentGradesController : Controller
             .Where(subject => subjectIds.Contains(subject.Id))
             .Select(subject => new StudentGradeSubjectDto { Id = subject.Id, Name = subject.Name })
             .ToList();
+    }
+
+    private async Task SetGradeManagementFlagsAsync(StudentGradesViewModel viewModel)
+    {
+        if (User.IsInRole("Principal"))
+        {
+            foreach (var grade in viewModel.GradesBySubject.Values.SelectMany(grades => grades))
+            {
+                grade.CanManage = true;
+            }
+
+            return;
+        }
+
+        if (!User.IsInRole("Teacher"))
+        {
+            return;
+        }
+
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            return;
+        }
+
+        var teachers = await teacherService.GetAllAsync();
+        var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == userId.Value);
+        if (teacher is null)
+        {
+            return;
+        }
+
+        foreach (var grade in viewModel.GradesBySubject.Values.SelectMany(grades => grades))
+        {
+            grade.CanManage =
+                grade.TeacherId == teacher.Id &&
+                DateTime.UtcNow - grade.Date <= TimeSpan.FromDays(7);
+        }
     }
 }
 

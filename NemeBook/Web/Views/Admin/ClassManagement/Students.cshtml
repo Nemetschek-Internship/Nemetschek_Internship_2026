@@ -128,9 +128,15 @@
                                     </span>
                                 </div>
 
-                                <button class="nb-student-chat-btn" type="button" aria-label="Чат с @student.FullName">
-                                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
-                                </button>
+                                <a class="nb-student-chat-btn"
+                                   asp-area=""
+                                   asp-controller="Teacher"
+                                   asp-action="Student"
+                                   asp-route-studentId="@student.StudentId"
+                                   aria-label="Отвори профила на @student.FullName"
+                                   title="Профил">
+                                    <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                                </a>
                             </article>
                         }
                     </div>

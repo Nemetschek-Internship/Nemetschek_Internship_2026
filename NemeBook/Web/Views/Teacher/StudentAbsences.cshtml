@@ -1,0 +1,257 @@
+@model Entities.ViewModels.Teachers.TeacherStudentAbsencesViewModel
+
+@{
+    Layout = "_AppShell";
+    ViewData["Title"] = $"Отсъствия - {Model.StudentName}";
+    ViewData["ActiveNav"] = User.IsInRole("Principal") ? "Classes" : "MyClass";
+    ViewData["ShellUserName"] = Model.TeacherName;
+    ViewData["ShellUserMeta"] = Model.MainMeta;
+    ViewData["ShellUserInitials"] = Model.TeacherInitials;
+}
+
+@section Styles {
+<style>
+    .nb-absences-page {
+        min-width: 0;
+        display: grid;
+        gap: 18px;
+        padding: 28px 34px 44px;
+    }
+    .nb-absences-header,
+    .nb-absences-list {
+        border: 1px solid #eee7df;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
+    }
+    .nb-absences-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+    }
+    .nb-absences-title {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+    }
+    .nb-absences-avatar {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #ffe4c2;
+        color: #a95508;
+        font-size: 13px;
+        font-weight: 950;
+    }
+    .nb-absences-title h1 {
+        margin: 0;
+        overflow: hidden;
+        color: #1f232b;
+        font-size: 21px;
+        font-weight: 950;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-absences-title p {
+        margin: 4px 0 0;
+        color: #8f887f;
+        font-size: 12px;
+        font-weight: 850;
+    }
+    .nb-absences-back {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 12px;
+        border-radius: 7px;
+        background: #fbf7f2;
+        color: #6f6962;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+    }
+    .nb-absences-list {
+        overflow: hidden;
+    }
+    .nb-absence-row {
+        display: grid;
+        gap: 6px;
+        padding: 14px 18px;
+        border-bottom: 1px solid #f5eee7;
+    }
+    .nb-absence-row:last-child {
+        border-bottom: 0;
+    }
+    .nb-absence-main {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+    }
+    .nb-absence-main strong {
+        overflow: hidden;
+        color: #20232a;
+        font-size: 13px;
+        font-weight: 950;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-absence-status {
+        min-height: 26px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: #ffe0dc;
+        color: #c23329;
+        font-size: 12px;
+        font-weight: 950;
+    }
+    .nb-absence-status.is-excused {
+        background: #dff8e9;
+        color: #159953;
+    }
+    .nb-absence-meta {
+        color: #8f887f;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .nb-absence-note {
+        margin: 2px 0 0;
+        color: #5f6673;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+    .nb-excuse-form {
+        display: grid;
+        grid-template-columns: minmax(140px, 180px) minmax(0, 1fr) auto;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .nb-excuse-form select,
+    .nb-excuse-form input {
+        min-height: 32px;
+        border: 1px solid #eee3d8;
+        border-radius: 7px;
+        background: #fffaf5;
+        color: #242832;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 6px 8px;
+    }
+    .nb-excuse-form button {
+        min-height: 32px;
+        border: 0;
+        border-radius: 7px;
+        background: #159953;
+        color: #ffffff;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 950;
+        cursor: pointer;
+        padding: 0 12px;
+    }
+    .nb-absence-empty {
+        min-height: 140px;
+        display: grid;
+        place-items: center;
+        color: #8f887f;
+        font-size: 13px;
+        font-weight: 850;
+        text-align: center;
+    }
+    @@media (max-width: 760px) {
+        .nb-absences-page {
+            padding: 18px;
+        }
+        .nb-absences-header,
+        .nb-excuse-form {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+}
+
+<section class="nb-absences-page">
+    <header class="nb-absences-header">
+        <div class="nb-absences-title">
+            <span class="nb-absences-avatar" aria-hidden="true">@Model.StudentInitials</span>
+            <div>
+                <h1>Отсъствия за @Model.StudentName</h1>
+                <p>Клас @Model.ClassName · @Model.Absences.Count записи</p>
+            </div>
+        </div>
+
+        <a class="nb-absences-back" asp-controller="Teacher" asp-action="Student" asp-route-studentId="@Model.StudentId">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            <span>Назад</span>
+        </a>
+    </header>
+
+    <article class="nb-absences-list">
+        @if (Model.Absences.Count == 0)
+        {
+            <div class="nb-absence-empty">Няма въведени отсъствия.</div>
+        }
+        else
+        {
+            @foreach (var absence in Model.Absences)
+            {
+                <section class="nb-absence-row">
+                    <div class="nb-absence-main">
+                        <strong>@absence.SubjectName</strong>
+                        <span class="nb-absence-status @(absence.IsExcused ? "is-excused" : null)">@absence.StatusName</span>
+                    </div>
+                    <span class="nb-absence-meta">@absence.TypeName · @absence.Date.ToString("dd.MM.yyyy") · @absence.LessonNumber час</span>
+                    @if (absence.IsExcused)
+                    {
+                        <p class="nb-absence-note">
+                            @(string.IsNullOrWhiteSpace(absence.ExcuseReasonName) ? "Извинено" : absence.ExcuseReasonName)
+                            @if (!string.IsNullOrWhiteSpace(absence.ExcuseNote))
+                            {
+                                <span> · @absence.ExcuseNote</span>
+                            }
+                        </p>
+                    }
+                    else if (absence.CanExcuse)
+                    {
+                        <form class="nb-excuse-form" method="post" asp-controller="Teacher" asp-action="ExcuseAbsence">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="AbsenceId" value="@absence.Id" />
+                            <select name="ExcuseReason" aria-label="Причина">
+                                @foreach (var reason in Enum.GetValues<Entities.Enums.AbsenceExcuseReason>())
+                                {
+                                    <option value="@reason">@GetDisplayName(reason)</option>
+                                }
+                            </select>
+                            <input name="ExcuseNote" type="text" maxlength="1000" placeholder="Бележка" />
+                            <button type="submit">Извини</button>
+                        </form>
+                    }
+                </section>
+            }
+        }
+    </article>
+</section>
+
+@functions {
+    private static string GetDisplayName(Enum value)
+    {
+        var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+        var display = member?
+            .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), false)
+            .OfType<System.ComponentModel.DataAnnotations.DisplayAttribute>()
+            .FirstOrDefault();
+
+        return display?.Name ?? value.ToString();
+    }
+}

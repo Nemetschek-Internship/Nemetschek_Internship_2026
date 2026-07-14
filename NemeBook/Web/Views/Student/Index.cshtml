@@ -925,9 +925,6 @@
                     <span class="nb-action-value">@Model.FeedbackSummary.Count</span>
                     <p title="@Model.FeedbackSummary.Detail">@Model.FeedbackSummary.Detail</p>
                 </div>
-                <span class="nb-action-icon" aria-hidden="true">
-                    <i class="bi bi-chat-square-text-fill"></i>
-                </span>
             </button>
 
             <button class="nb-action-card" type="button" data-nb-modal-open="student-absences-modal">
@@ -936,9 +933,6 @@
                     <span class="nb-action-value">@Model.AbsenceSummary.Count</span>
                     <p title="@Model.AbsenceSummary.Detail">@Model.AbsenceSummary.Detail</p>
                 </div>
-                <span class="nb-action-icon" aria-hidden="true">
-                    <i class="bi bi-exclamation-circle-fill"></i>
-                </span>
             </button>
         </div>
     </section>
@@ -994,31 +988,6 @@
         </article>
 
         <div class="nb-side-column">
-            <article class="nb-panel">
-                <div class="nb-panel-header">
-                    <h3>Днес</h3>
-                    <span>Програма</span>
-                </div>
-
-                @if (Model.TodaysSchedule.Any())
-                {
-                    <div class="nb-schedule-list">
-                        @foreach (var item in Model.TodaysSchedule)
-                        {
-                            <div class="nb-schedule-item">
-                                <span class="nb-period-chip">@item.PeriodNumber</span>
-                                <span class="nb-schedule-name" title="@item.SubjectName">@item.SubjectName</span>
-                                <span class="nb-schedule-time">@item.TimeRange</span>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="nb-empty-panel">Няма програма за днес.</div>
-                }
-            </article>
-
             <article class="nb-panel">
                 <div class="nb-panel-header">
                     <h3>Последни оценки</h3>

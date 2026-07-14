@@ -1,0 +1,470 @@
+@using System.Text.Json
+@model Entities.ViewModels.Students.StudentCalendarViewModel
+
+@{
+    Layout = "_AppShell";
+    ViewData["Title"] = "Календар";
+    ViewData["ActiveNav"] = "Calendar";
+    ViewData["ShellUserName"] = Model.StudentName;
+    ViewData["ShellUserMeta"] = Model.ClassName;
+    ViewData["ShellUserInitials"] = Model.StudentInitials;
+
+    var selectedMonth = new DateTime(Model.Year, Model.Month, 1);
+    var previousMonth = selectedMonth.AddMonths(-1);
+    var nextMonth = selectedMonth.AddMonths(1);
+    var calendarDaysJson = JsonSerializer.Serialize(Model.CalendarDays.Select(day => new
+    {
+        key = day.Date.ToString("yyyy-MM-dd"),
+        label = day.Date.ToString("dd.MM.yyyy"),
+        events = day.Events.Select(schoolEvent => new
+        {
+            title = schoolEvent.Title,
+            description = schoolEvent.Description,
+            type = schoolEvent.EventTypeName,
+            typeClass = schoolEvent.EventTypeCssClass,
+            subject = schoolEvent.ClassSubjectName,
+            time = schoolEvent.TimeLabel
+        })
+    }));
+}
+
+@section Styles {
+<style>
+    .nb-student-calendar-page {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+        gap: 18px;
+        padding: 28px 34px 44px;
+    }
+    .nb-calendar-panel,
+    .nb-upcoming-panel {
+        border: 1px solid #eee7df;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
+    }
+    .nb-calendar-panel {
+        min-width: 0;
+        padding: 18px;
+    }
+    .nb-calendar-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+    .nb-calendar-month {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .nb-calendar-month h2 {
+        margin: 0;
+        color: #20232a;
+        font-size: 17px;
+        font-weight: 950;
+        text-transform: capitalize;
+    }
+    .nb-calendar-month a {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        background: #fff1e6;
+        color: #e95b0c;
+        text-decoration: none;
+    }
+    .nb-calendar-class {
+        color: #8f887f;
+        font-size: 12px;
+        font-weight: 850;
+    }
+    .nb-calendar-weekdays,
+    .nb-calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 7px;
+    }
+    .nb-calendar-weekdays {
+        margin-bottom: 7px;
+        color: #9a938b;
+        font-size: 11px;
+        font-weight: 900;
+        text-align: center;
+    }
+    .nb-calendar-day {
+        min-height: 104px;
+        min-width: 0;
+        display: grid;
+        align-content: start;
+        gap: 7px;
+        padding: 9px;
+        border: 1px solid #f0e8df;
+        border-radius: 8px;
+        background: #fffaf5;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .nb-calendar-day:hover,
+    .nb-calendar-day:focus-visible {
+        border-color: #f97316;
+        outline: none;
+    }
+    .nb-calendar-day.is-muted {
+        opacity: 0.48;
+    }
+    .nb-calendar-day.is-today {
+        border-color: #f97316;
+        box-shadow: inset 0 0 0 1px #f97316;
+    }
+    .nb-calendar-day-number {
+        color: #242832;
+        font-size: 12px;
+        font-weight: 950;
+    }
+    .nb-calendar-event-lines {
+        min-width: 0;
+        display: grid;
+        gap: 4px;
+    }
+    .nb-calendar-event-line,
+    .nb-calendar-more {
+        overflow: hidden;
+        min-height: 20px;
+        padding: 3px 7px;
+        border-radius: 999px;
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 850;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .is-purple { background: #7447ff; }
+    .is-blue { background: #3177ff; }
+    .is-green { background: #20a95c; }
+    .is-orange,
+    .nb-calendar-more { background: #f97316; }
+    .nb-upcoming-panel {
+        align-self: start;
+        padding: 18px;
+    }
+    .nb-upcoming-panel h2 {
+        margin: 0 0 14px;
+        color: #20232a;
+        font-size: 15px;
+        font-weight: 950;
+    }
+    .nb-upcoming-list {
+        display: grid;
+        gap: 10px;
+    }
+    .nb-upcoming-card,
+    .nb-day-event-card {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 10px minmax(0, 1fr);
+        gap: 10px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #fbf7f2;
+    }
+    .nb-event-marker {
+        width: 10px;
+        border-radius: 999px;
+    }
+    .nb-event-copy {
+        min-width: 0;
+        display: grid;
+        gap: 4px;
+    }
+    .nb-event-copy strong {
+        overflow: hidden;
+        color: #242832;
+        font-size: 13px;
+        font-weight: 950;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-event-copy span,
+    .nb-event-copy small {
+        color: #81786f;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .nb-event-copy p {
+        margin: 4px 0 0;
+        color: #5f6673;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+    .nb-empty-calendar {
+        min-height: 92px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        background: #fbf7f2;
+        color: #9f978e;
+        font-size: 13px;
+        font-weight: 850;
+        text-align: center;
+    }
+    .nb-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 70;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(31, 35, 43, 0.42);
+    }
+    .nb-modal-backdrop[hidden] {
+        display: none;
+    }
+    .nb-modal {
+        width: min(620px, 100%);
+        max-height: min(720px, calc(100vh - 48px));
+        overflow: hidden;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 30px 80px rgba(31, 35, 43, 0.28);
+    }
+    .nb-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border-bottom: 1px solid #eee7df;
+    }
+    .nb-modal-header h2 {
+        margin: 0;
+        color: #20232a;
+        font-size: 16px;
+        font-weight: 950;
+    }
+    .nb-modal-close {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #f0ded0;
+        border-radius: 50%;
+        background: #fff8f1;
+        color: #e95b0c;
+        cursor: pointer;
+    }
+    .nb-day-events-list {
+        max-height: min(58vh, 520px);
+        overflow-y: auto;
+        display: grid;
+        gap: 10px;
+        padding: 18px 20px 20px;
+    }
+    body.nb-modal-open {
+        overflow: hidden;
+    }
+    @@media (max-width: 960px) {
+        .nb-student-calendar-page {
+            grid-template-columns: 1fr;
+            padding: 18px 16px 32px;
+        }
+    }
+    @@media (max-width: 640px) {
+        .nb-calendar-toolbar {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        .nb-calendar-weekdays,
+        .nb-calendar-grid {
+            gap: 4px;
+        }
+        .nb-calendar-day {
+            min-height: 76px;
+            padding: 6px;
+        }
+        .nb-calendar-event-line {
+            min-height: 16px;
+            padding-inline: 5px;
+            font-size: 9px;
+        }
+    }
+</style>
+}
+
+<section class="nb-student-calendar-page">
+    <article class="nb-calendar-panel">
+        <div class="nb-calendar-toolbar">
+            <div class="nb-calendar-month">
+                <a asp-controller="Student" asp-action="Calendar" asp-route-year="@previousMonth.Year" asp-route-month="@previousMonth.Month" aria-label="Предишен месец">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                </a>
+                <h2>@Model.MonthName @Model.Year</h2>
+                <a asp-controller="Student" asp-action="Calendar" asp-route-year="@nextMonth.Year" asp-route-month="@nextMonth.Month" aria-label="Следващ месец">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </a>
+            </div>
+            <span class="nb-calendar-class">Клас @Model.ClassName</span>
+        </div>
+
+        <div class="nb-calendar-weekdays" aria-hidden="true">
+            <span>Пон</span>
+            <span>Вто</span>
+            <span>Сря</span>
+            <span>Чет</span>
+            <span>Пет</span>
+            <span>Съб</span>
+            <span>Нед</span>
+        </div>
+
+        <div class="nb-calendar-grid">
+            @foreach (var day in Model.CalendarDays)
+            {
+                <button class="nb-calendar-day js-calendar-day @(day.IsCurrentMonth ? null : "is-muted") @(day.IsToday ? "is-today" : null)"
+                        type="button"
+                        data-date-key="@day.Date.ToString("yyyy-MM-dd")"
+                        aria-label="Виж събития за @day.Date.ToString("dd.MM.yyyy")">
+                    <span class="nb-calendar-day-number">@day.DayNumber</span>
+                    <span class="nb-calendar-event-lines">
+                        @foreach (var schoolEvent in day.Events.Take(3))
+                        {
+                            <span class="nb-calendar-event-line @schoolEvent.EventTypeCssClass" title="@schoolEvent.Title">@schoolEvent.Title</span>
+                        }
+                        @if (day.Events.Count > 3)
+                        {
+                            <span class="nb-calendar-more">+@(day.Events.Count - 3)</span>
+                        }
+                    </span>
+                </button>
+            }
+        </div>
+    </article>
+
+    <aside class="nb-upcoming-panel">
+        <h2>Предстоящи събития</h2>
+        @if (Model.UpcomingEvents.Count == 0)
+        {
+            <div class="nb-empty-calendar">Няма предстоящи събития.</div>
+        }
+        else
+        {
+            <div class="nb-upcoming-list">
+                @foreach (var schoolEvent in Model.UpcomingEvents)
+                {
+                    <article class="nb-upcoming-card">
+                        <span class="nb-event-marker @schoolEvent.EventTypeCssClass" aria-hidden="true"></span>
+                        <div class="nb-event-copy">
+                            <strong>@schoolEvent.Title</strong>
+                            <span>@schoolEvent.DayLabel, @schoolEvent.TimeLabel</span>
+                            <small>
+                                @schoolEvent.EventTypeName
+                                @if (!string.IsNullOrWhiteSpace(schoolEvent.ClassSubjectName))
+                                {
+                                    <text> · @schoolEvent.ClassSubjectName</text>
+                                }
+                            </small>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </aside>
+</section>
+
+<div class="nb-modal-backdrop" data-day-dialog hidden>
+    <section class="nb-modal" role="dialog" aria-modal="true" aria-labelledby="day-events-title" tabindex="-1">
+        <header class="nb-modal-header">
+            <h2 id="day-events-title">Събития</h2>
+            <button class="nb-modal-close" type="button" data-day-dialog-close aria-label="Затвори">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="nb-day-events-list" data-day-events-list></div>
+    </section>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const days = @Html.Raw(calendarDaysJson);
+    const dayByKey = new Map(days.map((day) => [day.key, day]));
+    const dialog = document.querySelector("[data-day-dialog]");
+    const title = document.getElementById("day-events-title");
+    const list = document.querySelector("[data-day-events-list]");
+
+    const closeDialog = () => {
+        dialog.hidden = true;
+        document.body.classList.remove("nb-modal-open");
+    };
+
+    const openDialog = (day) => {
+        title.textContent = `Събития за ${day.label}`;
+        list.replaceChildren();
+
+        if (day.events.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "nb-empty-calendar";
+            empty.textContent = "Няма събития за тази дата.";
+            list.appendChild(empty);
+        } else {
+            day.events.forEach((schoolEvent) => {
+                const card = document.createElement("article");
+                card.className = "nb-day-event-card";
+
+                const marker = document.createElement("span");
+                marker.className = `nb-event-marker ${schoolEvent.typeClass}`;
+
+                const copy = document.createElement("div");
+                copy.className = "nb-event-copy";
+
+                const eventTitle = document.createElement("strong");
+                eventTitle.textContent = schoolEvent.title;
+
+                const meta = document.createElement("span");
+                meta.textContent = [schoolEvent.type, schoolEvent.subject, schoolEvent.time].filter(Boolean).join(" · ");
+
+                copy.append(eventTitle, meta);
+
+                if (schoolEvent.description) {
+                    const description = document.createElement("p");
+                    description.textContent = schoolEvent.description;
+                    copy.appendChild(description);
+                }
+
+                card.append(marker, copy);
+                list.appendChild(card);
+            });
+        }
+
+        dialog.hidden = false;
+        document.body.classList.add("nb-modal-open");
+        dialog.querySelector(".nb-modal")?.focus();
+    };
+
+    document.querySelectorAll(".js-calendar-day").forEach((button) => {
+        button.addEventListener("click", () => {
+            const day = dayByKey.get(button.dataset.dateKey);
+            if (day) {
+                openDialog(day);
+            }
+        });
+    });
+
+    dialog.addEventListener("click", (event) => {
+        if (event.target === dialog || event.target.closest("[data-day-dialog-close]")) {
+            closeDialog();
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            closeDialog();
+        }
+    });
+})();
+</script>
+}

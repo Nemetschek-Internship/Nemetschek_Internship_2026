@@ -5,6 +5,7 @@ namespace Entities.ViewModels.Grades;
 public class GradeDto
 {
     public Guid Id { get; set; }
+    public Guid ClassSubjectId { get; set; }
     public decimal Value { get; set; }
     public GradeType Type { get; set; }
     public string Note { get; set; } = string.Empty;
@@ -21,4 +22,6 @@ public class GradeDto
     // Student info
     public Guid StudentId { get; set; }
     public string StudentName { get; set; } = string.Empty;
+
+    public bool CanManage { get; set; }
 }

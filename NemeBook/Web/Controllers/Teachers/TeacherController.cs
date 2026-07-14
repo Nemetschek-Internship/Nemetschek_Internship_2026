@@ -12,7 +12,7 @@ using Services.Repositories;
 
 namespace Web.Controllers.Teachers;
 
-[Authorize(Roles = "Teacher")]
+[Authorize(Roles = "Teacher,Principal")]
 public class TeacherController : Controller
 {
     private readonly IAbsenceRepository absenceRepository;
@@ -111,7 +111,7 @@ public class TeacherController : Controller
     [HttpGet]
     public async Task<IActionResult> Student(Guid studentId, CancellationToken cancellationToken)
     {
-        var access = await GetMainTeacherStudentAccessAsync(studentId, cancellationToken);
+        var access = await GetStudentProfileAccessAsync(studentId, cancellationToken);
         if (access is null)
         {
             return RedirectToAction("AccessDenied", "Account");
@@ -124,13 +124,26 @@ public class TeacherController : Controller
     [HttpGet]
     public async Task<IActionResult> StudentFeedbacks(Guid studentId, CancellationToken cancellationToken)
     {
-        var access = await GetMainTeacherStudentAccessAsync(studentId, cancellationToken);
+        var access = await GetStudentProfileAccessAsync(studentId, cancellationToken);
         if (access is null)
         {
             return RedirectToAction("AccessDenied", "Account");
         }
 
         var viewModel = await BuildStudentFeedbacksViewModelAsync(access, cancellationToken);
+        return View(viewModel);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> StudentAbsences(Guid studentId, CancellationToken cancellationToken)
+    {
+        var access = await GetStudentProfileAccessAsync(studentId, cancellationToken);
+        if (access is null)
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        var viewModel = await BuildStudentAbsencesViewModelAsync(access, cancellationToken);
         return View(viewModel);
     }
 
@@ -201,6 +214,65 @@ public class TeacherController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateStudentGrade(
+        TeacherGradeEditInputModel model,
+        CancellationToken cancellationToken)
+    {
+        var grade = await gradeRepository.GetByIdAsync(model.GradeId, cancellationToken);
+        if (grade is null || model.Value < 2 || model.Value > 6 || !Enum.IsDefined(model.Type))
+        {
+            return RedirectToAction(nameof(Student), new { studentId = model.StudentId });
+        }
+
+        var access = await GetTeacherClassSubjectForStudentAsync(grade.StudentId, grade.ClassSubjectId, cancellationToken);
+        if (access is null)
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        if (!User.IsInRole("Principal") && DateTime.UtcNow - grade.CreatedAt > TimeSpan.FromDays(7))
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        grade.Value = model.Value;
+        grade.Type = model.Type;
+        grade.Note = model.Note?.Trim() ?? string.Empty;
+
+        await gradeRepository.UpdateAsync(grade, cancellationToken);
+        return RedirectToAction(nameof(Student), new { studentId = grade.StudentId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteStudentGrade(
+        Guid gradeId,
+        Guid studentId,
+        CancellationToken cancellationToken)
+    {
+        var grade = await gradeRepository.GetByIdAsync(gradeId, cancellationToken);
+        if (grade is null)
+        {
+            return RedirectToAction(nameof(Student), new { studentId });
+        }
+
+        var access = await GetTeacherClassSubjectForStudentAsync(grade.StudentId, grade.ClassSubjectId, cancellationToken);
+        if (access is null)
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        if (!User.IsInRole("Principal") && DateTime.UtcNow - grade.CreatedAt > TimeSpan.FromDays(7))
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        await gradeRepository.DeleteAsync(grade.Id, cancellationToken);
+        return RedirectToAction(nameof(Student), new { studentId = grade.StudentId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddAbsence(
         TeacherAbsenceRecordInputModel model,
         CancellationToken cancellationToken)
@@ -239,6 +311,63 @@ public class TeacherController : Controller
             cancellationToken: cancellationToken);
 
         return RedirectToAction(nameof(MyClass), new { classId = access.Student.ClassId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateStudentAbsence(
+        TeacherAbsenceEditInputModel model,
+        CancellationToken cancellationToken)
+    {
+        var absence = await absenceRepository.GetByIdAsync(model.AbsenceId, cancellationToken);
+        if (absence is null ||
+            model.LessonNumber < 1 ||
+            !Enum.IsDefined(model.Type) ||
+            !Enum.IsDefined(model.Status))
+        {
+            return RedirectToAction(nameof(Student), new { studentId = model.StudentId });
+        }
+
+        var access = await GetTeacherClassSubjectForStudentAsync(absence.StudentId, absence.ClassSubjectId, cancellationToken);
+        if (access is null)
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        absence.Date = model.Date == default ? DateOnly.FromDateTime(DateTime.Today) : model.Date;
+        absence.LessonNumber = model.LessonNumber;
+        absence.Type = model.Type;
+        absence.Status = model.Status;
+        absence.ExcuseReason = model.Status == AbsenceStatus.Excused ? model.ExcuseReason : null;
+        absence.ExcuseNote = model.Status == AbsenceStatus.Excused
+            ? model.ExcuseNote?.Trim() ?? string.Empty
+            : string.Empty;
+
+        await absenceRepository.UpdateAsync(absence, cancellationToken);
+        return RedirectToAction(nameof(Student), new { studentId = absence.StudentId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteStudentAbsence(
+        Guid absenceId,
+        Guid studentId,
+        CancellationToken cancellationToken)
+    {
+        var absence = await absenceRepository.GetByIdAsync(absenceId, cancellationToken);
+        if (absence is null)
+        {
+            return RedirectToAction(nameof(Student), new { studentId });
+        }
+
+        var access = await GetTeacherClassSubjectForStudentAsync(absence.StudentId, absence.ClassSubjectId, cancellationToken);
+        if (access is null)
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        await absenceRepository.DeleteAsync(absence.Id, cancellationToken);
+        return RedirectToAction(nameof(Student), new { studentId = absence.StudentId });
     }
 
     [HttpPost]
@@ -282,6 +411,55 @@ public class TeacherController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateStudentFeedback(
+        TeacherFeedbackEditInputModel model,
+        CancellationToken cancellationToken)
+    {
+        var feedback = await feedbackRepository.GetByIdAsync(model.FeedbackId, cancellationToken);
+        if (feedback is null || !Enum.IsDefined(model.Type) || string.IsNullOrWhiteSpace(model.Description))
+        {
+            return RedirectToAction(nameof(Student), new { studentId = model.StudentId });
+        }
+
+        var access = await GetTeacherClassSubjectForStudentAsync(feedback.StudentId, feedback.ClassSubjectId, cancellationToken);
+        if (access is null)
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        feedback.Date = model.Date == default ? DateOnly.FromDateTime(DateTime.Today) : model.Date;
+        feedback.Type = model.Type;
+        feedback.Description = model.Description.Trim();
+
+        await feedbackRepository.UpdateAsync(feedback, cancellationToken);
+        return RedirectToAction(nameof(StudentFeedbacks), new { studentId = feedback.StudentId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteStudentFeedback(
+        Guid feedbackId,
+        Guid studentId,
+        CancellationToken cancellationToken)
+    {
+        var feedback = await feedbackRepository.GetByIdAsync(feedbackId, cancellationToken);
+        if (feedback is null)
+        {
+            return RedirectToAction(nameof(Student), new { studentId });
+        }
+
+        var access = await GetTeacherClassSubjectForStudentAsync(feedback.StudentId, feedback.ClassSubjectId, cancellationToken);
+        if (access is null)
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        await feedbackRepository.DeleteAsync(feedback.Id, cancellationToken);
+        return RedirectToAction(nameof(StudentFeedbacks), new { studentId = feedback.StudentId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ExcuseAbsence(
         TeacherExcuseAbsenceInputModel model,
         CancellationToken cancellationToken)
@@ -292,7 +470,7 @@ public class TeacherController : Controller
             return RedirectToAction(nameof(MyClass));
         }
 
-        var access = await GetMainTeacherStudentAccessAsync(absence.StudentId, cancellationToken);
+        var access = await GetStudentProfileAccessAsync(absence.StudentId, cancellationToken);
         if (access is null)
         {
             return RedirectToAction("AccessDenied", "Account");
@@ -315,7 +493,7 @@ public class TeacherController : Controller
             absenceId: absence.Id,
             cancellationToken: cancellationToken);
 
-        return RedirectToAction(nameof(Student), new { studentId = access.Student.Id });
+        return RedirectToAction(nameof(StudentAbsences), new { studentId = access.Student.Id });
     }
 
     private async Task<Entities.ViewModels.Teachers.TeacherHomeViewModel?> GetTeacherHomeViewModelAsync(
@@ -348,13 +526,6 @@ public class TeacherController : Controller
             return null;
         }
 
-        var teachers = await teacherRepository.GetAllAsync(cancellationToken);
-        var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == userId.Value);
-        if (teacher is null)
-        {
-            return null;
-        }
-
         var student = await studentRepository.GetByIdAsync(studentId, cancellationToken);
         if (student is null || !student.User.IsActive || student.User.IsDeleted)
         {
@@ -365,15 +536,27 @@ public class TeacherController : Controller
         var classSubject = classSubjects
             .FirstOrDefault(currentClassSubject =>
                 currentClassSubject.Id == classSubjectId &&
-                currentClassSubject.ClassId == student.ClassId &&
-                currentClassSubject.TeacherId == teacher.Id);
+                currentClassSubject.ClassId == student.ClassId);
 
-        return classSubject is null
-            ? null
-            : new TeacherStudentRecordAccess(student, classSubject);
+        if (classSubject is null)
+        {
+            return null;
+        }
+
+        if (!User.IsInRole("Principal"))
+        {
+            var teachers = await teacherRepository.GetAllAsync(cancellationToken);
+            var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == userId.Value);
+            if (teacher is null || classSubject.TeacherId != teacher.Id)
+            {
+                return null;
+            }
+        }
+
+        return new TeacherStudentRecordAccess(student, classSubject);
     }
 
-    private async Task<TeacherMainStudentAccess?> GetMainTeacherStudentAccessAsync(
+    private async Task<TeacherMainStudentAccess?> GetStudentProfileAccessAsync(
         Guid studentId,
         CancellationToken cancellationToken)
     {
@@ -388,13 +571,6 @@ public class TeacherController : Controller
             return null;
         }
 
-        var teachers = await teacherRepository.GetAllAsync(cancellationToken);
-        var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == userId.Value);
-        if (teacher is null)
-        {
-            return null;
-        }
-
         var student = await studentRepository.GetByIdAsync(studentId, cancellationToken);
         if (student is null || student.User.IsDeleted || !student.User.IsActive)
         {
@@ -402,12 +578,24 @@ public class TeacherController : Controller
         }
 
         var schoolClass = await classRepository.GetByIdAsync(student.ClassId, cancellationToken);
-        if (schoolClass is null || schoolClass.MainTeacherId != teacher.Id)
+        if (schoolClass is null)
         {
             return null;
         }
 
-        return new TeacherMainStudentAccess(teacher, student, schoolClass);
+        if (User.IsInRole("Principal"))
+        {
+            return new TeacherMainStudentAccess(null, student, schoolClass, true);
+        }
+
+        var teachers = await teacherRepository.GetAllAsync(cancellationToken);
+        var teacher = teachers.FirstOrDefault(currentTeacher => currentTeacher.UserId == userId.Value);
+        if (teacher is null || schoolClass.MainTeacherId != teacher.Id)
+        {
+            return null;
+        }
+
+        return new TeacherMainStudentAccess(teacher, student, schoolClass, false);
     }
 
     private async Task<TeacherStudentDetailsViewModel> BuildStudentDetailsViewModelAsync(
@@ -427,14 +615,15 @@ public class TeacherController : Controller
                     : FormatPersonName(classSubject.Teacher.User));
 
         var grades = (await gradeRepository.GetGradesByStudentIdAsync(access.Student.Id, cancellationToken: cancellationToken))
-            .Take(5)
             .Select(grade => new TeacherStudentGradeDetailsItem
             {
                 Id = grade.Id,
+                ClassSubjectId = grade.ClassSubjectId,
                 SubjectName = GetSubjectName(grade.ClassSubjectId, subjectByClassSubjectId),
                 TeacherName = GetSubjectName(grade.ClassSubjectId, teacherByClassSubjectId),
                 Value = grade.Value,
                 DisplayValue = GetRoundedGrade(grade.Value),
+                TypeValue = (int)grade.Type,
                 TypeName = GetDisplayName(grade.Type),
                 Note = grade.Note,
                 CreatedAt = grade.CreatedAt
@@ -442,7 +631,6 @@ public class TeacherController : Controller
             .ToArray();
 
         var feedbacks = MapStudentFeedbacks(access.Student.Id, subjectByClassSubjectId, await feedbackRepository.GetAllAsync(cancellationToken))
-            .Take(5)
             .ToArray();
 
         var absences = (await absenceRepository.GetAllAsync(cancellationToken))
@@ -452,27 +640,35 @@ public class TeacherController : Controller
             .Select(absence => new TeacherStudentAbsenceDetailsItem
             {
                 Id = absence.Id,
+                ClassSubjectId = absence.ClassSubjectId,
                 SubjectName = GetSubjectName(absence.ClassSubjectId, subjectByClassSubjectId),
                 Date = absence.Date,
                 LessonNumber = absence.LessonNumber,
+                TypeValue = (int)absence.Type,
                 TypeName = GetDisplayName(absence.Type),
+                StatusValue = (int)absence.Status,
                 StatusName = GetDisplayName(absence.Status),
                 IsExcused = absence.Status == AbsenceStatus.Excused,
+                ExcuseReasonValue = absence.ExcuseReason.HasValue ? (int)absence.ExcuseReason.Value : null,
                 ExcuseReasonName = absence.ExcuseReason.HasValue ? GetDisplayName(absence.ExcuseReason.Value) : string.Empty,
-                ExcuseNote = absence.ExcuseNote
+                ExcuseNote = absence.ExcuseNote,
+                CanExcuse = true
             })
             .ToArray();
 
         return new TeacherStudentDetailsViewModel
         {
-            TeacherName = FormatPersonName(access.Teacher.User),
-            TeacherInitials = GetInitials(access.Teacher.User),
-            MainMeta = $"Класен ръководител на {FormatClassName(access.SchoolClass)}",
+            TeacherName = access.IsPrincipal ? "Директор" : FormatPersonName(access.Teacher!.User),
+            TeacherInitials = access.IsPrincipal ? "Д" : GetInitials(access.Teacher!.User),
+            MainMeta = access.IsPrincipal
+                ? $"Администратор · клас {FormatClassName(access.SchoolClass)}"
+                : $"Класен ръководител на {FormatClassName(access.SchoolClass)}",
             StudentId = access.Student.Id,
             ClassId = access.SchoolClass.Id,
             StudentName = FormatPersonName(access.Student.User),
             StudentInitials = GetInitials(access.Student.User),
             ClassName = FormatClassName(access.SchoolClass),
+            CanManageRecords = true,
             Grades = grades,
             Feedbacks = feedbacks,
             Absences = absences
@@ -487,12 +683,17 @@ public class TeacherController : Controller
         var subjectByClassSubjectId = classSubjects
             .Where(classSubject => classSubject.ClassId == access.Student.ClassId)
             .ToDictionary(classSubject => classSubject.Id, classSubject => classSubject.Subject.Name);
+        var manageableClassSubjectIds = GetManageableClassSubjectIds(
+            access,
+            classSubjects.Where(classSubject => classSubject.ClassId == access.Student.ClassId));
 
         return new TeacherStudentFeedbacksViewModel
         {
-            TeacherName = FormatPersonName(access.Teacher.User),
-            TeacherInitials = GetInitials(access.Teacher.User),
-            MainMeta = $"Класен ръководител на {FormatClassName(access.SchoolClass)}",
+            TeacherName = access.IsPrincipal ? "Директор" : FormatPersonName(access.Teacher!.User),
+            TeacherInitials = access.IsPrincipal ? "Д" : GetInitials(access.Teacher!.User),
+            MainMeta = access.IsPrincipal
+                ? $"Администратор · клас {FormatClassName(access.SchoolClass)}"
+                : $"Класен ръководител на {FormatClassName(access.SchoolClass)}",
             StudentId = access.Student.Id,
             ClassId = access.SchoolClass.Id,
             StudentName = FormatPersonName(access.Student.User),
@@ -501,7 +702,38 @@ public class TeacherController : Controller
             Feedbacks = MapStudentFeedbacks(
                     access.Student.Id,
                     subjectByClassSubjectId,
-                    await feedbackRepository.GetAllAsync(cancellationToken))
+                    await feedbackRepository.GetAllAsync(cancellationToken),
+                    manageableClassSubjectIds)
+                .ToArray()
+        };
+    }
+
+    private async Task<TeacherStudentAbsencesViewModel> BuildStudentAbsencesViewModelAsync(
+        TeacherMainStudentAccess access,
+        CancellationToken cancellationToken)
+    {
+        var classSubjects = await classSubjectRepository.GetAllAsync(cancellationToken);
+        var subjectByClassSubjectId = classSubjects
+            .Where(classSubject => classSubject.ClassId == access.Student.ClassId)
+            .ToDictionary(classSubject => classSubject.Id, classSubject => classSubject.Subject.Name);
+
+        return new TeacherStudentAbsencesViewModel
+        {
+            TeacherName = access.IsPrincipal ? "Директор" : FormatPersonName(access.Teacher!.User),
+            TeacherInitials = access.IsPrincipal ? "Д" : GetInitials(access.Teacher!.User),
+            MainMeta = access.IsPrincipal
+                ? $"Администратор · клас {FormatClassName(access.SchoolClass)}"
+                : $"Класен ръководител на {FormatClassName(access.SchoolClass)}",
+            StudentId = access.Student.Id,
+            ClassId = access.SchoolClass.Id,
+            StudentName = FormatPersonName(access.Student.User),
+            StudentInitials = GetInitials(access.Student.User),
+            ClassName = FormatClassName(access.SchoolClass),
+            Absences = MapStudentAbsences(
+                    access.Student.Id,
+                    subjectByClassSubjectId,
+                    await absenceRepository.GetAllAsync(cancellationToken),
+                    canExcuse: true)
                 .ToArray()
         };
     }
@@ -509,7 +741,8 @@ public class TeacherController : Controller
     private static IEnumerable<TeacherStudentFeedbackDetailsItem> MapStudentFeedbacks(
         Guid studentId,
         IReadOnlyDictionary<Guid, string> subjectByClassSubjectId,
-        IReadOnlyList<Feedback> feedbacks)
+        IReadOnlyList<Feedback> feedbacks,
+        IReadOnlySet<Guid>? manageableClassSubjectIds = null)
     {
         return feedbacks
             .Where(feedback => feedback.StudentId == studentId)
@@ -518,12 +751,59 @@ public class TeacherController : Controller
             .Select(feedback => new TeacherStudentFeedbackDetailsItem
             {
                 Id = feedback.Id,
+                ClassSubjectId = feedback.ClassSubjectId,
                 SubjectName = GetSubjectName(feedback.ClassSubjectId, subjectByClassSubjectId),
                 Date = feedback.Date,
+                TypeValue = (int)feedback.Type,
                 TypeName = GetDisplayName(feedback.Type),
                 Description = feedback.Description,
-                CreatedAt = feedback.CreatedAt
+                CreatedAt = feedback.CreatedAt,
+                CanManage = manageableClassSubjectIds?.Contains(feedback.ClassSubjectId) == true
             });
+    }
+
+    private static IEnumerable<TeacherStudentAbsenceDetailsItem> MapStudentAbsences(
+        Guid studentId,
+        IReadOnlyDictionary<Guid, string> subjectByClassSubjectId,
+        IReadOnlyList<Absence> absences,
+        bool canExcuse)
+    {
+        return absences
+            .Where(absence => absence.StudentId == studentId)
+            .OrderByDescending(absence => absence.Date)
+            .ThenByDescending(absence => absence.LessonNumber)
+            .Select(absence => new TeacherStudentAbsenceDetailsItem
+            {
+                Id = absence.Id,
+                ClassSubjectId = absence.ClassSubjectId,
+                SubjectName = GetSubjectName(absence.ClassSubjectId, subjectByClassSubjectId),
+                Date = absence.Date,
+                LessonNumber = absence.LessonNumber,
+                TypeValue = (int)absence.Type,
+                TypeName = GetDisplayName(absence.Type),
+                StatusValue = (int)absence.Status,
+                StatusName = GetDisplayName(absence.Status),
+                IsExcused = absence.Status == AbsenceStatus.Excused,
+                ExcuseReasonValue = absence.ExcuseReason.HasValue ? (int)absence.ExcuseReason.Value : null,
+                ExcuseReasonName = absence.ExcuseReason.HasValue ? GetDisplayName(absence.ExcuseReason.Value) : string.Empty,
+                ExcuseNote = absence.ExcuseNote,
+                CanExcuse = canExcuse
+            });
+    }
+
+    private static HashSet<Guid> GetManageableClassSubjectIds(
+        TeacherMainStudentAccess access,
+        IEnumerable<ClassSubject> classSubjects)
+    {
+        if (access.IsPrincipal)
+        {
+            return classSubjects.Select(classSubject => classSubject.Id).ToHashSet();
+        }
+
+        return classSubjects
+            .Where(classSubject => classSubject.TeacherId == access.Teacher!.Id)
+            .Select(classSubject => classSubject.Id)
+            .ToHashSet();
     }
 
     private Guid? GetCurrentUserId()
@@ -539,7 +819,7 @@ public class TeacherController : Controller
 
     private sealed record TeacherStudentRecordAccess(Student Student, ClassSubject ClassSubject);
 
-    private sealed record TeacherMainStudentAccess(Teacher Teacher, Student Student, Class SchoolClass);
+    private sealed record TeacherMainStudentAccess(Teacher? Teacher, Student Student, Class SchoolClass, bool IsPrincipal);
 
     private async Task<TeacherScheduleViewModel> BuildScheduleViewModelAsync(
         TeacherHomeViewModel homeViewModel,
@@ -793,6 +1073,19 @@ public class TeacherGradeRecordInputModel
     public string? Note { get; set; }
 }
 
+public class TeacherGradeEditInputModel
+{
+    public Guid GradeId { get; set; }
+
+    public Guid StudentId { get; set; }
+
+    public decimal Value { get; set; }
+
+    public GradeType Type { get; set; }
+
+    public string? Note { get; set; }
+}
+
 public class TeacherAbsenceRecordInputModel
 {
     public Guid? ClassId { get; set; }
@@ -814,6 +1107,25 @@ public class TeacherAbsenceRecordInputModel
     public string? ExcuseNote { get; set; }
 }
 
+public class TeacherAbsenceEditInputModel
+{
+    public Guid AbsenceId { get; set; }
+
+    public Guid StudentId { get; set; }
+
+    public DateOnly Date { get; set; }
+
+    public int LessonNumber { get; set; }
+
+    public AbsenceType Type { get; set; }
+
+    public AbsenceStatus Status { get; set; }
+
+    public AbsenceExcuseReason? ExcuseReason { get; set; }
+
+    public string? ExcuseNote { get; set; }
+}
+
 public class TeacherFeedbackRecordInputModel
 {
     public Guid? ClassId { get; set; }
@@ -821,6 +1133,19 @@ public class TeacherFeedbackRecordInputModel
     public Guid StudentId { get; set; }
 
     public Guid ClassSubjectId { get; set; }
+
+    public DateOnly Date { get; set; }
+
+    public FeedbackType Type { get; set; }
+
+    public string Description { get; set; } = string.Empty;
+}
+
+public class TeacherFeedbackEditInputModel
+{
+    public Guid FeedbackId { get; set; }
+
+    public Guid StudentId { get; set; }
 
     public DateOnly Date { get; set; }
 

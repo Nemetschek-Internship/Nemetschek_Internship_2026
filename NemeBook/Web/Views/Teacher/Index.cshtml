@@ -8,577 +8,384 @@
     ViewData["ShellUserMeta"] = Model.MainMeta;
     ViewData["ShellUserInitials"] = Model.TeacherInitials;
 
-    var className = string.IsNullOrWhiteSpace(Model.ClassName) ? "0" : Model.ClassName;
+    var classes = Model.TeachingClasses.OrderBy(schoolClass => schoolClass.Name).ToArray();
+    var subjects = Model.TeachingSubjects
+        .OrderBy(subject => subject.ClassName)
+        .ThenBy(subject => subject.SubjectName)
+        .ToArray();
+    var focusStudents = Model.Students
+        .OrderByDescending(student => student.RecordCount)
+        .ThenBy(student => student.FullName)
+        .Take(5)
+        .ToArray();
+    var busiestClass = classes
+        .OrderByDescending(schoolClass => schoolClass.StudentCount)
+        .FirstOrDefault();
 }
 
 @section Styles {
 <style>
     .nb-teacher-dashboard {
         min-width: 0;
-        padding: 18px 24px 28px;
-    }
-
-    .nb-teacher-greeting {
-        width: fit-content;
-        margin-bottom: 18px;
-        padding: 4px 12px;
-        border-radius: 999px;
-        background: #ece7df;
-        color: #5b554f;
-        font-size: 13px;
-        font-weight: 950;
-        line-height: 1.25;
-    }
-
-    .nb-teacher-hero {
         display: grid;
-        grid-template-columns: minmax(230px, 1.05fr) minmax(330px, 1.65fr) minmax(170px, 0.8fr);
-        gap: 14px;
-        align-items: stretch;
+        gap: 18px;
+        padding: 28px 34px 44px;
     }
-
+    .nb-teacher-hero,
     .nb-teacher-card,
-    .nb-teacher-mini-card,
-    .nb-teacher-list-card,
-    .nb-teacher-schedule-card {
+    .nb-teacher-panel {
         border: 1px solid #eee7df;
         border-radius: 8px;
         background: #ffffff;
         box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
     }
-
-    .nb-teacher-id-card {
-        min-height: 100px;
-        display: flex;
+    .nb-teacher-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
-        justify-content: space-between;
         gap: 18px;
-        padding: 18px;
+        padding: 20px;
         overflow: hidden;
-        background: linear-gradient(135deg, #ff7a1f 0%, #f5650b 58%, #ef5704 100%);
-        color: #ffffff;
     }
-
-    .nb-teacher-id-content {
+    .nb-teacher-title {
         min-width: 0;
         display: grid;
-        justify-items: start;
-        align-content: center;
+        grid-template-columns: 52px minmax(0, 1fr);
+        align-items: center;
+        gap: 13px;
     }
-
-    .nb-teacher-name-pill {
-        max-width: 100%;
-        display: block;
-        margin-bottom: 8px;
+    .nb-teacher-avatar {
+        width: 52px;
+        height: 52px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #ffe4c2;
+        color: #a95508;
+        font-size: 14px;
+        font-weight: 950;
+    }
+    .nb-teacher-title h1 {
+        margin: 0;
         overflow: hidden;
-        color: #ffffff;
-        font-size: 15px;
+        color: #1f232b;
+        font-size: 23px;
         font-weight: 950;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-
-    .nb-teacher-meta-pill {
-        min-height: 18px;
-        display: inline-flex;
-        align-items: center;
-        padding: 0 10px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.88);
-        color: #ef5704;
+    .nb-teacher-title p {
+        margin: 5px 0 0;
+        color: #8f887f;
+        font-size: 12px;
+        font-weight: 850;
+    }
+    .nb-teacher-hero-note {
+        max-width: 290px;
+        color: #6f6962;
+        font-size: 12px;
+        font-weight: 850;
+        line-height: 1.45;
+        text-align: right;
+    }
+    .nb-teacher-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+    .nb-teacher-card {
+        min-width: 0;
+        display: grid;
+        gap: 9px;
+        padding: 16px;
+    }
+    .nb-teacher-card span {
+        color: #8f887f;
         font-size: 11px;
         font-weight: 900;
+        text-transform: uppercase;
     }
-
-    .nb-teacher-initials {
-        width: 58px;
-        height: 58px;
-        flex: 0 0 auto;
-        display: grid;
-        place-items: center;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.96);
-        box-shadow: 0 12px 22px rgba(161, 61, 4, 0.16);
-        color: #f45d0a;
-        font-size: 16px;
-        font-weight: 950;
-    }
-
-    .nb-teacher-overview-card {
-        min-height: 100px;
-        display: grid;
-        align-content: center;
-        gap: 10px;
-        padding: 18px;
-    }
-
-    .nb-teacher-overview-title {
-        width: fit-content;
-        min-height: 22px;
-        display: inline-flex;
-        align-items: center;
-        padding: 3px 11px;
-        border-radius: 999px;
-        background: #ece7df;
-        color: #5b554f;
-        font-size: 12px;
-        font-weight: 950;
-    }
-
-    .nb-teacher-overview-row {
-        min-width: 0;
-        display: grid;
-        grid-template-columns: 24px minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .nb-teacher-dot {
-        width: 24px;
-        height: 24px;
-        display: grid;
-        place-items: center;
-        border-radius: 8px;
-        background: #eee3ff;
-        color: #7447ff;
-    }
-
-    .nb-teacher-dot::after {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-    }
-
-    .nb-teacher-dot.is-blue {
-        background: #dff0ff;
-        color: #3177ff;
-    }
-
-    .nb-teacher-dot.is-green {
-        background: #dff8e9;
-        color: #20a95c;
-    }
-
-    .nb-teacher-overview-row strong,
-    .nb-teacher-overview-row em {
-        min-height: 18px;
-        padding: 2px 9px;
-        border-radius: 999px;
-        background: #ece7df;
-        overflow: hidden;
-        color: #8c8a83;
-        font-size: 11px;
-        font-style: normal;
-        font-weight: 850;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .nb-teacher-overview-row em {
-        justify-self: end;
-        min-width: 28px;
-        text-align: center;
-    }
-
-    .nb-teacher-side-stack {
-        display: grid;
-        gap: 12px;
-    }
-
-    .nb-teacher-mini-card {
-        min-height: 76px;
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 14px;
-        color: inherit;
-        text-decoration: none;
-    }
-
-    .nb-teacher-mini-card h3,
-    .nb-teacher-heading h2 {
-        margin: 0;
-        color: #1f232b;
-        font-size: 12px;
-        font-weight: 950;
-    }
-
-    .nb-teacher-mini-card strong {
-        width: fit-content;
-        min-width: 38px;
-        min-height: 21px;
-        display: grid;
-        place-items: center;
-        margin-top: 10px;
-        padding: 2px 10px;
-        border-radius: 999px;
-        background: #ece7df;
-        color: #8d867c;
-        font-size: 18px;
+    .nb-teacher-card strong {
+        color: #20232a;
+        font-size: 28px;
         font-weight: 950;
         line-height: 1;
     }
-
-    .nb-teacher-mini-card p {
-        width: fit-content;
-        max-width: 132px;
-        margin: 7px 0 0;
-        padding: 3px 9px;
-        border-radius: 999px;
-        background: #f0ebe4;
+    .nb-teacher-card small {
         overflow: hidden;
-        color: #b9b2a8;
-        font-size: 10px;
+        color: #6f6962;
+        font-size: 12px;
         font-weight: 800;
-        line-height: 1.2;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-
-    .nb-teacher-mini-card i {
-        width: 24px;
-        height: 24px;
-        flex: 0 0 auto;
+    .nb-teacher-grid {
         display: grid;
-        place-items: center;
-        border-radius: 8px;
-        background: #ffdcb8;
-        color: #f46a16;
-        font-size: 13px;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 18px;
     }
-
-    .nb-teacher-lower {
-        display: grid;
-        grid-template-columns: minmax(390px, 1.6fr) minmax(240px, 0.8fr);
-        gap: 14px;
-        margin-top: 18px;
+    .nb-teacher-panel {
+        min-width: 0;
+        overflow: hidden;
     }
-
-    .nb-teacher-list-card,
-    .nb-teacher-schedule-card {
-        padding: 16px;
-    }
-
-    .nb-teacher-heading {
+    .nb-teacher-panel header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 14px;
-        margin-bottom: 12px;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px solid #f0e8df;
     }
-
-    .nb-teacher-heading h2 {
-        width: fit-content;
-        padding: 3px 11px;
-        border-radius: 999px;
-        background: #ece7df;
+    .nb-teacher-panel h2 {
+        margin: 0;
+        color: #20232a;
+        font-size: 16px;
+        font-weight: 950;
     }
-
-    .nb-teacher-heading a {
-        color: #f15d10;
-        font-size: 11px;
-        font-weight: 900;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .nb-teacher-section-note {
-        width: fit-content;
-        margin-bottom: 10px;
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: #f6f1ea;
-        color: #8d867c;
+    .nb-teacher-panel header span {
+        color: #8f887f;
         font-size: 11px;
         font-weight: 850;
     }
-
-    .nb-teacher-empty-row {
-        min-height: 38px;
+    .nb-load-list,
+    .nb-focus-list,
+    .nb-subject-cloud {
         display: grid;
-        grid-template-columns: 8px 24px minmax(0, 1fr) auto;
+    }
+    .nb-load-row,
+    .nb-focus-row {
+        min-width: 0;
+        display: grid;
+        gap: 8px;
+        padding: 14px 18px;
+        border-bottom: 1px solid #f5eee7;
+    }
+    .nb-load-row:last-child,
+    .nb-focus-row:last-child {
+        border-bottom: 0;
+    }
+    .nb-load-main,
+    .nb-focus-main {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 10px;
-        padding: 7px 8px;
-        border-radius: 8px;
     }
-
-    .nb-teacher-empty-row:first-child {
-        background: #fff1e6;
-    }
-
-    .nb-teacher-empty-row .nb-teacher-row-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #e2ddd5;
-    }
-
-    .nb-teacher-empty-row .nb-teacher-row-avatar {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: #e2ddd5;
-    }
-
-    .nb-teacher-empty-row strong,
-    .nb-teacher-empty-row small,
-    .nb-teacher-schedule-item strong,
-    .nb-teacher-schedule-item em {
-        display: block;
-        width: fit-content;
-        max-width: 100%;
-        min-height: 18px;
-        padding: 2px 9px;
-        border-radius: 999px;
-        background: #ece7df;
+    .nb-load-main strong,
+    .nb-focus-main strong {
         overflow: hidden;
-        color: #8a887f;
-        font-size: 11px;
-        font-style: normal;
-        font-weight: 850;
+        color: #20232a;
+        font-size: 13px;
+        font-weight: 950;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-
-    .nb-teacher-empty-row small,
-    .nb-teacher-schedule-item em {
-        margin-top: 3px;
-        background: #f0ebe4;
-        color: #c8c1b8;
-        font-size: 10px;
-        font-weight: 800;
-    }
-
-    .nb-teacher-empty-row em {
-        min-width: 34px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: #e2ddd5;
-        color: #9d968e;
-        font-size: 11px;
-        font-style: normal;
-        font-weight: 950;
-        text-align: center;
-    }
-
-    .nb-teacher-empty-row:first-child em {
-        background: #f45d0a;
-        color: #ffffff;
-    }
-
-    .nb-teacher-schedule-list {
-        display: grid;
-        gap: 8px;
-    }
-
-    .nb-teacher-schedule-item {
-        min-height: 30px;
-        display: grid;
-        grid-template-columns: 30px minmax(0, 1fr) auto;
+    .nb-pill {
+        min-height: 24px;
+        display: inline-flex;
         align-items: center;
-        gap: 9px;
-    }
-
-    .nb-teacher-schedule-item span {
-        width: 25px;
-        min-height: 20px;
-        display: grid;
-        place-items: center;
+        padding: 0 9px;
         border-radius: 999px;
-        background: #fff1e6;
-        color: #f45d0a;
-        font-size: 10px;
-        font-weight: 950;
+        background: #fbf7f2;
+        color: #6f6962;
+        font-size: 11px;
+        font-weight: 900;
     }
-
-    .nb-teacher-empty-panel {
-        min-height: 64px;
+    .nb-pill.is-warm {
+        background: #ffe4c2;
+        color: #f97316;
+    }
+    .nb-pill.is-green {
+        background: #dff8e9;
+        color: #159953;
+    }
+    .nb-load-subjects {
+        overflow: hidden;
+        color: #8f887f;
+        font-size: 12px;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-subject-cloud {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        padding: 18px;
+    }
+    .nb-subject-tile {
+        min-width: 0;
         display: grid;
-        place-items: center;
+        gap: 5px;
+        padding: 12px;
         border-radius: 8px;
         background: #fbf7f2;
-        color: #a49c92;
+    }
+    .nb-subject-tile strong {
+        overflow: hidden;
+        color: #20232a;
         font-size: 12px;
+        font-weight: 950;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-subject-tile span {
+        color: #8f887f;
+        font-size: 11px;
+        font-weight: 850;
+    }
+    .nb-empty-panel {
+        min-height: 130px;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        color: #8f887f;
+        font-size: 13px;
         font-weight: 850;
         text-align: center;
     }
-
-    @@media (max-width: 1180px) {
-        .nb-teacher-hero {
-            grid-template-columns: minmax(240px, 1fr) minmax(320px, 1.3fr);
-        }
-
-        .nb-teacher-side-stack {
-            grid-column: 1 / -1;
+    @@media (max-width: 1080px) {
+        .nb-teacher-stat-grid,
+        .nb-teacher-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
-
-    @@media (max-width: 920px) {
-        .nb-teacher-hero,
-        .nb-teacher-lower {
-            grid-template-columns: 1fr;
-        }
-
-        .nb-teacher-side-stack {
-            grid-column: auto;
-        }
-    }
-
-    @@media (max-width: 640px) {
+    @@media (max-width: 720px) {
         .nb-teacher-dashboard {
-            padding-left: 16px;
-            padding-right: 16px;
+            padding: 18px;
         }
-
-        .nb-teacher-overview-row {
-            grid-template-columns: 24px minmax(0, 1fr) 34px;
-        }
-
-        .nb-teacher-side-stack {
+        .nb-teacher-hero,
+        .nb-teacher-stat-grid,
+        .nb-teacher-grid {
             grid-template-columns: 1fr;
         }
-
-        .nb-teacher-empty-row {
-            grid-template-columns: 8px 24px minmax(0, 1fr);
+        .nb-teacher-hero-note {
+            max-width: none;
+            text-align: left;
         }
-
-        .nb-teacher-empty-row em {
-            grid-column: 3;
+        .nb-teacher-title h1 {
+            white-space: normal;
         }
     }
 </style>
 }
 
 <section class="nb-teacher-dashboard" aria-label="Начало за учител">
-    <div class="nb-teacher-greeting">Статистики</div>
-
-    <section class="nb-teacher-hero" aria-label="Обобщение">
-        <article class="nb-teacher-card nb-teacher-id-card">
-            <div class="nb-teacher-id-content">
-                <span class="nb-teacher-name-pill">@Model.TeacherName</span>
-                <span class="nb-teacher-meta-pill">@(Model.HasMainClass ? $"Клас {className}" : "Предмети")</span>
+    <header class="nb-teacher-hero">
+        <div class="nb-teacher-title">
+            <span class="nb-teacher-avatar" aria-hidden="true">@Model.TeacherInitials</span>
+            <div>
+                <h1>@Model.TeacherName</h1>
+                <p>@Model.MainMeta</p>
             </div>
-            <span class="nb-teacher-initials" aria-hidden="true">@Model.TeacherInitials</span>
+        </div>
+        <p class="nb-teacher-hero-note">
+            Обобщение на натоварването, покритието по класове и учениците с най-много записи.
+        </p>
+    </header>
+
+    <section class="nb-teacher-stat-grid" aria-label="Обобщение">
+        <article class="nb-teacher-card">
+            <span>Класове</span>
+            <strong>@classes.Length</strong>
+            <small>@(Model.HasMainClass ? $"Класен на {Model.ClassName}" : "Без поверен клас")</small>
         </article>
-
-        <article class="nb-teacher-card nb-teacher-overview-card">
-            <span class="nb-teacher-overview-title">Среден успех по предмети</span>
-
-            <div class="nb-teacher-overview-row">
-                <span class="nb-teacher-dot"></span>
-                <strong>@(Model.HasMainClass ? "Моят клас" : "Предмети")</strong>
-                <em>@(Model.HasMainClass ? className : Model.TeachingSubjects.Count)</em>
-            </div>
-
-            <div class="nb-teacher-overview-row">
-                <span class="nb-teacher-dot is-blue"></span>
-                <strong>Ученици</strong>
-                <em>@Model.StudentCount</em>
-            </div>
-
-            <div class="nb-teacher-overview-row">
-                <span class="nb-teacher-dot is-green"></span>
-                <strong>Часове днес</strong>
-                <em>0</em>
-            </div>
+        <article class="nb-teacher-card">
+            <span>Предмети</span>
+            <strong>@subjects.Select(subject => subject.SubjectName).Distinct().Count()</strong>
+            <small>@subjects.Length разпределения</small>
         </article>
-
-        <aside class="nb-teacher-side-stack" aria-label="Бърза информация">
-            <a class="nb-teacher-mini-card" asp-controller="Teacher" asp-action="MySubjects">
-                <div>
-                    <h3>Отзиви</h3>
-                    <strong>0</strong>
-                    <p>Няма данни</p>
-                </div>
-                <i class="bi bi-chat-square-text-fill" aria-hidden="true"></i>
-            </a>
-
-            <a class="nb-teacher-mini-card" asp-controller="Teacher" asp-action="MySubjects">
-                <div>
-                    <h3>Отсъствия</h3>
-                    <strong>0</strong>
-                    <p>Няма данни</p>
-                </div>
-                <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
-            </a>
-        </aside>
+        <article class="nb-teacher-card">
+            <span>Ученици</span>
+            <strong>@Model.StudentCount</strong>
+            <small>@(busiestClass is null ? "Няма класове" : $"Най-голям: {busiestClass.Name}")</small>
+        </article>
+        <article class="nb-teacher-card">
+            <span>Фокус</span>
+            <strong>@focusStudents.Count(student => student.RecordCount > 0)</strong>
+            <small>ученици със записи</small>
+        </article>
     </section>
 
-    <section class="nb-teacher-lower">
-        <article class="nb-teacher-list-card">
-            <div class="nb-teacher-heading">
-                <h2>@(Model.HasMainClass ? "Моят клас" : "Моите предмети")</h2>
-                <a asp-controller="Teacher" asp-action="@(Model.HasMainClass ? "MyClass" : "MySubjects")">
-                    <span>Детайли</span>
-                    <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
-                </a>
-            </div>
-
-            <div class="nb-teacher-section-note">Последни записи за класа</div>
-
-            @if (Model.Students.Any())
+    <section class="nb-teacher-grid">
+        <article class="nb-teacher-panel">
+            <header>
+                <h2>Покритие по класове</h2>
+                <span>@classes.Length класа</span>
+            </header>
+            @if (classes.Length == 0)
             {
-                @foreach (var student in Model.Students.Take(4))
-                {
-                    <div class="nb-teacher-empty-row">
-                        <span class="nb-teacher-row-dot"></span>
-                        <span class="nb-teacher-row-avatar"></span>
-                        <div>
-                            <strong>@student.FullName</strong>
-                            <small>Клас @className</small>
-                        </div>
-                        <em>0</em>
-                    </div>
-                }
+                <div class="nb-empty-panel">Все още няма назначени класове.</div>
             }
             else
             {
-                <div class="nb-teacher-empty-row">
-                    <span class="nb-teacher-row-dot"></span>
-                    <span class="nb-teacher-row-avatar"></span>
-                    <div>
-                        <strong>Няма ученици</strong>
-                        <small>0 записа</small>
-                    </div>
-                    <em>0</em>
-                </div>
-                <div class="nb-teacher-empty-row">
-                    <span class="nb-teacher-row-dot"></span>
-                    <span class="nb-teacher-row-avatar"></span>
-                    <div>
-                        <strong>Няма данни</strong>
-                        <small>0 записа</small>
-                    </div>
-                    <em>0</em>
-                </div>
-                <div class="nb-teacher-empty-row">
-                    <span class="nb-teacher-row-dot"></span>
-                    <span class="nb-teacher-row-avatar"></span>
-                    <div>
-                        <strong>Няма данни</strong>
-                        <small>0 записа</small>
-                    </div>
-                    <em>0</em>
+                <div class="nb-load-list">
+                    @foreach (var schoolClass in classes)
+                    {
+                        <section class="nb-load-row">
+                            <div class="nb-load-main">
+                                <strong>Клас @schoolClass.Name</strong>
+                                <span class="nb-pill @(schoolClass.IsMainClass ? "is-warm" : null)">
+                                    @(schoolClass.IsMainClass ? "класен" : $"{schoolClass.StudentCount} ученици")
+                                </span>
+                            </div>
+                            <span class="nb-load-subjects" title="@schoolClass.SubjectNames">
+                                @(string.IsNullOrWhiteSpace(schoolClass.SubjectNames) ? "Няма предмети" : schoolClass.SubjectNames)
+                            </span>
+                        </section>
+                    }
                 </div>
             }
         </article>
 
-        <article class="nb-teacher-schedule-card">
-            <div class="nb-teacher-heading">
-                <h2>Днес</h2>
-                <a asp-controller="Teacher" asp-action="Schedule">
-                    <span>Програма</span>
-                    <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
-                </a>
-            </div>
-
-            <div class="nb-teacher-schedule-list">
-                <div class="nb-teacher-empty-panel">Няма програма за днес. 0 часа.</div>
-            </div>
+        <article class="nb-teacher-panel">
+            <header>
+                <h2>Фокус ученици</h2>
+                <span>@focusStudents.Length показани</span>
+            </header>
+            @if (focusStudents.Length == 0)
+            {
+                <div class="nb-empty-panel">Няма ученици за показване.</div>
+            }
+            else
+            {
+                <div class="nb-focus-list">
+                    @foreach (var student in focusStudents)
+                    {
+                        <section class="nb-focus-row">
+                            <div class="nb-focus-main">
+                                <strong>@student.FullName</strong>
+                                <span class="nb-pill @(student.RecordCount > 0 ? "is-green" : null)">
+                                    @student.RecordCount записи
+                                </span>
+                            </div>
+                        </section>
+                    }
+                </div>
+            }
         </article>
     </section>
+
+    <article class="nb-teacher-panel">
+        <header>
+            <h2>Предмети и класове</h2>
+            <span>@subjects.Length разпределения</span>
+        </header>
+        @if (subjects.Length == 0)
+        {
+            <div class="nb-empty-panel">Все още няма назначени предмети.</div>
+        }
+        else
+        {
+            <div class="nb-subject-cloud">
+                @foreach (var subject in subjects)
+                {
+                    <section class="nb-subject-tile">
+                        <strong>@subject.SubjectName</strong>
+                        <span>Клас @subject.ClassName · @subject.StudentCount ученици</span>
+                    </section>
+                }
+            </div>
+        }
+    </article>
 </section>

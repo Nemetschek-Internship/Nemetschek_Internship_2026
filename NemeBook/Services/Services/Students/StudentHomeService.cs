@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using Entities.Enums;
 using Entities.Models;
 using Entities.ViewModels.Students;
@@ -17,6 +18,7 @@ public class StudentHomeService : IStudentHomeService
     private readonly IFeedbackRepository feedbackRepository;
     private readonly IAbsenceRepository absenceRepository;
     private readonly IClassScheduleEntryRepository scheduleEntryRepository;
+    private readonly IEventRepository eventRepository;
     private readonly IAccountsRepository accountsRepository;
 
     public StudentHomeService(
@@ -27,6 +29,7 @@ public class StudentHomeService : IStudentHomeService
         IFeedbackRepository feedbackRepository,
         IAbsenceRepository absenceRepository,
         IClassScheduleEntryRepository scheduleEntryRepository,
+        IEventRepository eventRepository,
         IAccountsRepository accountsRepository)
     {
         this.studentRepository = studentRepository;
@@ -36,6 +39,7 @@ public class StudentHomeService : IStudentHomeService
         this.feedbackRepository = feedbackRepository;
         this.absenceRepository = absenceRepository;
         this.scheduleEntryRepository = scheduleEntryRepository;
+        this.eventRepository = eventRepository;
         this.accountsRepository = accountsRepository;
     }
 
@@ -86,6 +90,10 @@ public class StudentHomeService : IStudentHomeService
             .ThenByDescending(absence => absence.CreatedAt)
             .ToList();
 
+        var academicSubjects = BuildAcademicSubjects(grades, subjectByClassSubjectId, teacherByClassSubjectId);
+        var feedbackDetails = BuildFeedbackDetails(studentFeedbacks, subjectByClassSubjectId, teacherByClassSubjectId);
+        var absenceDetails = BuildAbsenceDetails(studentAbsences, subjectByClassSubjectId, teacherByClassSubjectId);
+
         return new StudentHomeViewModel
         {
             StudentName = FormatStudentName(student),
@@ -94,13 +102,91 @@ public class StudentHomeService : IStudentHomeService
             GradeCount = grades.Count,
             OverallAverage = grades.Any() ? Math.Round(grades.Average(grade => grade.Value), 2) : 0,
             SubjectProgress = BuildSubjectProgress(grades, subjectByClassSubjectId),
-            AcademicSubjects = BuildAcademicSubjects(grades, subjectByClassSubjectId, teacherByClassSubjectId),
+            AcademicSubjects = academicSubjects,
+            SubjectRecords = BuildSubjectRecords(academicSubjects, absenceDetails, feedbackDetails),
             RecentGrades = BuildRecentGrades(grades, subjectByClassSubjectId),
-            Feedbacks = BuildFeedbackDetails(studentFeedbacks, subjectByClassSubjectId, teacherByClassSubjectId),
+            Feedbacks = feedbackDetails,
             FeedbackSummary = BuildFeedbackSummary(studentFeedbacks, subjectByClassSubjectId),
-            Absences = BuildAbsenceDetails(studentAbsences, subjectByClassSubjectId, teacherByClassSubjectId),
+            Absences = absenceDetails,
             AbsenceSummary = BuildAbsenceSummary(studentAbsences, subjectByClassSubjectId),
             TodaysSchedule = BuildTodaysSchedule(scheduleEntries, student.ClassId)
+        };
+    }
+
+    public async Task<StudentCalendarViewModel?> GetCalendarAsync(
+        Guid userId,
+        int? year,
+        int? month,
+        CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+
+        var students = await studentRepository.GetAllAsync(cancellationToken);
+        var student = students.FirstOrDefault(existingStudent => existingStudent.UserId == userId);
+        if (student is null)
+        {
+            return null;
+        }
+
+        var classEntity = await classService.GetByIdAsync(student.ClassId, cancellationToken);
+        if (classEntity is null)
+        {
+            return null;
+        }
+
+        var selectedMonth = GetSelectedMonth(year, month);
+        var monthStart = new DateTime(selectedMonth.Year, selectedMonth.Month, 1);
+        var monthEnd = monthStart.AddMonths(1);
+        var calendarStart = monthStart.AddDays(-GetMondayBasedDayIndex(monthStart.DayOfWeek));
+        var calendarEnd = monthEnd.AddDays((7 - GetMondayBasedDayIndex(monthEnd.DayOfWeek)) % 7);
+
+        if ((calendarEnd - calendarStart).TotalDays < 35)
+        {
+            calendarEnd = calendarStart.AddDays(35);
+        }
+
+        var classEvents = (await eventRepository.GetAllAsync(cancellationToken))
+            .Where(schoolEvent =>
+                schoolEvent.Date >= calendarStart &&
+                schoolEvent.Date < calendarEnd &&
+                (schoolEvent.Classes.Any(schoolClass => schoolClass.Id == student.ClassId) ||
+                 schoolEvent.ClassSubject?.ClassId == student.ClassId))
+            .OrderBy(schoolEvent => schoolEvent.Date)
+            .Select(MapCalendarEvent)
+            .ToList();
+
+        return new StudentCalendarViewModel
+        {
+            StudentName = FormatStudentName(student),
+            StudentInitials = FormatInitials(student.User.FirstName, student.User.LastName),
+            ClassName = $"{classEntity.GradeNumber}{classEntity.Letter}",
+            Year = selectedMonth.Year,
+            Month = selectedMonth.Month,
+            MonthName = CultureInfo.GetCultureInfo("bg-BG").DateTimeFormat.GetMonthName(selectedMonth.Month),
+            CalendarDays = Enumerable
+                .Range(0, (calendarEnd - calendarStart).Days)
+                .Select(offset =>
+                {
+                    var date = calendarStart.AddDays(offset);
+                    return new StudentCalendarDayViewModel
+                    {
+                        Date = date,
+                        DayNumber = date.Day,
+                        IsCurrentMonth = date.Month == selectedMonth.Month,
+                        IsToday = date.Date == DateTime.Today,
+                        Events = classEvents
+                            .Where(schoolEvent => schoolEvent.Date.Date == date.Date)
+                            .ToList()
+                    };
+                })
+                .ToList(),
+            UpcomingEvents = classEvents
+                .Where(schoolEvent => schoolEvent.Date >= DateTime.Today)
+                .Take(8)
+                .ToList()
         };
     }
 
@@ -205,6 +291,28 @@ public class StudentHomeService : IStudentHomeService
                         })
                         .ToList()
                 };
+            })
+            .ToList();
+    }
+
+    private static IReadOnlyList<StudentSubjectRecordsItem> BuildSubjectRecords(
+        IReadOnlyList<StudentAcademicSubjectItem> academicSubjects,
+        IReadOnlyList<StudentAbsenceDetailItem> absences,
+        IReadOnlyList<StudentFeedbackDetailItem> feedbacks)
+    {
+        return academicSubjects
+            .Select(subject => new StudentSubjectRecordsItem
+            {
+                SubjectName = subject.SubjectName,
+                Average = subject.Average,
+                GradeCount = subject.GradeCount,
+                Grades = subject.Grades,
+                Absences = absences
+                    .Where(absence => absence.SubjectName == subject.SubjectName)
+                    .ToList(),
+                Feedbacks = feedbacks
+                    .Where(feedback => feedback.SubjectName == subject.SubjectName)
+                    .ToList()
             })
             .ToList();
     }
@@ -388,5 +496,51 @@ public class StudentHomeService : IStudentHomeService
         }
 
         return Math.Clamp((int)Math.Round(average / 6 * 100), 0, 100);
+    }
+
+    private static DateTime GetSelectedMonth(int? year, int? month)
+    {
+        var today = DateTime.Today;
+        if (!year.HasValue ||
+            !month.HasValue ||
+            year.Value < 1900 ||
+            month.Value is < 1 or > 12)
+        {
+            return new DateTime(today.Year, today.Month, 1);
+        }
+
+        return new DateTime(year.Value, month.Value, 1);
+    }
+
+    private static int GetMondayBasedDayIndex(DayOfWeek dayOfWeek)
+    {
+        return ((int)dayOfWeek + 6) % 7;
+    }
+
+    private static StudentCalendarEventViewModel MapCalendarEvent(Event schoolEvent)
+    {
+        return new StudentCalendarEventViewModel
+        {
+            Id = schoolEvent.Id,
+            Title = schoolEvent.Title,
+            Description = schoolEvent.Description,
+            EventTypeName = GetDisplayName(schoolEvent.EventType),
+            EventTypeCssClass = GetEventTypeCssClass(schoolEvent.EventType),
+            ClassSubjectName = schoolEvent.ClassSubject?.Subject.Name,
+            Date = schoolEvent.Date,
+            DayLabel = schoolEvent.Date.ToString("dd.MM.yyyy", CultureInfo.GetCultureInfo("bg-BG")),
+            TimeLabel = schoolEvent.Date.ToString("HH:mm", CultureInfo.GetCultureInfo("bg-BG"))
+        };
+    }
+
+    private static string GetEventTypeCssClass(EventType eventType)
+    {
+        return eventType switch
+        {
+            EventType.Test => "is-purple",
+            EventType.Homework => "is-blue",
+            EventType.Trip => "is-green",
+            _ => "is-orange"
+        };
     }
 }

@@ -1,0 +1,59 @@
+@model Entities.ViewModels.Teachers.TeacherScheduleViewModel
+
+@{
+    Layout = "_AppShell";
+    ViewData["Title"] = "Програма";
+    ViewData["ActiveNav"] = "Schedule";
+    ViewData["ShellUserName"] = Model.TeacherName;
+    ViewData["ShellUserMeta"] = Model.MainMeta;
+    ViewData["ShellUserInitials"] = Model.TeacherInitials;
+}
+
+<section class="nb-principal-content nb-class-management-content" aria-label="Седмична програма">
+    <section class="nb-class-students-panel nb-schedule-panel" aria-label="Програма">
+        @if (Model.Days.All(day => day.Entries.Count == 0))
+        {
+            <div class="nb-class-subjects-empty">
+                <span>Няма назначени часове в програмата.</span>
+            </div>
+        }
+        else
+        {
+            <div class="nb-schedule-week" aria-label="Седмична програма">
+                @foreach (var day in Model.Days)
+                {
+                    <section class="nb-schedule-day" aria-label="@day.DayName">
+                        <header>
+                            <strong>@day.DayName</strong>
+                        </header>
+
+                        <div class="nb-schedule-day-stack">
+                            @if (day.Entries.Count == 0)
+                            {
+                                <div class="nb-empty-class">Няма часове</div>
+                            }
+                            else
+                            {
+                                @foreach (var entry in day.Entries)
+                                {
+                                    <article class="nb-schedule-card">
+                                        <span class="nb-schedule-period">@entry.PeriodNumber</span>
+                                        <span class="nb-schedule-card-body">
+                                            <strong>@entry.SubjectName</strong>
+                                            <small>Клас @entry.ClassName</small>
+                                            @if (entry.IsSubstitution)
+                                            {
+                                                <em>заместване</em>
+                                            }
+                                            <span>@entry.TimeRange</span>
+                                        </span>
+                                    </article>
+                                }
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+        }
+    </section>
+</section>

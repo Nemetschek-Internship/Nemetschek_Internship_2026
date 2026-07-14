@@ -29,9 +29,13 @@
             <i class="bi bi-chat-dots"></i>
             <span>Чатове</span>
         </a>
-        <a class="@(activeNav == "Calendar" ? "is-active" : null)" href="#" aria-disabled="true">
+        <a class="@(activeNav == "Calendar" ? "is-active" : null)" asp-area="" asp-controller="Student" asp-action="Calendar">
             <i class="bi bi-calendar3"></i>
             <span>Календар</span>
+        </a>
+        <a class="@(activeNav == "Schedule" ? "is-active" : null)" asp-area="" asp-controller="Student" asp-action="Schedule">
+            <i class="bi bi-calendar-week"></i>
+            <span>Програма</span>
         </a>
         <a class="@(activeNav == "Profile" ? "is-active" : null)" asp-area="" asp-controller="Account" asp-action="Profile">
             <i class="bi bi-person"></i>

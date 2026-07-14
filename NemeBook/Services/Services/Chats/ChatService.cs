@@ -56,7 +56,7 @@ public class ChatService : IChatService
             .Where(chat => chat.Users.Any(user => user.Id == userId))
             .Where(chat => !IsCustomGroupChat(chat))
             .Where(chat => !IsDirectChatWithSelf(userId, chat))
-            .Where(chat => !IsDirectChatWithInactiveStudent(chat))
+            .Where(chat => !IsDirectChatWithInactiveParticipant(chat))
             .Where(chat => !IsDirectChatWithPrincipalForRestrictedRole(requester, chat))
             .Where(chat => CanUserSeeChat(requester, chat))
             .ToList();
@@ -284,9 +284,9 @@ public class ChatService : IChatService
             throw new UnauthorizedAccessException("Self chats are disabled.");
         }
 
-        if (IsDirectChatWithInactiveStudent(chat))
+        if (IsDirectChatWithInactiveParticipant(chat))
         {
-            throw new UnauthorizedAccessException("Inactive student direct chats are hidden.");
+            throw new UnauthorizedAccessException("Inactive direct chat participants are hidden.");
         }
 
         if (IsDirectChatWithPrincipalForRestrictedRole(requester, chat))
@@ -312,11 +312,11 @@ public class ChatService : IChatService
             && chat.Users.Any(user => user.Id == userId);
     }
 
-    private static bool IsDirectChatWithInactiveStudent(Chat chat)
+    private static bool IsDirectChatWithInactiveParticipant(Chat chat)
     {
         return string.IsNullOrWhiteSpace(chat.Name)
             && chat.Users.Count == 2
-            && chat.Users.Any(user => user.Role == UserRole.Student && (user.IsDeleted || !user.IsActive));
+            && chat.Users.Any(user => user.IsDeleted || !user.IsActive);
     }
 
     private static bool IsDirectChatWithPrincipalForRestrictedRole(User requester, Chat chat)
@@ -432,7 +432,9 @@ public class ChatService : IChatService
         var classes = await classRepository.GetAllAsync(cancellationToken);
         var classSubjects = await classSubjectRepository.GetAllAsync(cancellationToken);
 
-        var teacherUserByTeacherId = teachers.ToDictionary(teacher => teacher.Id, teacher => teacher.UserId);
+        var teacherUserByTeacherId = teachers
+            .Where(teacher => teacher.User.IsActive && !teacher.User.IsDeleted)
+            .ToDictionary(teacher => teacher.Id, teacher => teacher.UserId);
         HashSet<Guid> allowedIds = requester.Role switch
         {
             UserRole.Student => GetAllowedForStudent(requesterUserId, students, classSubjects, classes, teacherUserByTeacherId),
@@ -488,6 +490,7 @@ public class ChatService : IChatService
             ?? throw new InvalidOperationException("Профилът на родителя не беше намерен.");
 
         var childClassIds = parent.Students
+            .Where(student => student.User.IsActive && !student.User.IsDeleted)
             .Select(student => student.ClassId)
             .ToHashSet();
 
@@ -538,11 +541,16 @@ public class ChatService : IChatService
 
         var studentUserIds = students
             .Where(student => classIds.Contains(student.ClassId))
+            .Where(student => student.User.IsActive && !student.User.IsDeleted)
             .Select(student => student.UserId)
             .ToHashSet();
 
         var parentUserIds = parents
-            .Where(parent => parent.Students.Any(student => classIds.Contains(student.ClassId)))
+            .Where(parent => parent.User.IsActive && !parent.User.IsDeleted)
+            .Where(parent => parent.Students.Any(student =>
+                classIds.Contains(student.ClassId) &&
+                student.User.IsActive &&
+                !student.User.IsDeleted))
             .Select(parent => parent.UserId)
             .ToHashSet();
 

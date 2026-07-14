@@ -3,10 +3,32 @@
 @{
     Layout = "_AppShell";
     ViewData["Title"] = Model.StudentName;
-    ViewData["ActiveNav"] = "MyClass";
+    ViewData["ActiveNav"] = User.IsInRole("Principal") ? "Classes" : "MyClass";
     ViewData["ShellUserName"] = Model.TeacherName;
     ViewData["ShellUserMeta"] = Model.MainMeta;
     ViewData["ShellUserInitials"] = Model.TeacherInitials;
+
+    var overallAverage = Model.Grades.Count > 0 ? Model.Grades.Average(grade => grade.Value) : 0m;
+    var excellentGrades = Model.Grades.Count(grade => grade.DisplayValue >= 5);
+    var lowGrades = Model.Grades.Count(grade => grade.DisplayValue <= 3);
+    var excusedAbsences = Model.Absences.Count(absence => absence.IsExcused);
+    var unexcusedAbsences = Model.Absences.Count - excusedAbsences;
+    var praiseCount = Model.Feedbacks.Count(feedback => feedback.TypeName.Contains("похвал", StringComparison.OrdinalIgnoreCase));
+    var noteCount = Math.Max(0, Model.Feedbacks.Count - praiseCount);
+    var subjectStats = Model.Grades.Select(grade => grade.SubjectName)
+        .Concat(Model.Absences.Select(absence => absence.SubjectName))
+        .Concat(Model.Feedbacks.Select(feedback => feedback.SubjectName))
+        .Where(subject => !string.IsNullOrWhiteSpace(subject))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(subject => subject)
+        .Select(subject => new
+        {
+            Name = subject,
+            Grades = Model.Grades.Where(grade => string.Equals(grade.SubjectName, subject, StringComparison.OrdinalIgnoreCase)).ToArray(),
+            Absences = Model.Absences.Count(absence => string.Equals(absence.SubjectName, subject, StringComparison.OrdinalIgnoreCase)),
+            Feedbacks = Model.Feedbacks.Count(feedback => string.Equals(feedback.SubjectName, subject, StringComparison.OrdinalIgnoreCase))
+        })
+        .ToArray();
 }
 
 @section Styles {
@@ -17,16 +39,20 @@
         gap: 18px;
         padding: 28px 34px 44px;
     }
+    .nb-student-details-hero,
+    .nb-stat-card,
+    .nb-stats-panel {
+        border: 1px solid #eee7df;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
+    }
     .nb-student-details-hero {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 18px;
         padding: 20px;
-        border: 1px solid #eee7df;
-        border-radius: 8px;
-        background: #ffffff;
-        box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
     }
     .nb-student-identity {
         min-width: 0;
@@ -84,83 +110,92 @@
         background: #ffe4c2;
         color: #f97316;
     }
-    .nb-student-details-grid {
+    .nb-stat-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+    .nb-stat-card {
+        min-width: 0;
+        display: grid;
+        gap: 8px;
+        padding: 16px;
+    }
+    .nb-stat-card span {
+        color: #8f887f;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .nb-stat-card strong {
+        color: #20232a;
+        font-size: 26px;
+        font-weight: 950;
+        line-height: 1;
+    }
+    .nb-stat-card small {
+        overflow: hidden;
+        color: #6f6962;
+        font-size: 12px;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nb-stats-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
         gap: 18px;
     }
-    .nb-record-card {
+    .nb-stats-panel {
         min-width: 0;
-        border: 1px solid #eee7df;
-        border-radius: 8px;
-        background: #ffffff;
-        box-shadow: 0 10px 22px rgba(42, 35, 29, 0.05);
         overflow: hidden;
     }
-    .nb-record-card header {
+    .nb-stats-panel header {
         display: flex;
-        align-items: end;
+        align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: 10px;
         padding: 16px 18px;
         border-bottom: 1px solid #f0e8df;
     }
-    .nb-record-card h2 {
+    .nb-stats-panel h2 {
         margin: 0;
-        color: #1f232b;
+        color: #20232a;
         font-size: 16px;
         font-weight: 950;
     }
-    .nb-record-card header span {
+    .nb-stats-panel header span {
         color: #8f887f;
         font-size: 11px;
         font-weight: 850;
     }
-    .nb-record-list {
+    .nb-subject-stat-list,
+    .nb-distribution-list {
         display: grid;
+        gap: 0;
     }
-    .nb-grade-row,
-    .nb-feedback-row,
-    .nb-absence-row {
-        width: 100%;
+    .nb-subject-stat-row,
+    .nb-distribution-row {
         min-width: 0;
         display: grid;
-        gap: 4px;
-        padding: 13px 18px;
+        gap: 8px;
+        padding: 14px 18px;
         border-bottom: 1px solid #f5eee7;
-        color: inherit;
-        text-align: left;
     }
-    button.nb-grade-row {
-        border-top: 0;
-        border-right: 0;
-        border-left: 0;
-        background: transparent;
-        font: inherit;
-        cursor: pointer;
-    }
-    button.nb-grade-row:hover,
-    button.nb-grade-row:focus-visible {
-        background: #fff8f1;
-        outline: none;
-    }
-    .nb-grade-row:last-child,
-    .nb-feedback-row:last-child,
-    .nb-absence-row:last-child {
+    .nb-subject-stat-row:last-child,
+    .nb-distribution-row:last-child {
         border-bottom: 0;
     }
-    .nb-grade-main,
-    .nb-feedback-main,
-    .nb-absence-main {
+    .nb-subject-stat-main,
+    .nb-distribution-main {
         min-width: 0;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 10px;
     }
-    .nb-grade-main strong,
-    .nb-feedback-main strong,
-    .nb-absence-main strong {
+    .nb-subject-stat-main strong,
+    .nb-distribution-main strong {
         overflow: hidden;
         color: #20232a;
         font-size: 13px;
@@ -168,66 +203,50 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .nb-grade-pill,
-    .nb-status-pill {
-        min-height: 26px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 9px;
-        border-radius: 7px;
-        background: #ffe4c2;
+    .nb-subject-stat-main span,
+    .nb-distribution-main span {
         color: #f97316;
         font-size: 12px;
         font-weight: 950;
     }
-    .nb-status-pill.is-excused {
+    .nb-track {
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #f2eee8;
+    }
+    .nb-track span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: #f97316;
+    }
+    .nb-subject-stat-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .nb-chip {
+        min-height: 24px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 8px;
+        border-radius: 7px;
+        background: #fbf7f2;
+        color: #6f6962;
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .nb-chip.is-red {
+        background: #ffe0dc;
+        color: #c23329;
+    }
+    .nb-chip.is-green {
         background: #dff8e9;
         color: #159953;
     }
-    .nb-record-meta {
-        color: #8f887f;
-        font-size: 11px;
-        font-weight: 800;
-    }
-    .nb-record-note {
-        margin: 3px 0 0;
-        color: #5f6673;
-        font-size: 12px;
-        line-height: 1.45;
-    }
-    .nb-excuse-form {
-        display: grid;
-        grid-template-columns: minmax(120px, 160px) minmax(0, 1fr) auto;
-        gap: 8px;
-        margin-top: 8px;
-    }
-    .nb-excuse-form select,
-    .nb-excuse-form input {
-        min-height: 32px;
-        border: 1px solid #eee3d8;
-        border-radius: 7px;
-        background: #fffaf5;
-        color: #242832;
-        font: inherit;
-        font-size: 12px;
-        font-weight: 800;
-        padding: 6px 8px;
-    }
-    .nb-excuse-form button {
-        min-height: 32px;
-        border: 0;
-        border-radius: 7px;
-        background: #159953;
-        color: #ffffff;
-        font: inherit;
-        font-size: 11px;
-        font-weight: 950;
-        cursor: pointer;
-        padding: 0 12px;
-    }
-    .nb-empty-records {
-        min-height: 112px;
+    .nb-empty-stats {
+        min-height: 150px;
         display: grid;
         place-items: center;
         padding: 18px;
@@ -236,131 +255,23 @@
         font-weight: 850;
         text-align: center;
     }
-    .nb-popup-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 70;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        background: rgba(31, 35, 43, 0.42);
+    @@media (max-width: 1100px) {
+        .nb-stat-grid,
+        .nb-stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
     }
-    .nb-popup-backdrop[hidden] {
-        display: none;
-    }
-    .nb-popup {
-        width: min(470px, 100%);
-        overflow: hidden;
-        border-radius: 12px;
-        background: #ffffff;
-        box-shadow: 0 30px 80px rgba(31, 35, 43, 0.28);
-    }
-    .nb-popup-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 18px 20px;
-        border-bottom: 1px solid #eee7df;
-    }
-    .nb-popup-header h3 {
-        margin: 0;
-        color: #20232a;
-        font-size: 16px;
-        font-weight: 900;
-    }
-    .nb-popup-header p {
-        margin: 3px 0 0;
-        color: #9a938b;
-        font-size: 12px;
-        font-weight: 750;
-    }
-    .nb-popup-close {
-        width: 34px;
-        height: 34px;
-        display: grid;
-        place-items: center;
-        flex: 0 0 auto;
-        border: 1px solid #f0ded0;
-        border-radius: 50%;
-        background: #fff8f1;
-        color: #e95b0c;
-        cursor: pointer;
-    }
-    .nb-popup-body {
-        display: grid;
-        gap: 12px;
-        padding: 18px 20px 20px;
-    }
-    .nb-popup-grade {
-        min-width: 34px;
-        min-height: 30px;
-        width: fit-content;
-        display: inline-grid;
-        place-items: center;
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: #eee7df;
-        color: #8d867c;
-        font-size: 12px;
-        font-weight: 950;
-    }
-    .nb-popup-grade.is-good {
-        background: #dff8e9;
-        color: #16a34a;
-    }
-    .nb-popup-grade.is-mid {
-        background: #fff0d8;
-        color: #e77817;
-    }
-    .nb-popup-grade.is-low {
-        background: #ffe0dc;
-        color: #e04434;
-    }
-    .nb-grade-detail-grid {
-        display: grid;
-        gap: 9px;
-    }
-    .nb-grade-detail-row {
-        min-height: 38px;
-        display: grid;
-        grid-template-columns: 90px minmax(0, 1fr);
-        align-items: center;
-        gap: 12px;
-        padding: 9px 10px;
-        border-radius: 8px;
-        background: #fbf7f2;
-    }
-    .nb-grade-detail-row span:first-child {
-        color: #8d867c;
-        font-size: 11px;
-        font-weight: 900;
-    }
-    .nb-grade-detail-row span:last-child {
-        min-width: 0;
-        overflow-wrap: anywhere;
-        color: #242832;
-        font-size: 13px;
-        font-weight: 850;
-    }
-    body.nb-popup-open {
-        overflow: hidden;
-    }
-    @@media (max-width: 980px) {
+    @@media (max-width: 760px) {
         .nb-student-details-page {
             padding: 18px;
         }
-        .nb-student-details-grid,
-        .nb-student-details-hero {
+        .nb-student-details-hero,
+        .nb-stat-grid,
+        .nb-stats-grid {
             grid-template-columns: 1fr;
         }
         .nb-student-details-actions {
             justify-content: flex-start;
-        }
-    }
-    @@media (max-width: 640px) {
-        .nb-excuse-form {
-            grid-template-columns: 1fr;
         }
         .nb-student-identity h1 {
             white-space: normal;
@@ -380,10 +291,20 @@
         </div>
 
         <nav class="nb-student-details-actions" aria-label="Действия">
-            <a class="nb-student-link" asp-controller="Teacher" asp-action="MyClass" asp-route-classId="@Model.ClassId">
-                <i class="bi bi-arrow-left" aria-hidden="true"></i>
-                <span>Назад</span>
-            </a>
+            @if (User.IsInRole("Principal"))
+            {
+                <a class="nb-student-link" asp-controller="ClassManagement" asp-action="Students" asp-route-classId="@Model.ClassId">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    <span>Назад</span>
+                </a>
+            }
+            else
+            {
+                <a class="nb-student-link" asp-controller="Teacher" asp-action="MyClass" asp-route-classId="@Model.ClassId">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    <span>Назад</span>
+                </a>
+            }
             <a class="nb-student-link is-primary" href="@Url.Content($"~/Grade/StudentGrades?studentId={Model.StudentId}")">
                 <i class="bi bi-journal-check" aria-hidden="true"></i>
                 <span>Всички оценки</span>
@@ -392,236 +313,114 @@
                 <i class="bi bi-chat-left-text" aria-hidden="true"></i>
                 <span>Всички отзиви</span>
             </a>
+            <a class="nb-student-link is-primary" asp-controller="Teacher" asp-action="StudentAbsences" asp-route-studentId="@Model.StudentId">
+                <i class="bi bi-person-x" aria-hidden="true"></i>
+                <span>Всички отсъствия</span>
+            </a>
         </nav>
     </header>
 
-    <div class="nb-student-details-grid">
-        <article class="nb-record-card">
-            <header>
-                <h2>Последни оценки</h2>
-                <span>@Model.Grades.Count от 5</span>
-            </header>
-
-            @if (Model.Grades.Count == 0)
-            {
-                <div class="nb-empty-records">Няма въведени оценки.</div>
-            }
-            else
-            {
-                <div class="nb-record-list">
-                    @foreach (var grade in Model.Grades)
-                    {
-                        var modalId = $"teacher-grade-popup-{grade.Id:N}";
-                        var gradeTone = grade.DisplayValue >= 5 ? "is-good" : grade.DisplayValue >= 4 ? "is-mid" : "is-low";
-
-                        <button class="nb-grade-row" type="button" data-nb-popup-open="@modalId">
-                            <div class="nb-grade-main">
-                                <strong>@grade.SubjectName</strong>
-                                <span class="nb-grade-pill" title="Записана стойност: @grade.Value.ToString("0.00")">@grade.DisplayValue</span>
-                            </div>
-                            <span class="nb-record-meta">@grade.TypeName · @grade.CreatedAt.ToString("dd.MM.yyyy") · записана стойност @grade.Value.ToString("0.00")</span>
-                            @if (!string.IsNullOrWhiteSpace(grade.Note))
-                            {
-                                <p class="nb-record-note">@grade.Note</p>
-                            }
-                        </button>
-                    }
-                </div>
-            }
+    <section class="nb-stat-grid" aria-label="Обща статистика">
+        <article class="nb-stat-card">
+            <span>Среден успех</span>
+            <strong>@overallAverage.ToString("0.00")</strong>
+            <small>@Model.Grades.Count оценки общо</small>
         </article>
+        <article class="nb-stat-card">
+            <span>Силни оценки</span>
+            <strong>@excellentGrades</strong>
+            <small>Оценки 5 и 6</small>
+        </article>
+        <article class="nb-stat-card">
+            <span>Отсъствия</span>
+            <strong>@Model.Absences.Count</strong>
+            <small>@unexcusedAbsences неизвинени · @excusedAbsences извинени</small>
+        </article>
+        <article class="nb-stat-card">
+            <span>Отзиви</span>
+            <strong>@Model.Feedbacks.Count</strong>
+            <small>@praiseCount положителни · @noteCount други</small>
+        </article>
+    </section>
 
-        <article class="nb-record-card">
+    <section class="nb-stats-grid">
+        <article class="nb-stats-panel">
             <header>
-                <h2>Последни отзиви</h2>
-                <span>@Model.Feedbacks.Count от 5</span>
+                <h2>Предмети</h2>
+                <span>@subjectStats.Length предмета</span>
             </header>
-
-            @if (Model.Feedbacks.Count == 0)
+            @if (subjectStats.Length == 0)
             {
-                <div class="nb-empty-records">Няма въведени отзиви.</div>
+                <div class="nb-empty-stats">Все още няма въведени данни за този ученик.</div>
             }
             else
             {
-                <div class="nb-record-list">
-                    @foreach (var feedback in Model.Feedbacks)
+                <div class="nb-subject-stat-list">
+                    @foreach (var subject in subjectStats)
                     {
-                        <section class="nb-feedback-row">
-                            <div class="nb-feedback-main">
-                                <strong>@feedback.SubjectName</strong>
-                                <span class="nb-status-pill">@feedback.TypeName</span>
+                        var average = subject.Grades.Length > 0 ? subject.Grades.Average(grade => grade.Value) : 0m;
+                        var averageText = average.ToString("0.00");
+                        var progress = subject.Grades.Length > 0 ? Math.Clamp((int)Math.Round(average / 6m * 100m), 0, 100) : 0;
+                        <section class="nb-subject-stat-row">
+                            <div class="nb-subject-stat-main">
+                                <strong>@subject.Name</strong>
+                                <span>@(subject.Grades.Length > 0 ? averageText : "няма")</span>
                             </div>
-                            <span class="nb-record-meta">@feedback.Date.ToString("dd.MM.yyyy")</span>
-                            <p class="nb-record-note">@feedback.Description</p>
+                            <div class="nb-track" aria-label="Среден успех @averageText">
+                                <span style="width: @progress%"></span>
+                            </div>
+                            <div class="nb-subject-stat-meta">
+                                <span class="nb-chip">@subject.Grades.Length оценки</span>
+                                <span class="nb-chip @(subject.Absences > 0 ? "is-red" : null)">@subject.Absences отсъствия</span>
+                                <span class="nb-chip">@subject.Feedbacks отзиви</span>
+                            </div>
                         </section>
                     }
                 </div>
             }
         </article>
 
-        <article class="nb-record-card">
+        <aside class="nb-stats-panel">
             <header>
-                <h2>Отсъствия</h2>
-                <span>@Model.Absences.Count записи</span>
+                <h2>Разпределение</h2>
+                <span>бърз преглед</span>
             </header>
-
-            @if (Model.Absences.Count == 0)
-            {
-                <div class="nb-empty-records">Няма въведени отсъствия.</div>
-            }
-            else
-            {
-                <div class="nb-record-list">
-                    @foreach (var absence in Model.Absences)
-                    {
-                        <section class="nb-absence-row">
-                            <div class="nb-absence-main">
-                                <strong>@absence.SubjectName</strong>
-                                <span class="nb-status-pill @(absence.IsExcused ? "is-excused" : null)">@absence.StatusName</span>
-                            </div>
-                            <span class="nb-record-meta">@absence.TypeName · @absence.Date.ToString("dd.MM.yyyy") · @absence.LessonNumber час</span>
-                            @if (absence.IsExcused)
-                            {
-                                <p class="nb-record-note">
-                                    @(string.IsNullOrWhiteSpace(absence.ExcuseReasonName) ? "Извинено" : absence.ExcuseReasonName)
-                                    @if (!string.IsNullOrWhiteSpace(absence.ExcuseNote))
-                                    {
-                                        <span> · @absence.ExcuseNote</span>
-                                    }
-                                </p>
-                            }
-                            else
-                            {
-                                <form class="nb-excuse-form" method="post" asp-controller="Teacher" asp-action="ExcuseAbsence">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="AbsenceId" value="@absence.Id" />
-                                    <select name="ExcuseReason" aria-label="Причина">
-                                        @foreach (var reason in Enum.GetValues<Entities.Enums.AbsenceExcuseReason>())
-                                        {
-                                            <option value="@reason">@GetDisplayName(reason)</option>
-                                        }
-                                    </select>
-                                    <input name="ExcuseNote" type="text" maxlength="1000" placeholder="Бележка" />
-                                    <button type="submit">Извини</button>
-                                </form>
-                            }
-                        </section>
-                    }
-                </div>
-            }
-        </article>
-    </div>
-</section>
-
-@foreach (var grade in Model.Grades)
-{
-    var modalId = $"teacher-grade-popup-{grade.Id:N}";
-    var gradeTone = grade.DisplayValue >= 5 ? "is-good" : grade.DisplayValue >= 4 ? "is-mid" : "is-low";
-
-    <div class="nb-popup-backdrop" data-nb-popup="@modalId" hidden>
-        <section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{modalId}-title")" tabindex="-1">
-            <header class="nb-popup-header">
-                <div>
-                    <h3 id="@($"{modalId}-title")">@grade.SubjectName</h3>
-                    <p>@grade.TypeName</p>
-                </div>
-                <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </header>
-            <div class="nb-popup-body">
-                <span class="nb-popup-grade @gradeTone">@grade.Value.ToString("0.00")</span>
-                <div class="nb-grade-detail-grid">
-                    <div class="nb-grade-detail-row">
-                        <span>Предмет</span>
-                        <span>@grade.SubjectName</span>
+            <div class="nb-distribution-list">
+                @{
+                    var goodProgress = Model.Grades.Count > 0 ? Math.Clamp((int)Math.Round(excellentGrades / (decimal)Model.Grades.Count * 100m), 0, 100) : 0;
+                    var lowProgress = Model.Grades.Count > 0 ? Math.Clamp((int)Math.Round(lowGrades / (decimal)Model.Grades.Count * 100m), 0, 100) : 0;
+                    var excusedProgress = Model.Absences.Count > 0 ? Math.Clamp((int)Math.Round(excusedAbsences / (decimal)Model.Absences.Count * 100m), 0, 100) : 0;
+                    var praiseProgress = Model.Feedbacks.Count > 0 ? Math.Clamp((int)Math.Round(praiseCount / (decimal)Model.Feedbacks.Count * 100m), 0, 100) : 0;
+                }
+                <section class="nb-distribution-row">
+                    <div class="nb-distribution-main">
+                        <strong>Оценки 5 и 6</strong>
+                        <span>@excellentGrades</span>
                     </div>
-                    <div class="nb-grade-detail-row">
-                        <span>Учител</span>
-                        <span>@grade.TeacherName</span>
+                    <div class="nb-track"><span style="width: @goodProgress%"></span></div>
+                </section>
+                <section class="nb-distribution-row">
+                    <div class="nb-distribution-main">
+                        <strong>Оценки 2 и 3</strong>
+                        <span>@lowGrades</span>
                     </div>
-                    <div class="nb-grade-detail-row">
-                        <span>Тип</span>
-                        <span>@grade.TypeName</span>
+                    <div class="nb-track"><span style="width: @lowProgress%"></span></div>
+                </section>
+                <section class="nb-distribution-row">
+                    <div class="nb-distribution-main">
+                        <strong>Извинени отсъствия</strong>
+                        <span>@excusedAbsences</span>
                     </div>
-                    <div class="nb-grade-detail-row">
-                        <span>Дата</span>
-                        <span>@grade.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                    <div class="nb-track"><span style="width: @excusedProgress%"></span></div>
+                </section>
+                <section class="nb-distribution-row">
+                    <div class="nb-distribution-main">
+                        <strong>Положителни отзиви</strong>
+                        <span>@praiseCount</span>
                     </div>
-                    <div class="nb-grade-detail-row">
-                        <span>Бележка</span>
-                        <span>@(string.IsNullOrWhiteSpace(grade.Note) ? "Няма бележка" : grade.Note)</span>
-                    </div>
-                </div>
+                    <div class="nb-track"><span style="width: @praiseProgress%"></span></div>
+                </section>
             </div>
-        </section>
-    </div>
-}
-
-@section Scripts {
-<script>
-(() => {
-const triggers = document.querySelectorAll("[data-nb-popup-open]");
-const popups = document.querySelectorAll("[data-nb-popup]");
-let activeTrigger = null;
-
-const closePopup = (popup) => {
-    if (!popup) {
-        return;
-    }
-
-    popup.hidden = true;
-    document.body.classList.remove("nb-popup-open");
-
-    if (activeTrigger) {
-        activeTrigger.focus();
-        activeTrigger = null;
-    }
-};
-
-const openPopup = (id, trigger) => {
-    const popup = document.querySelector(`[data-nb-popup="${id}"]`);
-    if (!popup) {
-        return;
-    }
-
-    activeTrigger = trigger;
-    popup.hidden = false;
-    document.body.classList.add("nb-popup-open");
-    popup.querySelector(".nb-popup")?.focus();
-};
-
-triggers.forEach((trigger) => {
-    trigger.addEventListener("click", () => {
-        openPopup(trigger.dataset.nbPopupOpen, trigger);
-    });
-});
-
-popups.forEach((popup) => {
-    popup.addEventListener("click", (event) => {
-        if (event.target === popup || event.target.closest("[data-nb-popup-close]")) {
-            closePopup(popup);
-        }
-    });
-});
-
-document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-        closePopup(document.querySelector("[data-nb-popup]:not([hidden])"));
-    }
-});
-})();
-</script>
-}
-
-@functions {
-    private static string GetDisplayName(Enum value)
-    {
-        var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
-        var display = member?
-            .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), false)
-            .OfType<System.ComponentModel.DataAnnotations.DisplayAttribute>()
-            .FirstOrDefault();
-
-        return display?.Name ?? value.ToString();
-    }
-}
+        </aside>
+    </section>
+</section>

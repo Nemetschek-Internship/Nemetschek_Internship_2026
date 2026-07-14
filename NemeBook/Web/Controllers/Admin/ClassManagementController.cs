@@ -34,7 +34,7 @@ public class ClassManagementController : Controller
         {
             fullName = match.FullName,
             className = match.ClassName,
-            url = Url.Action(nameof(Students), new { classId = match.ClassId }),
+            url = Url.Action("Student", "Teacher", new { area = "", studentId = match.StudentId }),
         }));
     }
 

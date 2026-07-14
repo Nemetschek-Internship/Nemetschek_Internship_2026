@@ -150,6 +150,7 @@ public class GradeService : IGradeService
         var gradeDtos = grades.Select(g => new GradeDto
         {
             Id = g.Id,
+            ClassSubjectId = g.ClassSubjectId,
             Value = g.Value,
             Type = g.Type,
             Note = g.Note,
@@ -267,6 +268,7 @@ public class GradeService : IGradeService
         var gradeDtos = grades.Select(g => new GradeDto
         {
             Id = g.Id,
+            ClassSubjectId = g.ClassSubjectId,
             Value = g.Value,
             Type = g.Type,
             Note = g.Note,
@@ -415,6 +417,7 @@ public class GradeService : IGradeService
         return new GradeDto
         {
             Id = grade.Id,
+            ClassSubjectId = grade.ClassSubjectId,
             Value = grade.Value,
             Type = grade.Type,
             Note = grade.Note,
@@ -498,6 +501,7 @@ public class GradeService : IGradeService
             result.CreatedGrades.Add(new GradeDto
             {
                 Id = grade.Id,
+                ClassSubjectId = grade.ClassSubjectId,
                 Value = grade.Value,
                 Type = grade.Type,
                 Note = grade.Note,
@@ -553,6 +557,7 @@ public class GradeService : IGradeService
         return new GradeDto
         {
             Id = grade.Id,
+            ClassSubjectId = grade.ClassSubjectId,
             Value = grade.Value,
             Type = grade.Type,
             Note = grade.Note,
@@ -595,8 +600,8 @@ public class GradeService : IGradeService
         }
     }
 
-    // Shared by UpdateGradeAsync and DeleteGradeAsync: Principal has a 30-day window, Teacher (who must own the
-    // grade's ClassSubject, checked via ValidateClassSubjectAccessAsync) has a 7-day window from Grade.CreatedAt.
+    // Shared by UpdateGradeAsync and DeleteGradeAsync: teachers have a 7-day window from Grade.CreatedAt;
+    // principals can manage grades without a time limit.
     private async Task<ClassSubject> EnsureCanModifyGradeAsync(
         Grade grade,
         Guid userId,
@@ -612,8 +617,7 @@ public class GradeService : IGradeService
         }
         else if (role == "Principal")
         {
-            if (DateTime.UtcNow - grade.CreatedAt > TimeSpan.FromDays(30))
-                throw new InvalidOperationException("Срокът за редакция е изтекъл (1 месец). Оценката вече не може да бъде променяна.");
+            return classSubject;
         }
         else
         {

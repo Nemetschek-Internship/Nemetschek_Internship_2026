@@ -73,6 +73,7 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
             .Select(student => new
             {
                 student.Id,
+                student.UserId,
                 student.User.FirstName,
                 student.User.MiddleName,
                 student.User.LastName,
@@ -89,6 +90,7 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
             .Select((student, index) => new PrincipalClassStudentViewModel
             {
                 StudentId = student.Id,
+                UserId = student.UserId,
                 ClassNumber = index + 1,
                 FullName = FormatFullName(student.FirstName, student.MiddleName, student.LastName),
                 AverageGrade = student.AverageGrade.HasValue
@@ -133,6 +135,7 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
             .Select(student => new
             {
                 student.ClassId,
+                student.Id,
                 student.User.FirstName,
                 student.User.MiddleName,
                 student.User.LastName,
@@ -144,6 +147,7 @@ public class PrincipalClassManagementService : IPrincipalClassManagementService
 
         return studentRows
             .Select(student => new PrincipalStudentSearchResult(
+                student.Id,
                 student.ClassId,
                 FormatFullName(student.FirstName, student.MiddleName, student.LastName),
                 $"{student.GradeNumber}{student.Letter}"))

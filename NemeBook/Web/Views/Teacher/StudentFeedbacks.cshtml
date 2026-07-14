@@ -3,7 +3,7 @@
 @{
     Layout = "_AppShell";
     ViewData["Title"] = $"Отзиви - {Model.StudentName}";
-    ViewData["ActiveNav"] = "MyClass";
+    ViewData["ActiveNav"] = User.IsInRole("Principal") ? "Classes" : "MyClass";
     ViewData["ShellUserName"] = Model.TeacherName;
     ViewData["ShellUserMeta"] = Model.MainMeta;
     ViewData["ShellUserInitials"] = Model.TeacherInitials;
@@ -126,6 +126,62 @@
         font-size: 12px;
         line-height: 1.45;
     }
+    .nb-feedback-edit-form {
+        display: grid;
+        grid-template-columns: 160px minmax(0, 1fr);
+        gap: 8px;
+        margin-top: 8px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #fbf7f2;
+    }
+    .nb-feedback-edit-form label {
+        display: grid;
+        gap: 5px;
+        color: #6f6962;
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .nb-feedback-edit-form input,
+    .nb-feedback-edit-form select,
+    .nb-feedback-edit-form textarea {
+        min-height: 32px;
+        border: 1px solid #eee3d8;
+        border-radius: 7px;
+        background: #fffaf5;
+        color: #242832;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 6px 8px;
+    }
+    .nb-feedback-edit-form textarea,
+    .nb-feedback-actions {
+        grid-column: 1 / -1;
+    }
+    .nb-feedback-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .nb-feedback-actions button {
+        min-height: 32px;
+        border: 0;
+        border-radius: 7px;
+        color: #ffffff;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 950;
+        cursor: pointer;
+        padding: 0 12px;
+    }
+    .nb-feedback-actions .is-save {
+        background: #f97316;
+    }
+    .nb-feedback-actions .is-danger {
+        background: #dc2626;
+    }
     .nb-feedback-empty {
         min-height: 140px;
         display: grid;
@@ -140,6 +196,9 @@
             padding: 18px;
         }
         .nb-feedbacks-header {
+            grid-template-columns: 1fr;
+        }
+        .nb-feedback-edit-form {
             grid-template-columns: 1fr;
         }
     }
@@ -178,8 +237,56 @@
                     </div>
                     <span class="nb-feedback-meta">@feedback.Date.ToString("dd.MM.yyyy")</span>
                     <p class="nb-feedback-description">@feedback.Description</p>
+                    @if (feedback.CanManage)
+                    {
+                        <form class="nb-feedback-edit-form" method="post" asp-controller="Teacher" asp-action="UpdateStudentFeedback">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="FeedbackId" value="@feedback.Id" />
+                            <input type="hidden" name="StudentId" value="@Model.StudentId" />
+                            <label>
+                                <span>Дата</span>
+                                <input name="Date" type="date" value="@feedback.Date.ToString("yyyy-MM-dd")" required />
+                            </label>
+                            <label>
+                                <span>Тип</span>
+                                <select name="Type" required>
+                                    @foreach (var type in Enum.GetValues<Entities.Enums.FeedbackType>())
+                                    {
+                                        <option value="@type" selected="@(feedback.TypeValue == (int)type)">@GetDisplayName(type)</option>
+                                    }
+                                </select>
+                            </label>
+                            <label>
+                                <span>Описание</span>
+                                <textarea name="Description" maxlength="4000" required>@feedback.Description</textarea>
+                            </label>
+                            <div class="nb-feedback-actions">
+                                <button class="is-save" type="submit">Запази</button>
+                                <button class="is-danger"
+                                        type="submit"
+                                        formmethod="post"
+                                        formaction="@Url.Action("DeleteStudentFeedback", "Teacher", new { feedbackId = feedback.Id, studentId = Model.StudentId })"
+                                        onclick="return confirm('Сигурни ли сте, че искате да изтриете този отзив?');">
+                                    Изтрий
+                                </button>
+                            </div>
+                        </form>
+                    }
                 </section>
             }
         }
     </article>
 </section>
+
+@functions {
+    private static string GetDisplayName(Enum value)
+    {
+        var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+        var display = member?
+            .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), false)
+            .OfType<System.ComponentModel.DataAnnotations.DisplayAttribute>()
+            .FirstOrDefault();
+
+        return display?.Name ?? value.ToString();
+    }
+}

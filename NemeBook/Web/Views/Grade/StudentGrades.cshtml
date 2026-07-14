@@ -57,7 +57,7 @@
     .nb-grade-list {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 10px;
     }
     .nb-grade-chip,
     .nb-popup-grade {
@@ -75,9 +75,14 @@
         font-weight: 950;
     }
     .nb-grade-chip {
-        gap: 6px;
-        padding: 3px 10px;
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        min-height: 42px;
+        padding: 0;
+        border-radius: 50%;
         cursor: pointer;
+        text-align: center;
         transition: transform 0.16s ease, box-shadow 0.16s ease;
     }
     .nb-grade-chip:hover,
@@ -95,12 +100,6 @@
     .nb-popup-grade.is-low {
         background: #ffe0dc;
         color: #c23329;
-    }
-    .nb-grade-chip small {
-        color: inherit;
-        opacity: 0.75;
-        font-size: 10px;
-        font-weight: 900;
     }
     .nb-popup-backdrop {
         position: fixed;
@@ -188,6 +187,68 @@
         font-size: 13px;
         font-weight: 850;
     }
+    .nb-grade-edit-form {
+        display: grid;
+        grid-template-columns: 110px minmax(0, 1fr);
+        gap: 9px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #fbf7f2;
+    }
+    .nb-grade-edit-form label {
+        display: grid;
+        gap: 5px;
+        color: #6f6962;
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .nb-grade-edit-form input,
+    .nb-grade-edit-form select,
+    .nb-grade-edit-form textarea {
+        min-height: 34px;
+        border: 1px solid #eee3d8;
+        border-radius: 7px;
+        background: #fffaf5;
+        color: #242832;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 6px 8px;
+    }
+    .nb-grade-edit-form textarea,
+    .nb-grade-edit-actions,
+    .nb-grade-edit-message {
+        grid-column: 1 / -1;
+    }
+    .nb-grade-edit-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .nb-grade-edit-actions button {
+        min-height: 32px;
+        border: 0;
+        border-radius: 7px;
+        color: #ffffff;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 950;
+        cursor: pointer;
+        padding: 0 12px;
+    }
+    .nb-grade-edit-actions .is-save {
+        background: #f97316;
+    }
+    .nb-grade-edit-actions .is-danger {
+        background: #dc2626;
+    }
+    .nb-grade-edit-message {
+        min-height: 18px;
+        color: #c23329;
+        font-size: 11px;
+        font-weight: 850;
+    }
     body.nb-popup-open {
         overflow: hidden;
     }
@@ -201,6 +262,9 @@
         .nb-grade-detail-row {
             grid-template-columns: 1fr;
             gap: 4px;
+        }
+        .nb-grade-edit-form {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -230,16 +294,16 @@
                         @foreach (var grade in subject.Value.OrderByDescending(grade => grade.Date))
                         {
                             var modalId = $"grade-popup-{grade.Id:N}";
-                            var displayGrade = FormatDisplayGrade(grade.Value, Model.ClassName);
+                            var displayGrade = GetDisplayedGrade(grade.Value).ToString();
                             var gradeClass = GetGradeClass(grade.Value);
+                            var gradeTitle = $"{GetDisplayName(grade.Type)} · {grade.Date:dd.MM.yyyy}";
 
                             <button class="nb-grade-chip @gradeClass"
                                     type="button"
                                     data-nb-popup-open="@modalId"
-                                    title="Детайли за оценката"
+                                    title="@gradeTitle"
                                     aria-label="Отвори детайли за оценка @displayGrade по @grade.SubjectName">
                                 <span>@displayGrade</span>
-                                <small>@grade.Date.ToString("dd.MM")</small>
                             </button>
                         }
                     </div>
@@ -291,6 +355,34 @@
                             <span>@(string.IsNullOrWhiteSpace(grade.Note) ? "Няма бележка" : grade.Note)</span>
                         </div>
                     </div>
+                    @if (grade.CanManage)
+                    {
+                        <form class="nb-grade-edit-form" data-grade-edit-form>
+                            <input type="hidden" name="GradeId" value="@grade.Id" />
+                            <label>
+                                <span>Оценка</span>
+                                <input name="Value" type="number" min="2" max="6" step="0.25" value="@grade.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" required />
+                            </label>
+                            <label>
+                                <span>Тип</span>
+                                <select name="Type" required>
+                                    @foreach (var type in Enum.GetValues<Entities.Enums.GradeType>())
+                                    {
+                                        <option value="@((int)type)" selected="@(grade.Type == type)">@GetDisplayName(type)</option>
+                                    }
+                                </select>
+                            </label>
+                            <label>
+                                <span>Бележка</span>
+                                <textarea name="Note" maxlength="1000">@grade.Note</textarea>
+                            </label>
+                            <p class="nb-grade-edit-message" data-grade-edit-message aria-live="polite"></p>
+                            <div class="nb-grade-edit-actions">
+                                <button class="is-save" type="submit">Запази</button>
+                                <button class="is-danger" type="button" data-grade-delete="@grade.Id">Изтрий</button>
+                            </div>
+                        </form>
+                    }
                 </div>
             </section>
         </div>
@@ -354,36 +446,70 @@ document.addEventListener("keydown", (event) => {
         closePopup(document.querySelector("[data-nb-popup]:not([hidden])"));
     }
 });
+
+const showFormError = (form, message) => {
+    const target = form.querySelector("[data-grade-edit-message]");
+    if (target) {
+        target.textContent = message || "Възникна грешка.";
+    }
+};
+
+document.querySelectorAll("[data-grade-edit-form]").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        showFormError(form, "");
+
+        const formData = new FormData(form);
+        const response = await fetch("@Url.Action("UpdateGrade", "Grade")", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                gradeId: formData.get("GradeId"),
+                value: Number(formData.get("Value")),
+                type: Number(formData.get("Type")),
+                note: formData.get("Note") || ""
+            })
+        });
+
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+
+        const payload = await response.json().catch(() => ({}));
+        showFormError(form, payload.error || "Оценката не беше запазена.");
+    });
+});
+
+document.querySelectorAll("[data-grade-delete]").forEach((button) => {
+    button.addEventListener("click", async () => {
+        if (!confirm("Сигурни ли сте, че искате да изтриете тази оценка?")) {
+            return;
+        }
+
+        const response = await fetch(`@Url.Action("DeleteGrade", "Grade")?gradeId=${button.dataset.gradeDelete}`, {
+            method: "DELETE"
+        });
+
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+
+        const form = button.closest("[data-grade-edit-form]");
+        const payload = await response.json().catch(() => ({}));
+        if (form) {
+            showFormError(form, payload.error || "Оценката не беше изтрита.");
+        }
+    });
+});
 })();
 </script>
 }
 
 @functions {
-    private static string FormatDisplayGrade(decimal value, string? className)
-    {
-        if (IsEarlyGradeClass(className))
-        {
-            if (value < 3)
-            {
-                return ":(";
-            }
-
-            if (value < 4)
-            {
-                return ":|";
-            }
-
-            if (value < 5)
-            {
-                return ":)";
-            }
-
-            return value < 6 ? ":D" : ":-D";
-        }
-
-        return GetDisplayedGrade(value).ToString();
-    }
-
     private static int GetDisplayedGrade(decimal value)
     {
         if (value < 3)
@@ -398,12 +524,6 @@ document.addEventListener("keydown", (event) => {
     {
         var display = GetDisplayedGrade(value);
         return display >= 5 ? "is-high" : display <= 3 ? "is-low" : string.Empty;
-    }
-
-    private static bool IsEarlyGradeClass(string? className)
-    {
-        return !string.IsNullOrWhiteSpace(className)
-            && (className.StartsWith("1", StringComparison.Ordinal) || className.StartsWith("2", StringComparison.Ordinal));
     }
 
     private static string GetDisplayName(Enum value)

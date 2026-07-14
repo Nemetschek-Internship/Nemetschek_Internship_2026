@@ -112,6 +112,7 @@ public interface IPrincipalClassManagementService
 }
 
 public sealed record PrincipalStudentSearchResult(
+    Guid StudentId,
     Guid ClassId,
     string FullName,
     string ClassName);

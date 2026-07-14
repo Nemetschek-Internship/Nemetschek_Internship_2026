@@ -16,6 +16,8 @@ public class StudentHomeViewModel
 
     public IReadOnlyList<StudentAcademicSubjectItem> AcademicSubjects { get; set; } = Array.Empty<StudentAcademicSubjectItem>();
 
+    public IReadOnlyList<StudentSubjectRecordsItem> SubjectRecords { get; set; } = Array.Empty<StudentSubjectRecordsItem>();
+
     public IReadOnlyList<StudentTimelineItem> RecentGrades { get; set; } = Array.Empty<StudentTimelineItem>();
 
     public IReadOnlyList<StudentFeedbackDetailItem> Feedbacks { get; set; } = Array.Empty<StudentFeedbackDetailItem>();
@@ -27,6 +29,21 @@ public class StudentHomeViewModel
     public StudentSummaryCard AbsenceSummary { get; set; } = new();
 
     public IReadOnlyList<StudentScheduleItem> TodaysSchedule { get; set; } = Array.Empty<StudentScheduleItem>();
+}
+
+public class StudentSubjectRecordsItem
+{
+    public string SubjectName { get; set; } = string.Empty;
+
+    public decimal Average { get; set; }
+
+    public int GradeCount { get; set; }
+
+    public IReadOnlyList<StudentGradeDetailItem> Grades { get; set; } = Array.Empty<StudentGradeDetailItem>();
+
+    public IReadOnlyList<StudentAbsenceDetailItem> Absences { get; set; } = Array.Empty<StudentAbsenceDetailItem>();
+
+    public IReadOnlyList<StudentFeedbackDetailItem> Feedbacks { get; set; } = Array.Empty<StudentFeedbackDetailItem>();
 }
 
 public class StudentSubjectProgressItem
@@ -129,4 +146,57 @@ public class StudentScheduleItem
     public string SubjectName { get; set; } = string.Empty;
 
     public string TimeRange { get; set; } = string.Empty;
+}
+
+public class StudentCalendarViewModel
+{
+    public string StudentName { get; set; } = string.Empty;
+
+    public string StudentInitials { get; set; } = string.Empty;
+
+    public string ClassName { get; set; } = string.Empty;
+
+    public int Year { get; set; }
+
+    public int Month { get; set; }
+
+    public string MonthName { get; set; } = string.Empty;
+
+    public IReadOnlyList<StudentCalendarDayViewModel> CalendarDays { get; set; } = Array.Empty<StudentCalendarDayViewModel>();
+
+    public IReadOnlyList<StudentCalendarEventViewModel> UpcomingEvents { get; set; } = Array.Empty<StudentCalendarEventViewModel>();
+}
+
+public class StudentCalendarDayViewModel
+{
+    public DateTime Date { get; set; }
+
+    public int DayNumber { get; set; }
+
+    public bool IsCurrentMonth { get; set; }
+
+    public bool IsToday { get; set; }
+
+    public IReadOnlyList<StudentCalendarEventViewModel> Events { get; set; } = Array.Empty<StudentCalendarEventViewModel>();
+}
+
+public class StudentCalendarEventViewModel
+{
+    public Guid Id { get; set; }
+
+    public string Title { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public string EventTypeName { get; set; } = string.Empty;
+
+    public string EventTypeCssClass { get; set; } = string.Empty;
+
+    public string? ClassSubjectName { get; set; }
+
+    public DateTime Date { get; set; }
+
+    public string DayLabel { get; set; } = string.Empty;
+
+    public string TimeLabel { get; set; } = string.Empty;
 }
