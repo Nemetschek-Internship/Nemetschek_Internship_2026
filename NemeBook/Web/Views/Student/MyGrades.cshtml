@@ -596,8 +596,8 @@
                     var subjectAbsences = absenceItems
                         .Where(item => string.Equals(item.Item.SubjectName, subject, StringComparison.OrdinalIgnoreCase))
                         .ToArray();
-                    var unexcused = subjectAbsences
-                        .Where(item => !IsExcused(item.Item.Status) && !IsLateness(item.Item.Type))
+                    var excused = subjectAbsences
+                        .Where(item => IsExcused(item.Item.Status) && !IsLateness(item.Item.Type))
                         .ToArray();
                     var lateness = subjectAbsences
                         .Where(item => IsLateness(item.Item.Type))
@@ -606,7 +606,7 @@
                         .Where(item => !IsLateness(item.Item.Type))
                         .ToArray();
                     var baseId = Math.Abs(subject.GetHashCode());
-                    var unexcusedModalId = $"absence-unexcused-{baseId}";
+                    var excusedModalId = $"absence-excused-{baseId}";
                     var latenessModalId = $"absence-lateness-{baseId}";
                     var absencesModalId = $"absence-all-{baseId}";
 
@@ -616,15 +616,15 @@
                             <span>@subjectAbsences.Length записи</span>
                         </div>
                         <div class="nb-count-list">
-                            @if (unexcused.Length > 0)
+                            @if (excused.Length > 0)
                             {
-                                <button class="nb-count-btn is-low" type="button" data-nb-popup-open="@unexcusedModalId">
-                                    Неизвинени <strong>@unexcused.Length</strong>
+                                <button class="nb-count-btn is-good" type="button" data-nb-popup-open="@excusedModalId">
+                                    Извинени <strong>@excused.Length</strong>
                                 </button>
                             }
                             else
                             {
-                                <span class="nb-count-empty">Неизвинени 0</span>
+                                <span class="nb-count-empty">Извинени 0</span>
                             }
                             @if (lateness.Length > 0)
                             {
@@ -649,14 +649,14 @@
                         </div>
                     </section>
 
-                    @if (unexcused.Length > 0)
+                    @if (excused.Length > 0)
                     {
-                        <div class="nb-popup-backdrop" data-nb-popup="@unexcusedModalId" hidden>
-                            <section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{unexcusedModalId}-title")" tabindex="-1">
+                        <div class="nb-popup-backdrop" data-nb-popup="@excusedModalId" hidden>
+                            <section class="nb-popup" role="dialog" aria-modal="true" aria-labelledby="@($"{excusedModalId}-title")" tabindex="-1">
                                 <header class="nb-popup-header">
                                     <div>
-                                        <h3 id="@($"{unexcusedModalId}-title")">Неизвинени отсъствия</h3>
-                                        <p>@subject · @unexcused.Length записи</p>
+                                        <h3 id="@($"{excusedModalId}-title")">Извинени отсъствия</h3>
+                                        <p>@subject · @excused.Length записи</p>
                                     </div>
                                     <button class="nb-popup-close" type="button" data-nb-popup-close aria-label="Затвори">
                                         <i class="bi bi-x-lg"></i>
@@ -664,7 +664,7 @@
                                 </header>
                                 <div class="nb-popup-body">
                                     <div class="nb-detail-list">
-                                        @foreach (var absence in unexcused)
+                                        @foreach (var absence in excused)
                                         {
                                             <button class="nb-detail-list-btn" type="button" data-nb-popup-open="@absence.ModalId">
                                                 <strong>@absence.Item.Type · @absence.Item.LessonNumber час</strong>

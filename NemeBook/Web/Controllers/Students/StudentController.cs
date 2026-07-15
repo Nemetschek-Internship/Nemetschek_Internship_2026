@@ -117,6 +117,7 @@ public class StudentController : Controller
                         {
                             Id = entry.Id,
                             ClassName = FormatClassName(entry.Class),
+                            TeacherName = FormatScheduleTeacherName(entry),
                             SubjectName = entry.ClassSubject.Subject.Name,
                             PeriodNumber = entry.PeriodNumber,
                             TimeRange = $"{entry.StartsAt:HH:mm} - {entry.EndsAt:HH:mm}",
@@ -164,6 +165,15 @@ public class StudentController : Controller
     private static string FormatClassName(Class schoolClass)
     {
         return $"{schoolClass.GradeNumber}{schoolClass.Letter}";
+    }
+
+    private static string FormatScheduleTeacherName(ClassScheduleEntry entry)
+    {
+        var teacher = entry.SubstituteTeacher ?? entry.ClassSubject.Teacher;
+
+        return teacher?.User is null
+            ? "Няма назначен учител"
+            : FormatPersonName(teacher.User);
     }
 
     private static string FormatPersonName(User user)
