@@ -1627,7 +1627,14 @@ body {
   font-weight: 900;
 }
 
-.nb-report-line-chart svg {
+.nb-report-line-plot {
+  position: relative;
+  min-width: 0;
+  min-height: 240px;
+  overflow: visible;
+}
+
+.nb-report-line-plot svg {
   width: 100%;
   height: 100%;
   min-height: 240px;
@@ -1649,10 +1656,23 @@ body {
 }
 
 .nb-report-line-point {
-  fill: #ffffff;
-  stroke: var(--nb-orange);
-  stroke-width: 1.8;
-  vector-effect: non-scaling-stroke;
+  position: absolute;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--nb-orange);
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.nb-report-line-points {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
 }
 
 .nb-report-line-x-axis {

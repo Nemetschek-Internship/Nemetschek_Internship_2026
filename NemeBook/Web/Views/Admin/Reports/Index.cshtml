@@ -156,20 +156,24 @@
                                         <span>@label</span>
                                     }
                                 </div>
-                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="@Model.MetricLabel по дати">
-                                    <line x1="0" y1="0" x2="100" y2="0" class="nb-report-grid-line" />
-                                    <line x1="0" y1="25" x2="100" y2="25" class="nb-report-grid-line" />
-                                    <line x1="0" y1="50" x2="100" y2="50" class="nb-report-grid-line" />
-                                    <line x1="0" y1="75" x2="100" y2="75" class="nb-report-grid-line" />
-                                    <line x1="0" y1="100" x2="100" y2="100" class="nb-report-grid-line" />
-                                    <polyline points="@linePoints" class="nb-report-line" />
-                                    @foreach (var point in Model.LinePoints)
-                                    {
-                                        <circle cx="@point.X" cy="@point.Y" r="2.1" class="nb-report-line-point">
-                                            <title>@point.Label - @point.Value.ToString("0.00") (@point.Count записи)</title>
-                                        </circle>
-                                    }
-                                </svg>
+                                <div class="nb-report-line-plot">
+                                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="@Model.MetricLabel по дати">
+                                        <line x1="0" y1="0" x2="100" y2="0" class="nb-report-grid-line" />
+                                        <line x1="0" y1="25" x2="100" y2="25" class="nb-report-grid-line" />
+                                        <line x1="0" y1="50" x2="100" y2="50" class="nb-report-grid-line" />
+                                        <line x1="0" y1="75" x2="100" y2="75" class="nb-report-grid-line" />
+                                        <line x1="0" y1="100" x2="100" y2="100" class="nb-report-grid-line" />
+                                        <polyline points="@linePoints" class="nb-report-line" />
+                                    </svg>
+                                    <div class="nb-report-line-points" aria-hidden="true">
+                                        @foreach (var point in Model.LinePoints)
+                                        {
+                                            <span class="nb-report-line-point"
+                                                  style="left: @point.X%; top: @point.Y%;"
+                                                  title="@($"{point.Label} - {point.Value:0.00} ({point.Count} записи)")"></span>
+                                        }
+                                    </div>
+                                </div>
                                 <div class="nb-report-line-x-axis">
                                     @foreach (var point in Model.LinePoints)
                                     {
